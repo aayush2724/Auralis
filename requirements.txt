@@ -1,0 +1,39 @@
+# Core LLM + RAG
+langchain
+langchain-community
+langgraph
+openai
+
+# Vector store + embeddings
+faiss-cpu
+sentence-transformers
+
+# Document loaders
+pymupdf
+pandas
+
+# API
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+asyncpg
+redis
+
+# ML / NLP
+transformers
+torch
+
+# Frontend / Visualization
+streamlit
+plotly
+
+# Testing
+pytest
+pytest-asyncio
+
+# Utilities
+python-dotenv
+tiktoken
+httpx
