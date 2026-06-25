@@ -20,7 +20,9 @@ import os
 from pathlib import Path
 from typing import Any
 
+# pyrefly: ignore [missing-import]
 from langchain_community.vectorstores import FAISS
+# pyrefly: ignore [missing-import]
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # ─── Logging ──────────────────────────────────────────────────────────────────

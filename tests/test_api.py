@@ -13,6 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 # Mock the database init so we don't connect to a real PostgreSQL on import/lifespan startup
+import src.api.main
 with patch("src.api.main.init_db", new_callable=AsyncMock) as mock_startup_init, \
      patch("src.api.main.init_users_db", new_callable=AsyncMock), \
      patch("src.api.main.seed_admin", new_callable=AsyncMock), \

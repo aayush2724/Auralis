@@ -36,8 +36,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path
 
+from src.ab.ab_test import ABVariant, assign_variant, static_response
 from src.analytics.tracker import log_event
 from src.api.auth import User, require_roles
 from src.api.schemas import (
@@ -96,73 +97,114 @@ async def chat(
     )
 
     try:
+        # ── Step 0: Determine A/B variant ──────────────────────────────────────
+        variant = await assign_variant(session_id)
+
         # ── Step 1: Load or create ConversationMemory ─────────────────────────
-        # from_session() queries PostgreSQL; returns a fresh instance if no
-        # prior session exists for this session_id (Feature 10).
         memory = await ConversationMemory.from_session(session_id)
 
-        # ── Step 2: Run the LangGraph conversation graph ──────────────────────
-        # run_graph() is synchronous internally (ThreadPoolExecutor for
-        # classifiers, blocking LLM call). It also appends both the user turn
-        # and the assistant response to *memory* before returning.
-        state = run_graph(message, memory)
+        if variant == ABVariant.STATIC:
+            # ── STATIC branch: return canned pitch, skip the graph ────────────
+            response_text = static_response(message)
 
-        # ── Step 3: Build explainability audit trail (Feature 9) ─────────────
-        exp_dict = explain(state)
-        explanation = ExplanationResponse(
-            objection_reason = exp_dict["objection_reason"],
-            persona_reason   = exp_dict["persona_reason"],
-            sentiment_reason = exp_dict["sentiment_reason"],
-            strategy_reason  = exp_dict["strategy_reason"],
-            trigger_phrases  = exp_dict["trigger_phrases"],
-            confidence_note  = exp_dict["confidence_note"],
-            handoff_reason   = exp_dict["handoff_reason"],
-        )
+            # Build a minimal state dict for logging
+            state = {
+                "user_input":     message,
+                "response":       response_text,
+                "confidence":     0.0,
+                "objection":      {"label": "neutral", "confidence": 0.0, "triggers": []},
+                "sentiment":      {"label": "neutral", "score": 0.0, "tone_instruction": ""},
+                "persona":        {"label": "Unknown", "pitch_angle": ""},
+                "strategy":       "static_pitch",
+                "citations":      "",
+                "should_handoff": False,
+                "retrieved_docs": [],
+                "variant":        "STATIC",
+            }
 
-        # ── Step 4: Persist session to PostgreSQL (Feature 10) ────────────────
-        facts = memory.get_facts()
-        # Attach the final persona label so it is stored alongside other facts.
-        persona_dict  = state.get("persona") or {}
-        persona_label = persona_dict.get("label")
-        if persona_label:
-            facts["persona_label"] = persona_label
+            memory.add(role="user", content=message)
+            memory.add(role="assistant", content=response_text)
 
-        await save_session(session_id, facts)
+            facts = memory.get_facts()
+            await save_session(session_id, facts)
 
-        # ── Step 5: Build and return ChatResponse ─────────────────────────────
-        objection_dict = state.get("objection") or {}
-        sentiment_dict = state.get("sentiment") or {}
-
-        # Map raw retrieved-doc dicts to typed RetrievedDoc models.
-        retrieved_docs = [
-            RetrievedDoc(
-                text        = d.get("text", ""),
-                source_file = d.get("source_file", ""),
-                chunk_index = d.get("chunk_index", -1),
-                score       = d.get("score", 0.0),
+            explanation = ExplanationResponse(
+                objection_reason="A/B test: STATIC variant — graph skipped.",
+                persona_reason="A/B test: STATIC variant — graph skipped.",
+                sentiment_reason="A/B test: STATIC variant — graph skipped.",
+                strategy_reason="A/B test: STATIC variant — fixed pitch returned.",
+                trigger_phrases=[],
+                confidence_note="N/A for STATIC variant.",
+                handoff_reason=None,
             )
-            for d in (state.get("retrieved_docs") or [])
-        ]
 
-        response = ChatResponse(
-            response        = state.get("response", ""),
-            objection_label = objection_dict.get("label", "neutral"),
-            confidence      = float(state.get("confidence", 1.0)),
-            sentiment       = sentiment_dict.get("label", "neutral"),
-            persona         = persona_dict.get("label", "Unknown"),
-            strategy        = state.get("strategy", "discovery_questions"),
-            citations       = state.get("citations", ""),
-            should_handoff  = bool(state.get("should_handoff", False)),
-            explanation     = explanation,
-            retrieved_docs  = retrieved_docs,
-            session_id      = session_id,
-            memory_context  = memory.get_context_string(),
-        )
+            response = ChatResponse(
+                response        = response_text,
+                objection_label = "neutral",
+                confidence      = 0.0,
+                sentiment       = "neutral",
+                persona         = "Unknown",
+                strategy        = "static_pitch",
+                citations       = "",
+                should_handoff  = False,
+                explanation     = explanation,
+                retrieved_docs  = [],
+                session_id      = session_id,
+                memory_context  = memory.get_context_string(),
+            )
+        else:
+            # ── ADAPTIVE branch: run the full graph pipeline ───────────────────
+            state = run_graph(message, memory)
+            state["variant"] = "ADAPTIVE"
 
-        # ── Step 6: Log analytics event (fire-and-forget) ─────────────────────
-        # asyncio.create_task schedules the coroutine on the running event loop
-        # without blocking the response. A failure in log_event() is swallowed
-        # inside tracker.py so it can never degrade the /chat endpoint.
+            exp_dict = explain(state)
+            explanation = ExplanationResponse(
+                objection_reason = exp_dict["objection_reason"],
+                persona_reason   = exp_dict["persona_reason"],
+                sentiment_reason = exp_dict["sentiment_reason"],
+                strategy_reason  = exp_dict["strategy_reason"],
+                trigger_phrases  = exp_dict["trigger_phrases"],
+                confidence_note  = exp_dict["confidence_note"],
+                handoff_reason   = exp_dict["handoff_reason"],
+            )
+
+            facts = memory.get_facts()
+            persona_dict  = state.get("persona") or {}
+            persona_label = persona_dict.get("label")
+            if persona_label:
+                facts["persona_label"] = persona_label
+
+            await save_session(session_id, facts)
+
+            objection_dict = state.get("objection") or {}
+            sentiment_dict = state.get("sentiment") or {}
+
+            retrieved_docs = [
+                RetrievedDoc(
+                    text        = d.get("text", ""),
+                    source_file = d.get("source_file", ""),
+                    chunk_index = d.get("chunk_index", -1),
+                    score       = d.get("score", 0.0),
+                )
+                for d in (state.get("retrieved_docs") or [])
+            ]
+
+            response = ChatResponse(
+                response        = state.get("response", ""),
+                objection_label = objection_dict.get("label", "neutral"),
+                confidence      = float(state.get("confidence", 1.0)),
+                sentiment       = sentiment_dict.get("label", "neutral"),
+                persona         = persona_dict.get("label", "Unknown"),
+                strategy        = state.get("strategy", "discovery_questions"),
+                citations       = state.get("citations", ""),
+                should_handoff  = bool(state.get("should_handoff", False)),
+                explanation     = explanation,
+                retrieved_docs  = retrieved_docs,
+                session_id      = session_id,
+                memory_context  = memory.get_context_string(),
+            )
+
+        # ── Log analytics event (fire-and-forget) ─────────────────────────────
         asyncio.create_task(
             log_event(session_id=session_id, state=state, did_convert=False)
         )

@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS conversation_events (
     persona_label   VARCHAR(64)  NOT NULL DEFAULT 'Unknown',
     confidence      FLOAT        NOT NULL DEFAULT 0.0,
     did_convert     BOOLEAN      NOT NULL DEFAULT FALSE,
+    variant         VARCHAR(16)  NOT NULL DEFAULT 'ADAPTIVE',
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
@@ -86,6 +87,13 @@ async def init_analytics_db() -> None:
     engine = _get_engine()
     async with engine.begin() as conn:
         await conn.execute(text(_CREATE_EVENTS_TABLE_SQL))
+        # Ensure 'variant' column exists if table was already created
+        try:
+            await conn.execute(text(
+                "ALTER TABLE conversation_events ADD COLUMN IF NOT EXISTS variant VARCHAR(16) NOT NULL DEFAULT 'ADAPTIVE'"
+            ))
+        except Exception as exc:
+            logger.warning("Could not add variant column to conversation_events: %s", exc)
     logger.info("conversation_events table initialised.")
 
 
@@ -130,10 +138,10 @@ async def _insert_event(
     sql = text("""
         INSERT INTO conversation_events
             (session_id, turn_number, objection_label, sentiment_label,
-             persona_label, confidence, did_convert, created_at)
+             persona_label, confidence, did_convert, variant, created_at)
         VALUES
             (:session_id, :turn_number, :objection_label, :sentiment_label,
-             :persona_label, :confidence, :did_convert, :now)
+             :persona_label, :confidence, :did_convert, :variant, :now)
     """)
     params = {
         "session_id":       session_id,
@@ -143,6 +151,7 @@ async def _insert_event(
         "persona_label":    persona.get("label", "Unknown"),
         "confidence":       float(objection.get("confidence", 0.0)),
         "did_convert":      did_convert,
+        "variant":          state.get("variant", "ADAPTIVE"),
         "now":              datetime.now(tz=timezone.utc),
     }
     async with engine.begin() as conn:
