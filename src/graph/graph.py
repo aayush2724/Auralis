@@ -371,8 +371,9 @@ def generate_node(state: GraphState) -> dict[str, Any]:
     llm = _get_llm()
     # pyrefly: ignore [missing-import]
     from langchain_core.messages import HumanMessage, SystemMessage  # noqa: PLC0415
+    system_prompt = _get_system_prompt(persona_label)
     messages = [
-        SystemMessage(content=_SYSTEM_PROMPT),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
     ]
     ai_msg = llm.invoke(messages)

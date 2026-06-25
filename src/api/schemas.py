@@ -1,0 +1,131 @@
+"""
+auralis/src/api/schemas.py
+───────────────────────────
+Shared Pydantic request/response models for the Auralis API.
+
+Keeping schemas in a dedicated module avoids circular imports between
+main.py and the route files.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+# ─── Request ──────────────────────────────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    """Incoming chat request body."""
+
+    session_id: str = Field(
+        ...,
+        description="Unique identifier for this user/conversation session. "
+                    "Reuse across turns to maintain conversation memory.",
+        examples=["user_abc123", "conv_2024_001"],
+    )
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=4096,
+        description="The prospect's latest utterance.",
+        examples=["This is way too expensive for our budget."],
+    )
+
+    model_config = {"json_schema_extra": {
+        "examples": [{
+            "session_id": "user_abc123",
+            "message": "We already use HubSpot and are very happy with it.",
+        }]
+    }}
+
+
+# ─── Nested models ────────────────────────────────────────────────────────────
+
+class ExplanationResponse(BaseModel):
+    """Human-readable audit trail for every model decision (Feature 9)."""
+    objection_reason: str
+    persona_reason:   str
+    sentiment_reason: str
+    strategy_reason:  str
+    trigger_phrases:  list[str]
+    confidence_note:  str
+    handoff_reason:   str | None = None
+
+
+class RetrievedDoc(BaseModel):
+    """A single retrieved knowledge-base chunk."""
+    text:        str
+    source_file: str
+    chunk_index: int
+    score:       float
+
+
+# ─── Response ─────────────────────────────────────────────────────────────────
+
+class ChatResponse(BaseModel):
+    """Full response returned by POST /chat."""
+
+    # Core output
+    response:        str   = Field(description="Generated sales response text.")
+    objection_label: str   = Field(description="Detected objection class.")
+    confidence:      float = Field(ge=0.0, le=1.0, description="Classifier confidence (0–1).")
+    sentiment:       str   = Field(description="Detected sentiment: positive | neutral | negative.")
+    persona:         str   = Field(description="Detected buyer persona.")
+    strategy:        str   = Field(description="Strategy module that built the response.")
+    citations:       str   = Field(description="Numbered source citations (Feature 11).")
+    should_handoff:  bool  = Field(description="True if human escalation is recommended (Feature 7).")
+
+    # Rich detail
+    explanation:     ExplanationResponse      = Field(description="Decision audit trail (Feature 9).")
+    retrieved_docs:  list[RetrievedDoc]       = Field(default_factory=list, description="Top-k knowledge-base chunks used.")
+
+    # Session context
+    session_id:      str                      = Field(description="Echo of the request session_id.")
+    memory_context:  str                      = Field(description="Current session fact summary (Feature 1).")
+
+    model_config = {"json_schema_extra": {
+        "examples": [{
+            "response":        "That's a fair concern — let me show you the ROI data...",
+            "objection_label": "price",
+            "confidence":      0.91,
+            "sentiment":       "neutral",
+            "persona":         "CTO",
+            "strategy":        "roi_business_case",
+            "citations":       "[1] Case Study (cases.pdf, chunk 0)",
+            "should_handoff":  False,
+            "explanation": {
+                "objection_reason": "Detected price objection (confidence 91%) because...",
+                "persona_reason":   "Identified CTO because of technical framing...",
+                "sentiment_reason": "Customer tone is measured...",
+                "strategy_reason":  "Applied roi_business_case because...",
+                "trigger_phrases":  ["too expensive"],
+                "confidence_note":  "",
+                "handoff_reason":   None,
+            },
+            "retrieved_docs":  [],
+            "session_id":      "user_abc123",
+            "memory_context":  "Customer context: tools=HubSpot.",
+        }]
+    }}
+
+
+# ─── Session endpoint response ────────────────────────────────────────────────
+
+class SessionFactsResponse(BaseModel):
+    """Response for GET /session/{session_id}."""
+    session_id:        str
+    company_name:      str | None
+    persona_label:     str | None
+    tools_mentioned:   list[str]
+    objections_raised: list[dict[str, Any]]
+    budget_signal:     str | None
+    found:             bool = Field(description="False if no session exists in the DB.")
+
+
+# ─── Health ───────────────────────────────────────────────────────────────────
+
+class HealthResponse(BaseModel):
+    status:  str = "ok"
+    version: str = "1.0.0"
