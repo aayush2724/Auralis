@@ -57,6 +57,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 
 _ADMIN_EMAIL:    str = os.getenv("ADMIN_EMAIL",    "admin@auralis.ai")
 _ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "changeme")
 
+if JWT_SECRET_KEY == "CHANGE_ME_IN_PRODUCTION_USE_A_LONG_RANDOM_SECRET":
+    logger.warning("SECURITY WARNING: Using default insecure JWT_SECRET_KEY. Ensure this is overridden in production!")
+
+if _ADMIN_PASSWORD == "changeme":
+    logger.warning("SECURITY WARNING: Using default ADMIN_PASSWORD ('changeme'). Change it in your production .env file!")
+
 # ─── Roles ────────────────────────────────────────────────────────────────────
 
 Role = Literal["admin", "sales_rep", "viewer"]
