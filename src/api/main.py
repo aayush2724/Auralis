@@ -33,6 +33,7 @@ from src.api.routes.ab import router as ab_router
 from src.api.routes.analytics import router as analytics_router
 from src.api.routes.auth import router as auth_router
 from src.api.routes.chat import router as chat_router
+from src.api.routes.kb import router as kb_router
 from src.api.schemas import HealthResponse
 from src.memory.db import init_db
 
@@ -160,6 +161,7 @@ app.include_router(auth_router)
 # Protected — role guards are declared per-endpoint in the route handlers
 app.include_router(chat_router, tags=["Conversation & Memory"])
 app.include_router(ab_router, tags=["A/B Testing"])
+app.include_router(kb_router, tags=["Knowledge Base"])
 app.include_router(analytics_router)
 
 

@@ -167,7 +167,6 @@ def _sentiment_reason(sentiment: dict) -> str:
      Empathetic tone applied.'
     """
     label = sentiment.get("label", "neutral")
-    score = sentiment.get("score", 0.0)
     tone  = sentiment.get("tone_instruction", "")
 
     template = _SENTIMENT_EXPLANATIONS.get(label, _SENTIMENT_EXPLANATIONS["neutral"])
@@ -229,6 +228,21 @@ def _handoff_reason(state: GraphState) -> str | None:
     if not state.get("should_handoff"):
         return None
 
+    trigger = state.get("handoff_trigger", "")
+
+    if trigger == "USER_REQUESTED":
+        return "Human handoff triggered because the customer explicitly requested to speak with a human agent."
+
+    if trigger == "ANGRY_CUSTOMER":
+        sentiment = state.get("sentiment") or {}
+        s_score = sentiment.get("score", 0.0)
+        return f"Human handoff triggered due to high frustration signal ({s_score:.0%} negative sentiment)."
+
+    if trigger == "LOW_CONFIDENCE":
+        obj_conf = (state.get("objection") or {}).get("confidence", 1.0)
+        return f"Human handoff triggered due to low classifier confidence ({obj_conf:.0%})."
+
+    # Fallback: compute reasons from raw state (legacy path)
     obj_conf  = (state.get("objection") or {}).get("confidence", 1.0)
     sentiment = state.get("sentiment") or {}
     s_label   = sentiment.get("label", "")

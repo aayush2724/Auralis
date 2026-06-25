@@ -193,3 +193,27 @@ class DashboardResponse(BaseModel):
             "avg_confidence":         0.84,
         }]
     }}
+
+
+# ─── Knowledge Base ───────────────────────────────────────────────────────────
+
+class KBIngestResponse(BaseModel):
+    """Response for POST /kb/ingest."""
+    files_processed: int   = Field(description="Number of files successfully ingested.")
+    chunks_added:    int   = Field(description="Number of text chunks added to the FAISS index.")
+    index_updated:   bool  = Field(description="True if the FAISS index was updated.")
+
+    model_config = {"json_schema_extra": {
+        "examples": [{
+            "files_processed": 3,
+            "chunks_added":    47,
+            "index_updated":   True,
+        }]
+    }}
+
+
+class KBStatsResponse(BaseModel):
+    """Response for GET /kb/stats."""
+    total_documents: int          = Field(description="Number of source files in the vectorstore.")
+    total_chunks:   int          = Field(description="Number of text chunks in the FAISS index.")
+    last_updated:   str | None   = Field(description="ISO timestamp of the last ingestion, or None.")

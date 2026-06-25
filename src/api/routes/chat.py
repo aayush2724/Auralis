@@ -109,17 +109,19 @@ async def chat(
 
             # Build a minimal state dict for logging
             state = {
-                "user_input":     message,
-                "response":       response_text,
-                "confidence":     0.0,
-                "objection":      {"label": "neutral", "confidence": 0.0, "triggers": []},
-                "sentiment":      {"label": "neutral", "score": 0.0, "tone_instruction": ""},
-                "persona":        {"label": "Unknown", "pitch_angle": ""},
-                "strategy":       "static_pitch",
-                "citations":      "",
-                "should_handoff": False,
-                "retrieved_docs": [],
-                "variant":        "STATIC",
+                "user_input":      message,
+                "response":        response_text,
+                "confidence":      0.0,
+                "objection":       {"label": "neutral", "confidence": 0.0, "triggers": []},
+                "sentiment":       {"label": "neutral", "score": 0.0, "tone_instruction": ""},
+                "persona":         {"label": "Unknown", "pitch_angle": ""},
+                "strategy":        "static_pitch",
+                "citations":       "",
+                "should_handoff":  False,
+                "handoff_trigger": "",
+                "handoff_message": "",
+                "retrieved_docs":  [],
+                "variant":         "STATIC",
             }
 
             memory.add(role="user", content=message)
@@ -157,6 +159,13 @@ async def chat(
             state = run_graph(message, memory)
             state["variant"] = "ADAPTIVE"
 
+            # When handoff triggered, use the handoff_message as the response.
+            do_handoff = bool(state.get("should_handoff", False))
+            if do_handoff:
+                response_text = state.get("handoff_message") or state.get("response", "")
+            else:
+                response_text = state.get("response", "")
+
             exp_dict = explain(state)
             explanation = ExplanationResponse(
                 objection_reason = exp_dict["objection_reason"],
@@ -190,14 +199,14 @@ async def chat(
             ]
 
             response = ChatResponse(
-                response        = state.get("response", ""),
+                response        = response_text,
                 objection_label = objection_dict.get("label", "neutral"),
                 confidence      = float(state.get("confidence", 1.0)),
                 sentiment       = sentiment_dict.get("label", "neutral"),
                 persona         = persona_dict.get("label", "Unknown"),
                 strategy        = state.get("strategy", "discovery_questions"),
                 citations       = state.get("citations", ""),
-                should_handoff  = bool(state.get("should_handoff", False)),
+                should_handoff  = do_handoff,
                 explanation     = explanation,
                 retrieved_docs  = retrieved_docs,
                 session_id      = session_id,
