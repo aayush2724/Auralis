@@ -24,6 +24,8 @@ redis
 # ML / NLP
 transformers
 torch
+accelerate
+scipy
 
 # Frontend / Visualization
 streamlit
