@@ -84,29 +84,63 @@ Keep it under 230 words. Apply {sentiment_label} tone.
 """
 
 
+def _format_comparison_bullets(intel_docs: list[dict], competitor_name: str) -> str:
+    """
+    Format the top competitor intel docs as structured comparison bullets.
+    Returns at most 3 bullets drawn from the knowledge base.
+    """
+    if not intel_docs:
+        return f"No specific intel on {competitor_name} — use general differentiation messaging."
+
+    lines: list[str] = []
+    for i, doc in enumerate(intel_docs[:3]):
+        text = doc.get("text", "").strip()[:300]
+        lines.append(f"• [{doc.get('source_file', 'intel')}] {text}")
+    return "\n".join(lines)
+
+
 def build_prompt(state: GraphState) -> str:
+    from src.classifier.competitor import detect_competitor
+    from src.rag.retriever import retrieve
+
     objection   = state.get("objection")   or {}
     sentiment   = state.get("sentiment")   or {}
     persona     = state.get("persona")     or {}
     metadata    = state.get("metadata")    or {}
-    docs        = state.get("retrieved_docs") or []
+    user_input  = state.get("user_input", "")
 
-    # Competitor name — prefer the metadata extracted by strategy_node,
-    # then fall back to trigger phrases, then generic.
+    # ── Step 1: resolve competitor name ───────────────────────────────────────
+    # Priority: fresh detection from live text > metadata set by strategy_node
+    # > first trigger phrase > generic fallback
     competitor_name = (
-        metadata.get("competitor_mentioned")
+        detect_competitor(user_input)
+        or metadata.get("competitor_mentioned")
         or metadata.get("competitor_name")
-        or (objection.get("triggers") or ["the competitor"])[0]
+        or (objection.get("triggers") or [""])[0]
         or "the incumbent tool"
     )
 
-    knowledge_block = "\n\n".join(
-        f"[{i+1}] {d['text'][:400]}" for i, d in enumerate(docs)
-    ) or f"No specific intel on {competitor_name} retrieved — use general differentiation messaging."
+    # ── Step 2: targeted competitor intel retrieval ────────────────────────────
+    # Re-query FAISS with a competitor-specific query even if retrieve_node
+    # already ran, to surface weaknesses/advantages from data/competitors/.
+    intel_docs: list[dict] = []
+    if competitor_name and competitor_name != "the incumbent tool":
+        intel_query = f"competitor {competitor_name} weaknesses advantages pricing"
+        try:
+            intel_docs = retrieve(intel_query, top_k=3)
+        except FileNotFoundError:
+            intel_docs = []
 
+    # Fall back to whatever retrieve_node already pulled
+    if not intel_docs:
+        intel_docs = state.get("retrieved_docs") or []
+
+    knowledge_block = _format_comparison_bullets(intel_docs, competitor_name)
+
+    # ── Step 3: render prompt ─────────────────────────────────────────────────
     return _PROMPT_TEMPLATE.format(
         memory_context  = state.get("memory_context") or "No prior context.",
-        user_input      = state.get("user_input", ""),
+        user_input      = user_input,
         confidence      = objection.get("confidence", 0.0),
         competitor_name = competitor_name,
         persona_label   = persona.get("label", "Unknown"),

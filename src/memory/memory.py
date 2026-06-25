@@ -13,14 +13,16 @@ Responsibilities
      - objections_raised: list of {turn, label, confidence} dicts built from
                           objection-classifier metadata passed via add().
 3. Expose a context string injected into every generation prompt (Feature 1).
+4. Persist / reload facts from PostgreSQL across conversations (Feature 10).
 
-Usage
------
-    mem = ConversationMemory()
+Usage (new session)
+-------------------
+    mem = ConversationMemory(session_id="user_42")
     mem.add("user", "We use Salesforce at Acme Corp.", metadata={"objection": result})
-    mem.add("assistant", "Great — here's how we integrate with Salesforce…")
-    print(mem.get_context_string())
-    # Customer context: company=Acme Corp | tools=Salesforce | raised price objection (turn 1, conf 0.91)
+
+Usage (resume existing session)
+--------------------------------
+    mem = await ConversationMemory.from_session("user_42")
 
 Public API
 ----------
@@ -28,10 +30,12 @@ Public API
     get_context_string()          -> str
     get_facts()                   -> dict
     clear()                       -> None
+    async from_session(session_id) -> ConversationMemory  [classmethod]
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass, field
@@ -138,19 +142,25 @@ class ConversationMemory:
     """
     Session-scoped conversation state for Auralis.
 
+    Parameters
+    ----------
+    session_id : Optional unique identifier for this session.
+                 When provided, facts are persisted to PostgreSQL on every
+                 user turn and can be reloaded across conversations (Feature 10).
+
     Thread-safety
     -------------
-    Not thread-safe by default. For concurrent API usage, instantiate one
-    ConversationMemory per session and store it in the request context.
+    Not thread-safe by default. Instantiate one per session/request.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, session_id: str | None = None) -> None:
+        self._session_id: str | None = session_id
         self._messages: list[Message] = []
         self._facts: dict[str, Any] = {
-            "company_name":      None,        # str | None
-            "tools_mentioned":   [],          # list[str]
-            "budget_signal":     None,        # str | None
-            "objections_raised": [],          # list[{turn, label, confidence}]
+            "company_name":      None,
+            "tools_mentioned":   [],
+            "budget_signal":     None,
+            "objections_raised": [],
         }
 
     # ── Core API ──────────────────────────────────────────────────────────────
@@ -163,6 +173,9 @@ class ConversationMemory:
     ) -> None:
         """
         Append a message and (for user turns) update extracted facts.
+
+        After updating facts, schedules an async DB persist if a session_id
+        is set and an asyncio event loop is running (Feature 10).
 
         Parameters
         ----------
@@ -182,6 +195,7 @@ class ConversationMemory:
 
         if role == "user":
             self._update_facts(msg)
+            self._schedule_persist()
 
         logger.debug("Memory | turn=%d role=%s | facts=%s", turn, role, self._facts)
 
@@ -244,7 +258,7 @@ class ConversationMemory:
         return list(self._messages)
 
     def clear(self) -> None:
-        """Reset all messages and extracted facts."""
+        """Reset all messages and extracted facts (does NOT delete DB record)."""
         self._messages.clear()
         self._facts = {
             "company_name":      None,
@@ -252,7 +266,77 @@ class ConversationMemory:
             "budget_signal":     None,
             "objections_raised": [],
         }
-        logger.debug("Memory cleared.")
+        logger.debug("Memory cleared (session_id=%s).", self._session_id)
+
+    # ── Async persistence (Feature 10) ────────────────────────────────────────
+
+    def _schedule_persist(self) -> None:
+        """
+        Fire-and-forget: schedule _persist() as an asyncio background task.
+        Silently skips if no session_id is set or no event loop is running.
+        """
+        if not self._session_id:
+            return
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._persist())
+        except RuntimeError:
+            # No running event loop (e.g. sync test context) — skip silently.
+            logger.debug("No event loop running — skipping DB persist.")
+
+    async def _persist(self) -> None:
+        """Async write of current facts to PostgreSQL via db.save_session()."""
+        if not self._session_id:
+            return
+        try:
+            from src.memory.db import save_session  # late import avoids circular dep
+            facts = self.get_facts()
+            # Persist detected persona if available in latest user message
+            if self._messages:
+                last_user = next(
+                    (m for m in reversed(self._messages) if m.role == "user"), None
+                )
+                if last_user and last_user.metadata.get("persona"):
+                    facts["persona_label"] = last_user.metadata["persona"].get("label")
+            await save_session(self._session_id, facts)
+            logger.debug("Session persisted: %s", self._session_id)
+        except Exception as exc:
+            logger.warning("DB persist failed for session %s: %s", self._session_id, exc)
+
+    @classmethod
+    async def from_session(cls, session_id: str) -> "ConversationMemory":
+        """
+        Create a ConversationMemory pre-loaded with facts from PostgreSQL.
+
+        If no session exists for *session_id*, returns a fresh empty instance.
+        This enables cross-conversation memory of every customer (Feature 10).
+
+        Parameters
+        ----------
+        session_id : The session/user identifier to look up.
+
+        Returns
+        -------
+        ConversationMemory with _facts populated from the DB (if found).
+        """
+        instance = cls(session_id=session_id)
+        try:
+            from src.memory.db import load_session  # late import
+            stored = await load_session(session_id)
+            if stored:
+                instance._facts["company_name"]      = stored.get("company_name")
+                instance._facts["tools_mentioned"]   = stored.get("tools_mentioned") or []
+                instance._facts["budget_signal"]      = stored.get("budget_signal")
+                instance._facts["objections_raised"] = stored.get("objections_raised") or []
+                logger.info(
+                    "Loaded session %s from DB: company=%s tools=%s",
+                    session_id,
+                    stored.get("company_name"),
+                    stored.get("tools_mentioned"),
+                )
+        except Exception as exc:
+            logger.warning("DB load failed for session %s: %s — starting fresh.", session_id, exc)
+        return instance
 
     # ── Fact extraction (private) ─────────────────────────────────────────────
 
@@ -306,6 +390,7 @@ class ConversationMemory:
     def __repr__(self) -> str:
         return (
             f"ConversationMemory("
+            f"session_id={self._session_id!r}, "
             f"turns={len(self._messages)}, "
             f"facts={self._facts!r})"
         )
