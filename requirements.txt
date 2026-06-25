@@ -43,3 +43,5 @@ pytest-asyncio
 python-dotenv
 tiktoken
 httpx
+structlog
+prometheus-client

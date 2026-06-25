@@ -1,20 +1,18 @@
-version: "3.9"
-
 services:
   # ─── PostgreSQL ───────────────────────────────────────────────
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: auralis_postgres
     environment:
-      POSTGRES_DB: auralis
-      POSTGRES_USER: auralis
-      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: pitchiq
+      POSTGRES_USER: pitchiq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pitchiq_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U auralis"]
+      test: ["CMD-SHELL", "pg_isready -U pitchiq -d pitchiq"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +24,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - pitchiq_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -35,7 +33,9 @@ services:
 
   # ─── Auralis API ──────────────────────────────────────────────
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: auralis_api
     env_file: .env
     ports:
@@ -48,22 +48,21 @@ services:
     volumes:
       - ./data:/app/data
       - ./vectorstore:/app/vectorstore
-    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
   # ─── Streamlit Dashboard ──────────────────────────────────────
-  dashboard:
-    build: .
-    container_name: auralis_dashboard
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: auralis_streamlit
     env_file: .env
     ports:
       - "8501:8501"
     depends_on:
       - api
-    volumes:
-      - ./data:/app/data
-      - ./vectorstore:/app/vectorstore
-    command: streamlit run src/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
+  pitchiq_pg_data:
+  pitchiq_redis_data:

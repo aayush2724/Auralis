@@ -52,6 +52,7 @@ from src.graph.graph import run_graph
 from src.memory.db import load_session, save_session
 from src.memory.memory import ConversationMemory
 from src.utils.explainability import explain
+from src.utils.logger import set_request_metadata
 
 logger = logging.getLogger("auralis.api.chat")
 router = APIRouter()
@@ -216,6 +217,21 @@ async def chat(
         # ── Log analytics event (fire-and-forget) ─────────────────────────────
         asyncio.create_task(
             log_event(session_id=session_id, state=state, did_convert=False)
+        )
+
+        # ── Emit structured log metadata for middleware ──────────────────────
+        set_request_metadata(
+            "POST", "/chat",
+            session_id=session_id,
+            user_input_length=len(message),
+            objection_label=response.objection_label,
+            confidence=response.confidence,
+            sentiment=response.sentiment,
+            persona=response.persona,
+            strategy=response.strategy,
+            response_length=len(response.response),
+            handoff=response.should_handoff,
+            handoff_trigger=state.get("handoff_trigger", ""),
         )
 
         return response

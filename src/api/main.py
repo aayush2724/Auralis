@@ -36,6 +36,7 @@ from src.api.routes.chat import router as chat_router
 from src.api.routes.kb import router as kb_router
 from src.api.schemas import HealthResponse
 from src.memory.db import init_db
+from src.utils.logger import mount_logging
 
 # ─── Logging Setup ────────────────────────────────────────────────────────────
 
@@ -134,6 +135,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─── Structured logging + Prometheus metrics ──────────────────────────────────
+
+mount_logging(app)
 
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
