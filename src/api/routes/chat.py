@@ -1,16 +1,45 @@
 """
 auralis/src/api/routes/chat.py
 ───────────────────────────────────
-API endpoints for Auralis — POST /chat and GET /session/{session_id}.
+Route handlers for POST /chat and GET /session/{session_id}.
+
+Authorization
+-------------
+  POST /chat               → requires role: sales_rep | admin
+  GET  /session/{id}       → requires role: admin
+
+POST /chat
+----------
+  Request  : ChatRequest(session_id, message)
+  Response : ChatResponse
+
+  Handler steps (per spec):
+    1. Load or create ConversationMemory for session_id.
+    2. Call run_graph(message, memory)  →  GraphState.
+    3. Call explain(state)              →  ExplanationResult; attach to response.
+    4. Persist session via save_session().
+    5. Build and return ChatResponse.
+
+GET /session/{session_id}
+--------------------------
+  Returns all persisted facts for the session from PostgreSQL as
+  SessionFactsResponse. Returns found=False (HTTP 200) if no session exists.
+
+OpenAPI docs
+------------
+  Both endpoints are fully documented and visible at /docs (Feature 14).
+  The Authorize button in Swagger UI accepts the JWT issued by POST /auth/token.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import Any
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path
 
+from src.analytics.tracker import log_event
+from src.api.auth import User, require_roles
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
@@ -27,88 +56,121 @@ logger = logging.getLogger("auralis.api.chat")
 router = APIRouter()
 
 
+# ─── POST /chat ───────────────────────────────────────────────────────────────
+
 @router.post(
     "/chat",
     response_model=ChatResponse,
-    summary="Process a customer utterance and generate a persona-targeted, citation-honest sales response.",
+    summary="Process a customer utterance and generate a sales response.",
     description=(
-        "Runs the customer utterance through parallel objection, sentiment, and persona classifiers. "
-        "Retrieves supporting evidence, selects a specialized negotiation strategy, generates a response, "
-        "and logs the decision audit trail."
+        "Runs the utterance through parallel objection / sentiment / persona "
+        "classifiers, retrieves supporting evidence from the knowledge base, "
+        "selects a negotiation strategy, generates a persona-targeted response, "
+        "and returns a full decision audit trail.\n\n"
+        "**Required role**: `sales_rep` or `admin`.\n\n"
+        "**Session memory** is loaded from PostgreSQL on each request and "
+        "persisted after the graph completes (Feature 10)."
     ),
+    responses={
+        400: {"description": "Invalid request — empty session_id or message."},
+        401: {"description": "Missing or invalid Bearer token."},
+        403: {"description": "Insufficient role. Requires sales_rep or admin."},
+        500: {"description": "Internal server error during graph execution."},
+    },
 )
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(
+    request: ChatRequest,
+    current_user: User = require_roles("sales_rep", "admin"),
+) -> ChatResponse:
     session_id = request.session_id.strip()
-    message = request.message.strip()
+    message    = request.message.strip()
 
     if not session_id:
         raise HTTPException(status_code=400, detail="`session_id` must be a non-empty string.")
     if not message:
         raise HTTPException(status_code=400, detail="`message` must be a non-empty string.")
 
+    logger.info(
+        "POST /chat | user=%s role=%s session=%s",
+        current_user.email, current_user.role, session_id,
+    )
+
     try:
-        # 1. Load or create ConversationMemory for the session_id
+        # ── Step 1: Load or create ConversationMemory ─────────────────────────
+        # from_session() queries PostgreSQL; returns a fresh instance if no
+        # prior session exists for this session_id (Feature 10).
         memory = await ConversationMemory.from_session(session_id)
 
-        # 2. Call run_graph(message, memory)
-        # Note: run_graph is a synchronous function that handles LLM call and classifier execution.
-        # We can run it directly as it handles thread pooling internally.
+        # ── Step 2: Run the LangGraph conversation graph ──────────────────────
+        # run_graph() is synchronous internally (ThreadPoolExecutor for
+        # classifiers, blocking LLM call). It also appends both the user turn
+        # and the assistant response to *memory* before returning.
         state = run_graph(message, memory)
 
-        # 3. Call explain(state) and map result
+        # ── Step 3: Build explainability audit trail (Feature 9) ─────────────
         exp_dict = explain(state)
         explanation = ExplanationResponse(
-            objection_reason=exp_dict["objection_reason"],
-            persona_reason=exp_dict["persona_reason"],
-            sentiment_reason=exp_dict["sentiment_reason"],
-            strategy_reason=exp_dict["strategy_reason"],
-            trigger_phrases=exp_dict["trigger_phrases"],
-            confidence_note=exp_dict["confidence_note"],
-            handoff_reason=exp_dict["handoff_reason"],
+            objection_reason = exp_dict["objection_reason"],
+            persona_reason   = exp_dict["persona_reason"],
+            sentiment_reason = exp_dict["sentiment_reason"],
+            strategy_reason  = exp_dict["strategy_reason"],
+            trigger_phrases  = exp_dict["trigger_phrases"],
+            confidence_note  = exp_dict["confidence_note"],
+            handoff_reason   = exp_dict["handoff_reason"],
         )
 
-        # 4. Persist session via save_session()
-        # Fetch up-to-date facts from memory
+        # ── Step 4: Persist session to PostgreSQL (Feature 10) ────────────────
         facts = memory.get_facts()
-        # Ensure we capture the final persona label from the graph state
-        persona_dict = state.get("persona") or {}
+        # Attach the final persona label so it is stored alongside other facts.
+        persona_dict  = state.get("persona") or {}
         persona_label = persona_dict.get("label")
         if persona_label:
             facts["persona_label"] = persona_label
 
         await save_session(session_id, facts)
 
-        # Map retrieved_docs
-        retrieved_docs_raw = state.get("retrieved_docs") or []
-        retrieved_docs = [
-            RetrievedDoc(
-                text=d.get("text", ""),
-                source_file=d.get("source_file", ""),
-                chunk_index=d.get("chunk_index", -1),
-                score=d.get("score", 0.0),
-            )
-            for d in retrieved_docs_raw
-        ]
-
-        # 5. Build and return ChatResponse
+        # ── Step 5: Build and return ChatResponse ─────────────────────────────
         objection_dict = state.get("objection") or {}
         sentiment_dict = state.get("sentiment") or {}
 
-        return ChatResponse(
-            response=state.get("response", ""),
-            objection_label=objection_dict.get("label", "neutral"),
-            confidence=state.get("confidence", 1.0),
-            sentiment=sentiment_dict.get("label", "neutral"),
-            persona=persona_dict.get("label", "Unknown"),
-            strategy=state.get("strategy", "discovery_questions"),
-            citations=state.get("citations", ""),
-            should_handoff=state.get("should_handoff", False),
-            explanation=explanation,
-            retrieved_docs=retrieved_docs,
-            session_id=session_id,
-            memory_context=memory.get_context_string(),
+        # Map raw retrieved-doc dicts to typed RetrievedDoc models.
+        retrieved_docs = [
+            RetrievedDoc(
+                text        = d.get("text", ""),
+                source_file = d.get("source_file", ""),
+                chunk_index = d.get("chunk_index", -1),
+                score       = d.get("score", 0.0),
+            )
+            for d in (state.get("retrieved_docs") or [])
+        ]
+
+        response = ChatResponse(
+            response        = state.get("response", ""),
+            objection_label = objection_dict.get("label", "neutral"),
+            confidence      = float(state.get("confidence", 1.0)),
+            sentiment       = sentiment_dict.get("label", "neutral"),
+            persona         = persona_dict.get("label", "Unknown"),
+            strategy        = state.get("strategy", "discovery_questions"),
+            citations       = state.get("citations", ""),
+            should_handoff  = bool(state.get("should_handoff", False)),
+            explanation     = explanation,
+            retrieved_docs  = retrieved_docs,
+            session_id      = session_id,
+            memory_context  = memory.get_context_string(),
         )
 
+        # ── Step 6: Log analytics event (fire-and-forget) ─────────────────────
+        # asyncio.create_task schedules the coroutine on the running event loop
+        # without blocking the response. A failure in log_event() is swallowed
+        # inside tracker.py so it can never degrade the /chat endpoint.
+        asyncio.create_task(
+            log_event(session_id=session_id, state=state, did_convert=False)
+        )
+
+        return response
+
+    except HTTPException:
+        raise  # Re-raise 400/401/403 unchanged
     except Exception as exc:
         logger.exception("Error in POST /chat for session %s", session_id)
         raise HTTPException(
@@ -117,40 +179,70 @@ async def chat(request: ChatRequest) -> ChatResponse:
         )
 
 
+# ─── GET /session/{session_id} ────────────────────────────────────────────────
+
 @router.get(
     "/session/{session_id}",
     response_model=SessionFactsResponse,
-    summary="Retrieve the extracted profile facts for a given customer session from PostgreSQL.",
+    summary="Retrieve the full persisted session facts for a customer from PostgreSQL.",
+    description=(
+        "Returns all extracted profile facts (company, persona, tools, objection "
+        "history, budget signal) for the given session_id.\n\n"
+        "**Required role**: `admin`.\n\n"
+        "Returns `found=false` (HTTP 200) rather than 404 if no session exists, "
+        "so callers can distinguish 'no data yet' from a genuine error."
+    ),
+    responses={
+        400: {"description": "Invalid request — empty session_id."},
+        401: {"description": "Missing or invalid Bearer token."},
+        403: {"description": "Insufficient role. Requires admin."},
+        500: {"description": "Internal server error during DB lookup."},
+    },
 )
 async def get_session_facts(
-    session_id: str = Path(..., description="The unique session identifier.")
+    session_id: str = Path(
+        ...,
+        description="The unique session identifier used in POST /chat.",
+        examples=["user_abc123", "conv_2024_001"],
+    ),
+    current_user: User = require_roles("admin"),
 ) -> SessionFactsResponse:
     session_id = session_id.strip()
     if not session_id:
         raise HTTPException(status_code=400, detail="`session_id` must be a non-empty string.")
 
+    logger.info(
+        "GET /session/%s | user=%s role=%s",
+        session_id, current_user.email, current_user.role,
+    )
+
     try:
         facts = await load_session(session_id)
+
         if not facts:
+            # Session not found — return a valid response with found=False
             return SessionFactsResponse(
-                session_id=session_id,
-                company_name=None,
-                persona_label=None,
-                tools_mentioned=[],
-                objections_raised=[],
-                budget_signal=None,
-                found=False,
+                session_id        = session_id,
+                company_name      = None,
+                persona_label     = None,
+                tools_mentioned   = [],
+                objections_raised = [],
+                budget_signal     = None,
+                found             = False,
             )
 
         return SessionFactsResponse(
-            session_id=session_id,
-            company_name=facts.get("company_name"),
-            persona_label=facts.get("persona_label"),
-            tools_mentioned=facts.get("tools_mentioned") or [],
-            objections_raised=facts.get("objections_raised") or [],
-            budget_signal=facts.get("budget_signal"),
-            found=True,
+            session_id        = session_id,
+            company_name      = facts.get("company_name"),
+            persona_label     = facts.get("persona_label"),
+            tools_mentioned   = facts.get("tools_mentioned") or [],
+            objections_raised = facts.get("objections_raised") or [],
+            budget_signal     = facts.get("budget_signal"),
+            found             = True,
         )
+
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("Error in GET /session/%s", session_id)
         raise HTTPException(

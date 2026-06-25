@@ -129,3 +129,67 @@ class SessionFactsResponse(BaseModel):
 class HealthResponse(BaseModel):
     status:  str = "ok"
     version: str = "1.0.0"
+
+
+# ─── Auth ────────────────────────────────────────────────────────────────────
+
+class TokenResponse(BaseModel):
+    """Response body for POST /auth/token."""
+    access_token: str = Field(description="Signed HS256 JWT. Include in Authorization: Bearer <token>.")
+    token_type:   str = Field(default="bearer", description="Always \"bearer\".")
+
+
+class UserResponse(BaseModel):
+    """Public user representation (no password)."""
+    id:    str = Field(description="UUID primary key from the users table.")
+    email: str = Field(description="User email address.")
+    role:  str = Field(description="User role: admin | sales_rep | viewer.")
+
+
+# ─── Analytics ────────────────────────────────────────────────────────────────
+
+class SentimentDaySnapshot(BaseModel):
+    """Daily sentiment counts for one calendar day."""
+    date:     str = Field(description="ISO date string, e.g. '2024-06-01'.")
+    positive: int = Field(default=0)
+    neutral:  int = Field(default=0)
+    negative: int = Field(default=0)
+
+
+class DashboardResponse(BaseModel):
+    """Aggregated analytics snapshot returned by GET /analytics/dashboard."""
+
+    total_sessions:         int   = Field(description="Total distinct sessions recorded.")
+    conversion_rate:        float = Field(
+        ge=0.0, le=1.0,
+        description="Fraction of sessions with at least one conversion event (0–1).",
+    )
+    objection_distribution: dict[str, int] = Field(
+        default_factory=dict,
+        description="Objection label → total event count.",
+    )
+    sentiment_trend:        list[SentimentDaySnapshot] = Field(
+        default_factory=list,
+        description="Daily sentiment counts for the last 30 days, newest-first.",
+    )
+    persona_distribution:   dict[str, int] = Field(
+        default_factory=dict,
+        description="Persona label → total event count.",
+    )
+    avg_confidence:         float = Field(
+        ge=0.0, le=1.0,
+        description="Mean objection classifier confidence across all events (0–1).",
+    )
+
+    model_config = {"json_schema_extra": {
+        "examples": [{
+            "total_sessions":         42,
+            "conversion_rate":        0.31,
+            "objection_distribution": {"price": 18, "trust": 11, "neutral": 8, "timing": 5},
+            "sentiment_trend": [
+                {"date": "2024-06-25", "positive": 5, "neutral": 12, "negative": 3}
+            ],
+            "persona_distribution":   {"CEO": 15, "CTO": 12, "Founder": 9, "Unknown": 6},
+            "avg_confidence":         0.84,
+        }]
+    }}

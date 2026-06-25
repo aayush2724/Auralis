@@ -363,6 +363,7 @@ def generate_node(state: GraphState) -> dict[str, Any]:
         "[generate_node] strategy=%s | label=%s | persona=%s",
         state.get("strategy"),
         (state.get("objection") or {}).get("label", "?"),
+        persona_label,
     )
 
     # Build the specialised user-turn prompt via the strategy router

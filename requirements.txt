@@ -16,6 +16,9 @@ pandas
 # API
 fastapi
 uvicorn[standard]
+python-multipart          # required for OAuth2PasswordRequestForm (form body parsing)
+python-jose[cryptography] # JWT signing / verification
+passlib[bcrypt]           # bcrypt password hashing
 
 # Database
 sqlalchemy

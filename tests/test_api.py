@@ -13,8 +13,21 @@ import pytest
 from fastapi.testclient import TestClient
 
 # Mock the database init so we don't connect to a real PostgreSQL on import/lifespan startup
-with patch("src.api.main.init_db", new_callable=AsyncMock) as mock_startup_init:
+with patch("src.api.main.init_db", new_callable=AsyncMock) as mock_startup_init, \
+     patch("src.api.main.init_users_db", new_callable=AsyncMock), \
+     patch("src.api.main.seed_admin", new_callable=AsyncMock), \
+     patch("src.api.main.init_analytics_db", new_callable=AsyncMock):
     from src.api.main import app
+
+# ─── Auth override ──────────────────────────────────────────────────────────────────
+# Replace get_current_user with a no-op that returns a fake admin so all
+# existing tests pass without a real JWT or database.
+
+from src.api.auth import User, get_current_user
+
+_FAKE_ADMIN = User(id="00000000-0000-0000-0000-000000000001", email="admin@test.ai", role="admin")
+
+app.dependency_overrides[get_current_user] = lambda: _FAKE_ADMIN
 
 client = TestClient(app)
 
@@ -128,8 +141,9 @@ class TestPostChatEndpoint:
     @patch("src.api.routes.chat.run_graph")
     @patch("src.api.routes.chat.explain")
     @patch("src.api.routes.chat.save_session", new_callable=AsyncMock)
+    @patch("src.api.routes.chat.log_event", new_callable=AsyncMock)
     def test_successful_chat_turn(
-        self, mock_save, mock_explain, mock_run_graph, mock_from_session
+        self, mock_log_event, mock_save, mock_explain, mock_run_graph, mock_from_session
     ):
         # Mock memory
         mock_mem = MagicMock()
