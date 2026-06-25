@@ -1,6 +1,7 @@
 # Core LLM + RAG
 langchain
 langchain-community
+langchain-openai
 langgraph
 openai
 
