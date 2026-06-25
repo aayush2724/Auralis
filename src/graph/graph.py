@@ -240,7 +240,7 @@ def strategy_node(state: GraphState) -> dict[str, Any]:
 # Each persona gets a distinct system prompt that re-frames language, metrics,
 # and structure for that buyer's worldview before the strategy prompt runs.
 
-_PERSONA_TEMPLATES: dict[str, str] = {
+PERSONA_TEMPLATES: dict[str, str] = {
     "CEO": """\
 You are Auralis, an elite AI sales assistant optimised for C-suite conversations.
 
@@ -338,7 +338,7 @@ Shared guidelines (apply always):
 
 def _get_system_prompt(persona_label: str) -> str:
     """Return the persona-specific system prompt + shared guidelines."""
-    template = _PERSONA_TEMPLATES.get(persona_label, _PERSONA_TEMPLATES["Unknown"])
+    template = PERSONA_TEMPLATES.get(persona_label, PERSONA_TEMPLATES["Unknown"])
     return template + _SHARED_GUIDELINES
 
 

@@ -22,12 +22,17 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any      
 
+# pyrefly: ignore [missing-import]
 import fitz  # PyMuPDF
+# pyrefly: ignore [missing-import]
 import pandas as pd
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+# pyrefly: ignore [missing-import]
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+# pyrefly: ignore [missing-import]
 from langchain_community.vectorstores import FAISS
+# pyrefly: ignore [missing-import]
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
