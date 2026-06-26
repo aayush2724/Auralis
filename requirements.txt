@@ -45,3 +45,4 @@ tiktoken
 httpx
 structlog
 prometheus-client
+prometheus-fastapi-instrumentator

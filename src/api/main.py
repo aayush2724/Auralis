@@ -38,6 +38,9 @@ from src.api.schemas import HealthResponse
 from src.memory.db import init_db
 from src.utils.logger import mount_logging
 
+# pyrefly: ignore [missing-import]
+from prometheus_fastapi_instrumentator import Instrumentator
+
 # ─── Logging Setup ────────────────────────────────────────────────────────────
 
 logging.basicConfig(
@@ -139,6 +142,9 @@ app.add_middleware(
 # ─── Structured logging + Prometheus metrics ──────────────────────────────────
 
 mount_logging(app)
+
+# ─── Prometheus auto-instrumentation (adds /metrics via prometheus-fastapi-instrumentator)
+Instrumentator().instrument(app).expose(app)
 
 
 # ─── Health Check ─────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 """
 auralis/src/utils/logger.py
-────────────────────────────
+───────────────────────────
 Structured JSON logging, request middleware, and Prometheus metrics for Auralis.
 
 Provides:
@@ -16,7 +16,7 @@ import logging
 import sys
 import time
 import traceback
-from typing import Any
+from typing import Any, TypedDict
 
 import structlog
 from fastapi import FastAPI, Request, Response
@@ -52,54 +52,40 @@ def setup_structlog() -> None:
 
 # ─── Structured log emitter ──────────────────────────────────────────────────
 
-_structlog_logger: structlog.stdlib.BoundLogger | None = None
-
-
-def _get_logger() -> structlog.stdlib.BoundLogger:
-    global _structlog_logger
-    if _structlog_logger is None:
-        setup_structlog()
-        _structlog_logger = structlog.get_logger("auralis.request")
-    return _structlog_logger
-
-
-def log_request(
-    *,
-    session_id: str = "",
-    user_input_length: int = 0,
-    objection_label: str = "",
-    confidence: float = 0.0,
-    sentiment: str = "",
-    persona: str = "",
-    strategy: str = "",
-    response_length: int = 0,
-    latency_ms: float = 0.0,
-    handoff: bool = False,
-    method: str = "",
-    path: str = "",
-    status_code: int = 200,
-) -> None:
+def get_logger(name: str) -> structlog.BoundLogger:
     """
-    Emit a structured JSON log line for a completed request.
+    Return a named structlog BoundLogger.
 
-    All fields map directly to the log schema required for observability.
+    Usage::
+
+        logger = get_logger(__name__)
+        logger.info("something happened", key="value")
     """
-    _get_logger().info(
-        "request",
-        method=method,
-        path=path,
-        status_code=status_code,
-        session_id=session_id,
-        user_input_length=user_input_length,
-        objection_label=objection_label,
-        confidence=confidence,
-        sentiment=sentiment,
-        persona=persona,
-        strategy=strategy,
-        response_length=response_length,
-        latency_ms=round(latency_ms, 2),
-        handoff=handoff,
-    )
+    setup_structlog()
+    return structlog.get_logger(name)
+
+
+# ─── RequestLog schema ───────────────────────────────────────────────────────
+
+class RequestLog(TypedDict, total=False):
+    """Structured fields emitted for every completed /chat request."""
+    session_id:          str
+    user_input_length:   int
+    objection_label:     str
+    objection_confidence: float
+    sentiment_label:     str
+    persona_label:       str
+    strategy_chosen:     str
+    response_length:     int
+    latency_ms:          float
+    should_handoff:      bool
+    handoff_trigger:     str | None
+
+
+def log_request(data: RequestLog) -> None:
+    """Emit a structured JSON log line for a completed /chat request."""
+    logger = get_logger("auralis.request")
+    logger.info("chat_request", **data)
 
 
 def log_exception(
@@ -111,7 +97,8 @@ def log_exception(
     traceback_str: str = "",
 ) -> None:
     """Emit a structured JSON log line for an unhandled exception."""
-    _get_logger().error(
+    logger = get_logger("auralis.request")
+    logger.error(
         "request_exception",
         method=method,
         path=path,
@@ -140,10 +127,17 @@ auralis_latency_seconds = Histogram(
     registry=_registry,
 )
 
-auralis_handoff_total = Counter(
-    "auralis_handoff_total",
+auralis_handoffs_total = Counter(
+    "auralis_handoffs_total",
     "Total handoff escalations",
     ["trigger"],
+    registry=_registry,
+)
+
+auralis_objections_total = Counter(
+    "auralis_objections_total",
+    "Total objection classifications",
+    ["objection_label"],
     registry=_registry,
 )
 
@@ -209,21 +203,19 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         elapsed_ms = (time.perf_counter() - start) * 1000
         meta = _pop_request_metadata(method, path)
 
-        log_request(
-            method=method,
-            path=path,
-            status_code=response.status_code,
+        log_request(RequestLog(
             session_id=meta.get("session_id", ""),
             user_input_length=meta.get("user_input_length", 0),
             objection_label=meta.get("objection_label", ""),
-            confidence=meta.get("confidence", 0.0),
-            sentiment=meta.get("sentiment", ""),
-            persona=meta.get("persona", ""),
-            strategy=meta.get("strategy", ""),
+            objection_confidence=meta.get("confidence", 0.0),
+            sentiment_label=meta.get("sentiment", ""),
+            persona_label=meta.get("persona", ""),
+            strategy_chosen=meta.get("strategy", ""),
             response_length=meta.get("response_length", 0),
-            latency_ms=elapsed_ms,
-            handoff=meta.get("handoff", False),
-        )
+            latency_ms=round(elapsed_ms, 2),
+            should_handoff=meta.get("handoff", False),
+            handoff_trigger=meta.get("handoff_trigger"),
+        ))
 
         # Prometheus counters
         objection_label = meta.get("objection_label", "")
@@ -237,7 +229,7 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         )
         if meta.get("handoff"):
             trigger = meta.get("handoff_trigger", "unknown")
-            auralis_handoff_total.labels(trigger=trigger).inc()
+            auralis_handoffs_total.labels(trigger=trigger).inc()
 
         return response
 

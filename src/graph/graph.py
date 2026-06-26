@@ -40,6 +40,7 @@ from src.classifier.sentiment import SentimentResult, analyze
 from src.handoff.handoff import evaluate_handoff
 from src.memory.memory import ConversationMemory
 from src.rag.retriever import format_citations, retrieve
+from src.utils.logger import auralis_handoffs_total, auralis_objections_total
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -155,6 +156,9 @@ def classify_node(state: GraphState) -> dict[str, Any]:
         objection["label"], objection["confidence"],
         sentiment["label"], persona["label"],
     )
+
+    # Increment Prometheus objection counter
+    auralis_objections_total.labels(objection_label=objection["label"]).inc()
 
     return {
         "objection":  objection,
@@ -390,6 +394,9 @@ def generate_node(state: GraphState) -> dict[str, Any]:
 
 def handoff_node(state: GraphState) -> dict:
     decision = evaluate_handoff(state, state['user_input'])
+    if decision["should_handoff"]:
+        trigger = decision["trigger"].value if decision["trigger"] else "unknown"
+        auralis_handoffs_total.labels(trigger=trigger).inc()
     return {
         'should_handoff': decision['should_handoff'],
         'handoff_trigger': decision['trigger'].value if decision['trigger'] else None,
