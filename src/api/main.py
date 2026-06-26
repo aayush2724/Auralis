@@ -20,7 +20,6 @@ Auto-generated OpenAPI docs (Feature 14)
 
 from __future__ import annotations
 
-import logging
 import time
 from contextlib import asynccontextmanager
 

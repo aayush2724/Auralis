@@ -146,7 +146,7 @@ def detect(text: str) -> PersonaResult:
     # Exclude "Unknown" from candidate labels — it will be applied as a
     # threshold fallback rather than letting the model "choose" unknown.
     candidate_personas = [p for p in PERSONAS if p != "Unknown"]
-    hypotheses        = [_HYPOTHESES[p] for p in candidate_personas]
+    [_HYPOTHESES[p] for p in candidate_personas]
 
     result = clf(
         text,

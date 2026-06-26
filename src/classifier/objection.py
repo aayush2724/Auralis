@@ -247,7 +247,7 @@ def _main() -> None:
     print(f"  Label      : {result['label']}")
     print(f"  Confidence : {result['confidence']:.1%}")
     print(f"  Triggers   : {result['triggers']}")
-    print(f"\n  All scores:")
+    print("\n  All scores:")
     for lbl, score in sorted(result["all_scores"].items(), key=lambda x: -x[1]):
         bar = "█" * int(score * 30)
         print(f"    {lbl:<16} {score:.4f}  {bar}")
