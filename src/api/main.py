@@ -166,7 +166,7 @@ app.include_router(auth_router)
 # Protected — role guards are declared per-endpoint in the route handlers
 app.include_router(chat_router, tags=["Conversation & Memory"])
 app.include_router(ab_router, tags=["A/B Testing"])
-app.include_router(kb_router, tags=["Knowledge Base"])
+app.include_router(kb_router, prefix="/kb", tags=["Knowledge Base"])
 app.include_router(analytics_router)
 
 

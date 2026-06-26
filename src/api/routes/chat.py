@@ -119,7 +119,7 @@ async def chat(
                 "strategy":        "static_pitch",
                 "citations":       "",
                 "should_handoff":  False,
-                "handoff_trigger": "",
+                "handoff_trigger": None,
                 "handoff_message": "",
                 "retrieved_docs":  [],
                 "variant":         "STATIC",
@@ -150,6 +150,7 @@ async def chat(
                 strategy        = "static_pitch",
                 citations       = "",
                 should_handoff  = False,
+                handoff_trigger = None,
                 explanation     = explanation,
                 retrieved_docs  = [],
                 session_id      = session_id,
@@ -208,6 +209,7 @@ async def chat(
                 strategy        = state.get("strategy", "discovery_questions"),
                 citations       = state.get("citations", ""),
                 should_handoff  = do_handoff,
+                handoff_trigger = state.get("handoff_trigger"),
                 explanation     = explanation,
                 retrieved_docs  = retrieved_docs,
                 session_id      = session_id,
@@ -218,6 +220,13 @@ async def chat(
         asyncio.create_task(
             log_event(session_id=session_id, state=state, did_convert=False)
         )
+
+        # ── Log handoff event if triggered ────────────────────────────────────
+        if do_handoff:
+            logger.info(
+                "Handoff triggered | session=%s trigger=%s",
+                session_id, state.get("handoff_trigger", "unknown"),
+            )
 
         # ── Emit structured log metadata for middleware ──────────────────────
         set_request_metadata(

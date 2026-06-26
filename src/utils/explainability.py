@@ -1,289 +1,123 @@
-"""
-auralis/src/utils/explainability.py
-─────────────────────────────────────
-Explainability layer for Auralis — Feature 9.
-
-Builds a human-readable audit trail of every model decision from the
-GraphState, so sales reps (and QA engineers) can understand *why* Auralis
-chose a particular strategy and response tone.
-
-Public API
-──────────
-  explain(state: GraphState) -> ExplanationResult
-
-ExplanationResult TypedDict fields
-────────────────────────────────────
-  objection_reason  : str          why this objection class was chosen
-  persona_reason    : str          why this persona was identified
-  sentiment_reason  : str          what the detected tone implies
-  strategy_reason   : str          why this strategy was selected
-  trigger_phrases   : list[str]    raw phrases that fired the objection class
-  confidence_note   : str          warning if confidence is low
-  handoff_reason    : str | None   why handoff was triggered (if applicable)
-"""
-
 from __future__ import annotations
+from typing import TypedDict, Any
 
-from typing import TypedDict
-
-from src.graph.graph import GraphState
-
-# ─── Strategy explanations ────────────────────────────────────────────────────
-# Describes the (objection × persona) → strategy decision in plain English.
-
-_STRATEGY_EXPLANATIONS: dict[str, dict[str, str]] = {
-    "price": {
-        "CEO":      "price + CEO = ROI business case is more persuasive than discounting; executives respond to financial impact, not feature lists.",
-        "Founder":  "price + Founder = ROI and unit economics framing; founders need to see payback period, not just list price.",
-        "CTO":      "price + CTO = value reframe with architecture context; CTOs justify cost through technical capability, not headline price.",
-        "_default": "price objection requires reframing cost as investment; generic value reframe applied.",
-    },
-    "trust": {
-        "CTO":       "price + CTO = technical proof (benchmarks, SLAs, security docs) is more credible to engineers than testimonials.",
-        "Developer": "trust + Developer = technical proof including API uptime, docs quality, and open-source contributions.",
-        "_default":  "trust objection requires social proof (case studies, references, guarantees); applied social proof strategy.",
-    },
-    "timing": {
-        "CEO":      "timing + CEO = strategic timing framing; connecting delay cost to board-level metrics and planning cycles.",
-        "Founder":  "timing + Founder = market-window urgency; first-mover advantage and competitive risk of waiting.",
-        "_default": "timing objection requires urgency creation with a low-friction next step to fit their current window.",
-    },
-    "competitor": {
-        "Developer":  "competitor + Developer = technical differentiation; API quality, SDK maturity, and developer experience are the battleground.",
-        "CTO":        "competitor + CTO = technical differentiation; architecture, scalability, and integration depth.",
-        "_default":   "competitor objection requires respectful differentiation and a parallel pilot proposal.",
-    },
-    "fit": {
-        "Product_Manager": "fit + PM = use-case mapping; PMs respond to feature-to-outcome alignment on their specific roadmap.",
-        "_default":        "fit objection requires discovery questions to surface the real gap before proposing solutions.",
-    },
-    "buying_signal": {
-        "_default": "buying signal detected; applied closing accelerator to remove friction and accelerate commitment.",
-    },
-    "neutral": {
-        "_default": "no clear objection detected; applied discovery questions to surface underlying concerns.",
-    },
+PERSONA_PITCH_ANGLES = {
+    "CEO":             "Lead with ROI and operational cost savings.",
+    "CTO":             "Lead with architecture, scalability, and API quality.",
+    "Developer":       "Lead with REST APIs, SDKs, and developer experience.",
+    "Product_Manager": "Lead with workflow integration and measurable user outcomes.",
+    "Founder":         "Lead with speed-to-market and competitive moat.",
+    "Unknown":         "Lead with a broad value overview and ask discovery questions.",
 }
 
-# ─── Sentiment explanations ────────────────────────────────────────────────────
-
-_SENTIMENT_EXPLANATIONS: dict[str, str] = {
-    "positive":  "Customer appears engaged and receptive. {tone} Energy-matching tone applied to maintain momentum.",
-    "neutral":   "Customer tone is measured and factual. {tone} Professional, informative tone applied.",
-    "negative":  "Customer appears frustrated or resistant. {tone} Empathetic, slow-paced tone applied; response prioritises acknowledgement over persuasion.",
-}
-
-# ─── Confidence thresholds ────────────────────────────────────────────────────
-
-_LOW_CONFIDENCE  = 0.50
-_VERY_LOW_CONF   = 0.35
-
-
-# ─── TypedDict ────────────────────────────────────────────────────────────────
-
-class ExplanationResult(TypedDict):
+class ExplanationResult(TypedDict, total=False):
     """Human-readable audit trail of every model decision in the graph."""
-    objection_reason: str          # why this objection class was chosen
-    persona_reason:   str          # why this persona was identified
-    sentiment_reason: str          # what the detected tone implies
-    strategy_reason:  str          # why this strategy was selected
-    trigger_phrases:  list[str]    # raw phrases from ObjectionResult.triggers
-    confidence_note:  str          # warning if confidence is low / empty if fine
-    handoff_reason:   str | None   # why handoff was triggered (None if not triggered)
+    objection_reason: str
+    persona_reason: str
+    sentiment_reason: str
+    strategy_reason: str
+    trigger_phrases: list[str]
+    confidence_note: str
+    handoff_reason: str | None
 
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
-def _objection_reason(objection: dict) -> str:
+def explain(state: dict) -> ExplanationResult:
     """
-    Build a sentence explaining why the objection classifier chose this label.
-
-    Example
-    -------
-    'Detected price objection (confidence 94%) because the customer said:
-     ["too expensive", "out of budget"].'
+    Build a human-readable explanation of every model decision from the GraphState.
     """
-    label      = objection.get("label", "unknown")
-    confidence = objection.get("confidence", 0.0)
-    triggers   = objection.get("triggers", [])
+    # Safe extraction of nested objects or direct keys
+    objection_dict = state.get("objection") or {}
+    label = objection_dict.get("label") or state.get("objection label") or "neutral"
+    conf = objection_dict.get("confidence") or state.get("objection confidence")
+    if conf is None:
+        conf = state.get("confidence") or 0.0
+    triggers = objection_dict.get("triggers") or state.get("objection triggers list") or []
 
-    trigger_str = (
-        f': ["{chr(34).join(f"{t}" for t in triggers[:5])}"]'
-        if triggers
-        else " with no explicit trigger phrases captured"
-    )
-
-    # Format trigger list cleanly
-    if triggers:
-        quoted = ", ".join(f'"{t}"' for t in triggers[:5])
-        trigger_str = f": [{quoted}]"
+    # 1. objection_reason
+    if not triggers:
+        objection_reason = "Pattern matched from overall message tone (no explicit trigger phrases captured)."
     else:
-        trigger_str = " with no explicit trigger phrases captured"
+        objection_reason = f"Detected {label} objection (confidence {conf:.0%}) because the prospect said: {triggers}."
 
-    return (
-        f'Detected {label} objection (confidence {confidence:.0%}) '
-        f'because the customer said{trigger_str}.'
-    )
+    # 2. persona_reason
+    persona_dict = state.get("persona") or {}
+    persona_label = persona_dict.get("label") or state.get("persona label") or "Unknown"
+    persona_conf = persona_dict.get("confidence") or state.get("persona confidence") or 0.0
+    pitch_angle = PERSONA_PITCH_ANGLES.get(persona_label, PERSONA_PITCH_ANGLES["Unknown"])
+    
+    persona_reason = f"Identified {persona_label} persona (confidence {persona_conf:.0%}). Pitch angle applied: {pitch_angle}."
 
+    # 3. sentiment_reason
+    sentiment_dict = state.get("sentiment") or {}
+    sentiment_label = sentiment_dict.get("label") or state.get("sentiment label") or "neutral"
+    sentiment_score = sentiment_dict.get("score") or state.get("sentiment score") or 0.0
+    tone_instruction = sentiment_dict.get("tone_instruction") or state.get("tone_instruction") or "Stay professional."
+    
+    sentiment_reason = f"Sentiment detected as {sentiment_label} (score {sentiment_score:.0%}). Tone instruction injected: {tone_instruction}."
 
-def _persona_reason(persona: dict, objection: dict) -> str:
-    """
-    Build a sentence explaining why this persona was identified.
+    # 4. strategy_reason
+    strategy = state.get("strategy") or state.get("strategy name chosen") or "discovery_questions"
+    
+    # Rationale per strategy combo
+    RATIONALES = {
+        ("price", "CTO"): "ROI framing is more persuasive than discounting for technical buyers.",
+        ("price", "CEO"): "CEOs need clear ROI framing and business case justifications to approve spend.",
+        ("price", "Founder"): "Founders want to understand the ROI and speed to market payback.",
+        ("trust", "CTO"): "CTOs require concrete technical proof like SOC2 compliance or architectural blueprints.",
+        ("trust", "Developer"): "Developers need technical proof including open source transparency and developer documentation.",
+        ("timing", "CEO"): "Strategic timing helps CEOs coordinate adoption with broader company roadmap goals.",
+        ("competitor", "Developer"): "Developers evaluate technical differentiation such as API design and SDK support.",
+        ("competitor", "CEO"): "Executive buyers need switching cost justification first.",
+        ("fit", "Product_Manager"): "Product Managers respond well to use-case mapping that targets specific workflow friction.",
+        ("buying_signal", "Unknown"): "Applied closing accelerator to capitalize on buying signals and streamline signup.",
+    }
+    
+    rationale = RATIONALES.get((label, persona_label))
+    if not rationale:
+        if label == "buying_signal":
+            rationale = "Applied closing accelerator to capitalize on buying signals and streamline signup."
+        else:
+            rationale = "Our strategy focuses on resolving the specific concern with the most relevant role-based value."
+            
+    strategy_reason = f"Applied {strategy} strategy because objection was {label} and persona was {persona_label}. {rationale}"
 
-    Example
-    -------
-    'Identified CTO (confidence 82%) because of technical framing:
-     ["integration", "architecture"].'
-    """
-    label      = persona.get("label", "Unknown")
-    confidence = persona.get("confidence", 0.0)
-
-    # Surface objection trigger phrases as evidence for persona, since they
-    # often contain role-specific vocabulary ("integration", "API", "board").
-    triggers   = objection.get("triggers", [])
-
-    if triggers:
-        quoted = ", ".join(f'"{t}"' for t in triggers[:4])
-        phrase_str = f" because of domain-specific framing: [{quoted}]"
+    # 5. confidence_note
+    if conf < 0.5:
+        confidence_note = 'Low confidence — response may be less targeted.'
+    elif conf < 0.75:
+        confidence_note = 'Moderate confidence — strategy is a best match.'
     else:
-        phrase_str = " based on the overall linguistic pattern of the message"
+        confidence_note = 'High confidence — strategy is well-matched.'
 
-    pitch = persona.get("pitch_angle", "")
-    pitch_note = f" Recommended pitch angle: {pitch}" if pitch else ""
+    # 6. trigger_phrases
+    trigger_phrases = list(triggers)
 
-    return (
-        f'Identified {label} persona (confidence {confidence:.0%})'
-        f'{phrase_str}.{pitch_note}'
-    )
-
-
-def _sentiment_reason(sentiment: dict) -> str:
-    """
-    Build a sentence explaining what the detected sentiment implies.
-
-    Example
-    -------
-    'Customer appears frustrated because sentiment score is 0.91 negative.
-     Empathetic tone applied.'
-    """
-    label = sentiment.get("label", "neutral")
-    tone  = sentiment.get("tone_instruction", "")
-
-    template = _SENTIMENT_EXPLANATIONS.get(label, _SENTIMENT_EXPLANATIONS["neutral"])
-    return template.format(tone=f'Tone instruction: "{tone}".' if tone else "")
-
-
-def _strategy_reason(objection: dict, persona: dict, strategy: str) -> str:
-    """
-    Build a sentence explaining why this strategy was chosen for
-    the (objection × persona) combination.
-
-    Example
-    -------
-    'Applied trust strategy because price + CTO = ROI framing is more
-     effective than discounting.'
-    """
-    obj_label     = objection.get("label", "neutral")
-    persona_label = persona.get("label", "Unknown")
-
-    persona_map    = _STRATEGY_EXPLANATIONS.get(obj_label, {})
-    explanation    = (
-        persona_map.get(persona_label)
-        or persona_map.get("_default")
-        or f"Applied {strategy} for {obj_label} objection."
-    )
-
-    return f'Applied {strategy} because {explanation}'
-
-
-def _confidence_note(objection: dict, sentiment: dict) -> str:
-    """Return a warning string if any score is below safe thresholds."""
-    obj_conf = objection.get("confidence", 1.0)
-    notes: list[str] = []
-
-    if obj_conf < _VERY_LOW_CONF:
-        notes.append(
-            f"⚠ Very low objection confidence ({obj_conf:.0%}) — "
-            "classification is uncertain. Human review recommended."
-        )
-    elif obj_conf < _LOW_CONFIDENCE:
-        notes.append(
-            f"⚡ Low objection confidence ({obj_conf:.0%}) — "
-            "response may not be optimally targeted."
-        )
-
-    s_label = sentiment.get("label", "neutral")
-    s_score = sentiment.get("score", 0.0)
-    if s_label == "negative" and s_score > 0.85:
-        notes.append(
-            f"⚠ High-frustration signal (negative sentiment score {s_score:.0%}) — "
-            "escalation may be appropriate."
-        )
-
-    return " ".join(notes)
-
-
-def _handoff_reason(state: GraphState) -> str | None:
-    """Return a human-readable handoff explanation, or None."""
-    if not state.get("should_handoff"):
-        return None
-
-    trigger = state.get("handoff_trigger", "")
-
-    if trigger == "USER_REQUESTED":
-        return "Human handoff triggered because the customer explicitly requested to speak with a human agent."
-
-    if trigger == "ANGRY_CUSTOMER":
-        sentiment = state.get("sentiment") or {}
-        s_score = sentiment.get("score", 0.0)
-        return f"Human handoff triggered due to high frustration signal ({s_score:.0%} negative sentiment)."
-
-    if trigger == "LOW_CONFIDENCE":
-        obj_conf = (state.get("objection") or {}).get("confidence", 1.0)
-        return f"Human handoff triggered due to low classifier confidence ({obj_conf:.0%})."
-
-    # Fallback: compute reasons from raw state (legacy path)
-    obj_conf  = (state.get("objection") or {}).get("confidence", 1.0)
-    sentiment = state.get("sentiment") or {}
-    s_label   = sentiment.get("label", "")
-    s_score   = sentiment.get("score", 0.0)
-
-    reasons: list[str] = []
-    if obj_conf < 0.40:
-        reasons.append(f"low classifier confidence ({obj_conf:.0%})")
-    if s_label == "negative" and s_score > 0.85:
-        reasons.append(f"high frustration signal ({s_score:.0%} negative sentiment)")
-
-    if reasons:
-        return f"Human handoff triggered due to: {' and '.join(reasons)}."
-    return "Human handoff triggered (threshold condition met)."
-
-
-# ─── Public API ───────────────────────────────────────────────────────────────
-
-def explain(state: GraphState) -> ExplanationResult:
-    """
-    Build a human-readable audit trail for every model decision in the graph.
-
-    Parameters
-    ----------
-    state : Completed GraphState (after all nodes have run).
-
-    Returns
-    -------
-    ExplanationResult with a plain-English explanation for each decision.
-    """
-    objection = state.get("objection") or {}
-    sentiment = state.get("sentiment") or {}
-    persona   = state.get("persona")   or {}
-    strategy  = state.get("strategy")  or "unknown"
+    # 7. handoff_reason
+    handoff_reason = None
+    if state.get("should_handoff"):
+        trigger = state.get("handoff_trigger", "")
+        if trigger == "USER_REQUESTED":
+            handoff_reason = "Human handoff triggered because the customer explicitly requested to speak with a human agent."
+        elif trigger == "ANGRY_CUSTOMER":
+            handoff_reason = f"Human handoff triggered due to high frustration signal ({sentiment_score:.0%} negative sentiment)."
+        elif trigger == "LOW_CONFIDENCE":
+            handoff_reason = f"Human handoff triggered due to low classifier confidence ({conf:.0%})."
+        else:
+            reasons = []
+            if conf < 0.40:
+                reasons.append(f"low classifier confidence ({conf:.0%})")
+            if sentiment_label == "negative" and sentiment_score > 0.85:
+                reasons.append(f"high frustration signal ({sentiment_score:.0%} negative sentiment)")
+            if reasons:
+                handoff_reason = f"Human handoff triggered due to: {' and '.join(reasons)}."
+            else:
+                handoff_reason = "Human handoff triggered (threshold condition met)."
 
     return ExplanationResult(
-        objection_reason = _objection_reason(objection),
-        persona_reason   = _persona_reason(persona, objection),
-        sentiment_reason = _sentiment_reason(sentiment),
-        strategy_reason  = _strategy_reason(objection, persona, strategy),
-        trigger_phrases  = list(objection.get("triggers", [])),
-        confidence_note  = _confidence_note(objection, sentiment),
-        handoff_reason   = _handoff_reason(state),
+        objection_reason=objection_reason,
+        persona_reason=persona_reason,
+        sentiment_reason=sentiment_reason,
+        strategy_reason=strategy_reason,
+        trigger_phrases=trigger_phrases,
+        confidence_note=confidence_note,
+        handoff_reason=handoff_reason
     )

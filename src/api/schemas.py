@@ -75,7 +75,8 @@ class ChatResponse(BaseModel):
     persona:         str   = Field(description="Detected buyer persona.")
     strategy:        str   = Field(description="Strategy module that built the response.")
     citations:       str   = Field(description="Numbered source citations (Feature 11).")
-    should_handoff:  bool  = Field(description="True if human escalation is recommended (Feature 7).")
+    should_handoff:  bool         = Field(description="True if human escalation is recommended (Feature 7).")
+    handoff_trigger: str | None   = Field(default=None, description="Handoff trigger reason if escalated.")
 
     # Rich detail
     explanation:     ExplanationResponse      = Field(description="Decision audit trail (Feature 9).")
@@ -201,12 +202,14 @@ class KBIngestResponse(BaseModel):
     """Response for POST /kb/ingest."""
     files_processed: int   = Field(description="Number of files successfully ingested.")
     chunks_added:    int   = Field(description="Number of text chunks added to the FAISS index.")
+    upload_dir:      str   = Field(description="Path to the directory where uploaded files were saved.")
     index_updated:   bool  = Field(description="True if the FAISS index was updated.")
 
     model_config = {"json_schema_extra": {
         "examples": [{
             "files_processed": 3,
             "chunks_added":    47,
+            "upload_dir":      "data/uploads/20240625T120000Z",
             "index_updated":   True,
         }]
     }}
@@ -215,5 +218,6 @@ class KBIngestResponse(BaseModel):
 class KBStatsResponse(BaseModel):
     """Response for GET /kb/stats."""
     total_documents: int          = Field(description="Number of source files in the vectorstore.")
-    total_chunks:   int          = Field(description="Number of text chunks in the FAISS index.")
-    last_updated:   str | None   = Field(description="ISO timestamp of the last ingestion, or None.")
+    total_chunks:   int           = Field(description="Number of text chunks in the FAISS index.")
+    index_path:     str           = Field(description="Filesystem path to the FAISS index.")
+    last_updated:   str | None    = Field(description="ISO timestamp of the last ingestion, or None.")

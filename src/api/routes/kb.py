@@ -1,6 +1,6 @@
 """
 auralis/src/api/routes/kb.py
-─────────────────────────────
+────────────────────────────
 Route handlers for knowledge-base management.
 
 POST /kb/ingest
@@ -36,7 +36,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".csv", ".md"}
 # ─── POST /kb/ingest ─────────────────────────────────────────────────────────
 
 @router.post(
-    "/kb/ingest",
+    "/ingest",
     response_model=KBIngestResponse,
     summary="Upload and ingest sales collateral into the knowledge base.",
     description=(
@@ -46,7 +46,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".csv", ".md"}
         "**Required role**: `admin`."
     ),
     responses={
-        400: {"description": "No valid files provided."},
+        400: {"description": "No valid files provided or unsupported file type."},
         401: {"description": "Missing or invalid Bearer token."},
         403: {"description": "Insufficient role. Requires admin."},
         500: {"description": "Internal server error during ingestion."},
@@ -73,8 +73,10 @@ async def kb_ingest(
     for upload_file in files:
         ext = Path(upload_file.filename or "").suffix.lower()
         if ext not in ALLOWED_EXTENSIONS:
-            logger.warning("Skipping unsupported file type: %s", upload_file.filename)
-            continue
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {ext}",
+            )
 
         dest = upload_dir / upload_file.filename
         try:
@@ -101,6 +103,7 @@ async def kb_ingest(
         return KBIngestResponse(
             files_processed=files_saved,
             chunks_added=chunks_added,
+            upload_dir=str(upload_dir),
             index_updated=True,
         )
     except Exception as exc:
@@ -114,7 +117,7 @@ async def kb_ingest(
 # ─── GET /kb/stats ───────────────────────────────────────────────────────────
 
 @router.get(
-    "/kb/stats",
+    "/stats",
     response_model=KBStatsResponse,
     summary="Get current knowledge base statistics.",
     description=(
@@ -134,7 +137,12 @@ async def kb_stats(
 
     index_file = VECTORSTORE_PATH / "index.faiss"
     if not index_file.exists():
-        return KBStatsResponse(total_documents=0, total_chunks=0, last_updated=None)
+        return KBStatsResponse(
+            total_documents=0,
+            total_chunks=0,
+            index_path=str(VECTORSTORE_PATH / "index.faiss"),
+            last_updated=None,
+        )
 
     try:
         # Read FAISS metadata to count documents and chunks
@@ -166,8 +174,14 @@ async def kb_stats(
         return KBStatsResponse(
             total_documents=total_documents,
             total_chunks=total_chunks,
+            index_path=str(VECTORSTORE_PATH / "index.faiss"),
             last_updated=last_updated,
         )
     except Exception as exc:
         logger.warning("Could not read KB stats: %s", exc)
-        return KBStatsResponse(total_documents=0, total_chunks=0, last_updated=None)
+        return KBStatsResponse(
+            total_documents=0,
+            total_chunks=0,
+            index_path=str(VECTORSTORE_PATH / "index.faiss"),
+            last_updated=None,
+        )

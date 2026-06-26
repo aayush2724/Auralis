@@ -99,26 +99,6 @@ _STRATEGY_MAP: dict[str, dict[str, str]] = {
     },
 }
 
-# Handoff thresholds (Feature 7)
-_HANDOFF_LOW_CONFIDENCE = 0.40
-_HANDOFF_NEGATIVE_SCORE = 0.88
-
-# Phrases that signal the user wants a human (mirrors handoff.py)
-_HUMAN_REQUEST_PHRASES: tuple[str, ...] = (
-    "talk to human",
-    "talk to a human",
-    "real person",
-    "speak to someone",
-    "speak to a human",
-    "human agent",
-    "talk to a rep",
-    "talk to a sales rep",
-    "connect me to",
-    "transfer me to",
-    "let me talk to",
-)
-
-
 # ─── GraphState ───────────────────────────────────────────────────────────────
 
 class GraphState(TypedDict, total=False):
@@ -134,7 +114,7 @@ class GraphState(TypedDict, total=False):
     response:         str
     confidence:       float
     should_handoff:   bool
-    handoff_trigger:  str
+    handoff_trigger:  str | None
     handoff_message:  str
     metadata:         dict[str, Any]
 
@@ -408,28 +388,12 @@ def generate_node(state: GraphState) -> dict[str, Any]:
 
 # ─── Node: handoff ────────────────────────────────────────────────────────────
 
-def handoff_node(state: GraphState) -> dict[str, Any]:
-    """
-    Feature 7 — Human Handoff trigger.
-
-    Delegates to evaluate_handoff() which checks three trigger conditions:
-      - USER_REQUESTED:  explicit ask for a human
-      - ANGRY_CUSTOMER:  negative sentiment above threshold
-      - LOW_CONFIDENCE:  classifier unsure
-
-    Sets should_handoff=True and replaces the response with the handoff_message.
-    """
-    user_input = state.get("user_input", "")
-    decision = evaluate_handoff(state, user_input)
-
-    trigger_name = decision["trigger"].value if decision["trigger"] else "NONE"
-    logger.info("[handoff_node] trigger=%s", trigger_name)
-
+def handoff_node(state: GraphState) -> dict:
+    decision = evaluate_handoff(state, state['user_input'])
     return {
-        "should_handoff":  decision["should_handoff"],
-        "handoff_trigger": trigger_name,
-        "handoff_message": decision["handoff_message"],
-        "response":        decision["handoff_message"],
+        'should_handoff': decision['should_handoff'],
+        'handoff_trigger': decision['trigger'].value if decision['trigger'] else None,
+        'handoff_message': decision['handoff_message'],
     }
 
 
@@ -439,35 +403,11 @@ def _should_handoff(state: GraphState) -> str:
     """
     Router called after generate_node.
     Returns 'handoff' or 'end' to control the conditional edge.
-
-    Checks three conditions (priority order):
-      1. USER_REQUESTED — user explicitly asks for a human
-      2. ANGRY_CUSTOMER — negative sentiment above threshold
-      3. LOW_CONFIDENCE  — classifier unsure
     """
-    # ── USER_REQUESTED ────────────────────────────────────────────────────
-    user_input = (state.get("user_input") or "").lower()
-    for phrase in _HUMAN_REQUEST_PHRASES:
-        if phrase in user_input:
-            logger.info("[router] handoff: user_requested phrase='%s'", phrase)
-            return "handoff"
-
-    # ── ANGRY_CUSTOMER ───────────────────────────────────────────────────
-    sentiment = state.get("sentiment") or {}
-    s_label = sentiment.get("label", "")
-    s_score = sentiment.get("score", 0.0)
-
-    if s_label == "negative" and s_score > _HANDOFF_NEGATIVE_SCORE:
-        logger.info("[router] handoff: angry_customer sentiment=%.2f", s_score)
+    decision = evaluate_handoff(state, state.get("user_input", ""))
+    if decision["should_handoff"]:
+        logger.info("[router] handoff: trigger=%s", decision["trigger"])
         return "handoff"
-
-    # ── LOW_CONFIDENCE ───────────────────────────────────────────────────
-    confidence = state.get("confidence", 1.0)
-
-    if confidence < _HANDOFF_LOW_CONFIDENCE:
-        logger.info("[router] handoff: low_confidence=%.2f", confidence)
-        return "handoff"
-
     return "end"
 
 
