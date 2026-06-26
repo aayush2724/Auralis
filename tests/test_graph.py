@@ -241,21 +241,21 @@ class TestGenerateNode:
 
 class TestHandoffNode:
     def test_sets_should_handoff_true(self):
-        state = _base_state(response="Original response.")
+        state = _base_state(confidence=0.25)
         result = handoff_node(state)
         assert result["should_handoff"] is True
 
-    def test_appends_escalation_notice(self):
-        state = _base_state(response="Original response.")
+    def test_returns_handoff_message(self):
+        state = _base_state(confidence=0.25)
         result = handoff_node(state)
-        assert "Escalation notice" in result["response"]
-        assert "Original response." in result["response"]
+        assert "handoff_message" in result
+        assert len(result["handoff_message"]) > 0
 
     def test_empty_response_handled(self):
-        state = _base_state(response="")
+        state = _base_state(response="", confidence=0.25)
         result = handoff_node(state)
         assert result["should_handoff"] is True
-        assert "Escalation notice" in result["response"]
+        assert len(result["handoff_message"]) > 0
 
 
 # ─── _should_handoff router ───────────────────────────────────────────────────

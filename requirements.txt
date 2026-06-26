@@ -38,6 +38,7 @@ plotly
 # Testing
 pytest
 pytest-asyncio
+pytest-cov
 
 # Utilities
 python-dotenv
