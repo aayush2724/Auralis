@@ -21,9 +21,10 @@ Auto-generated OpenAPI docs (Feature 14)
 from __future__ import annotations
 
 import logging
+import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
@@ -36,18 +37,14 @@ from src.api.routes.chat import router as chat_router
 from src.api.routes.kb import router as kb_router
 from src.api.schemas import HealthResponse
 from src.memory.db import init_db
-from src.utils.logger import mount_logging
+from src.utils.logger import get_logger
 
 # pyrefly: ignore [missing-import]
 from prometheus_fastapi_instrumentator import Instrumentator
 
 # ─── Logging Setup ────────────────────────────────────────────────────────────
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger("auralis.api")
+logger = get_logger("auralis.api")
 
 
 # ─── Lifespan (Startup / Shutdown) ────────────────────────────────────────────
@@ -139,11 +136,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Structured logging + Prometheus metrics ──────────────────────────────────
+# ─── Structured logging middleware ────────────────────────────────────────────
 
-mount_logging(app)
+@app.middleware("http")
+async def logging_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+        latency = (time.perf_counter() - start) * 1000
+        logger.info(
+            "http_request",
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            latency_ms=round(latency, 2),
+        )
+        return response
+    except Exception as e:
+        logger.error("unhandled_exception", error=str(e), path=request.url.path)
+        raise
 
-# ─── Prometheus auto-instrumentation (adds /metrics via prometheus-fastapi-instrumentator)
+# ─── Prometheus auto-instrumentation (adds /metrics) ─────────────────────────
+
 Instrumentator().instrument(app).expose(app)
 
 

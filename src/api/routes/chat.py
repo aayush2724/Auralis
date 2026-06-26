@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 
 from fastapi import APIRouter, HTTPException, Path
 
@@ -52,7 +53,7 @@ from src.graph.graph import run_graph
 from src.memory.db import load_session, save_session
 from src.memory.memory import ConversationMemory
 from src.utils.explainability import explain
-from src.utils.logger import set_request_metadata
+from src.utils.logger import log_request
 
 logger = logging.getLogger("auralis.api.chat")
 router = APIRouter()
@@ -92,6 +93,7 @@ async def chat(
     if not message:
         raise HTTPException(status_code=400, detail="`message` must be a non-empty string.")
 
+    start_time = time.perf_counter()
     logger.info(
         "POST /chat | user=%s role=%s session=%s",
         current_user.email, current_user.role, session_id,
@@ -228,20 +230,21 @@ async def chat(
                 session_id, state.get("handoff_trigger", "unknown"),
             )
 
-        # ── Emit structured log metadata for middleware ──────────────────────
-        set_request_metadata(
-            "POST", "/chat",
-            session_id=session_id,
-            user_input_length=len(message),
-            objection_label=response.objection_label,
-            confidence=response.confidence,
-            sentiment=response.sentiment,
-            persona=response.persona,
-            strategy=response.strategy,
-            response_length=len(response.response),
-            handoff=response.should_handoff,
-            handoff_trigger=state.get("handoff_trigger", ""),
-        )
+        # ── Emit structured request log ─────────────────────────────────────
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        log_request({
+            "session_id": session_id,
+            "user_input_length": len(message),
+            "objection_label": response.objection_label,
+            "objection_confidence": response.confidence,
+            "sentiment_label": response.sentiment,
+            "persona_label": response.persona,
+            "strategy_chosen": response.strategy,
+            "response_length": len(response.response),
+            "latency_ms": latency_ms,
+            "should_handoff": response.should_handoff,
+            "handoff_trigger": state.get("handoff_trigger"),
+        })
 
         return response
 

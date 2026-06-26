@@ -1,130 +1,63 @@
 name: CI
-
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
 
 jobs:
-  # ─── Tests ────────────────────────────────────────────────────────────────
+
   test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: pitchiq_test
-          POSTGRES_USER: pitchiq
-          POSTGRES_PASSWORD: testpassword
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U pitchiq -d pitchiq_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          POSTGRES_DB: auralis_test
+          POSTGRES_USER: auralis
+          POSTGRES_PASSWORD: test_password
+        ports: ['5432:5432']
+        options: --health-cmd='pg_isready -U auralis'
+                 --health-interval=5s --health-timeout=5s --health-retries=5
       redis:
         image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+        ports: ['6379:6379']
+        options: --health-cmd='redis-cli ping'
+                 --health-interval=5s --health-timeout=3s --health-retries=5
     env:
-      DATABASE_URL: postgresql+asyncpg://pitchiq:testpassword@localhost:5432/pitchiq_test
+      DATABASE_URL: postgresql+asyncpg://auralis:test_password@localhost:5432/auralis_test
       REDIS_URL: redis://localhost:6379/0
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
+      JWT_SECRET_KEY: test_secret_key_for_ci_only_32chars
+      OPENAI_API_KEY: sk-fake-key-for-testing
+      ENVIRONMENT: test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run tests with coverage
-        run: make test
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ --cov=src --cov-report=xml -v
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: htmlcov/
-          retention-days: 14
+          path: coverage.xml
 
-  # ─── Lint ──────────────────────────────────────────────────────────────────
   lint:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: python-version: '3.11'
+      - run: pip install ruff black
+      - run: ruff check src/
+      - run: black --check src/
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Install linters
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff black
-
-      - name: Ruff check
-        run: ruff check src/
-
-      - name: Black check
-        run: black --check src/
-
-  # ─── Docker build + smoke test ────────────────────────────────────────────
   docker-build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create .env for docker compose
-        run: |
-          echo "POSTGRES_PASSWORD=testpassword" > .env
-          echo "DATABASE_URL=postgresql+asyncpg://pitchiq:testpassword@localhost:5432/pitchiq" >> .env
-          echo "REDIS_URL=redis://localhost:6379/0" >> .env
-          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-
-      - name: Build containers
-        run: docker compose build
-
-      - name: Start services
-        run: docker compose up -d
-
-      - name: Wait for API to be ready
-        run: sleep 10
-
-      - name: Health check
-        run: curl -f http://localhost:8000/health
-
-      - name: Collect logs on failure
-        if: failure()
-        run: docker compose logs api
-
-      - name: Tear down
-        if: always()
-        run: docker compose down -v
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose build
+      - run: docker compose up -d
+      - run: sleep 15
+      - run: curl -f http://localhost:8000/health
+      - run: docker compose down
