@@ -1,7 +1,7 @@
 """
 streamlit_app.py
 ────────────────
-Interactive Streamlit front-end for PitchIQ (Auralis).
+Interactive Streamlit front-end for auralis (Auralis).
 
 Tabs
 ────
@@ -30,7 +30,7 @@ import streamlit as st
 API_BASE = os.getenv("AURALIS_API_URL", "http://localhost:8000")
 
 st.set_page_config(
-    page_title="PitchIQ",
+    page_title="auralis",
     page_icon="🎙️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -75,7 +75,7 @@ def _api_post(path: str, json: dict | None = None, **kwargs) -> httpx.Response |
     try:
         return httpx.post(f"{API_BASE}{path}", json=json, headers=_auth_headers(), timeout=30, **kwargs)
     except httpx.ConnectError:
-        st.error("Cannot connect to PitchIQ API. Is it running?")
+        st.error("Cannot connect to auralis API. Is it running?")
         return None
 
 
@@ -83,7 +83,7 @@ def _api_get(path: str, **kwargs) -> httpx.Response | None:
     try:
         return httpx.get(f"{API_BASE}{path}", headers=_auth_headers(), timeout=15, **kwargs)
     except httpx.ConnectError:
-        st.error("Cannot connect to PitchIQ API. Is it running?")
+        st.error("Cannot connect to auralis API. Is it running?")
         return None
 
 
@@ -94,7 +94,7 @@ def _login() -> bool:
     if st.session_state.jwt_token:
         return True
 
-    st.title("🎙️ PitchIQ")
+    st.title("🎙️ auralis")
     st.subheader("Sign in to continue")
 
     with st.form("login"):
@@ -218,7 +218,7 @@ def _tab_chat():
             # ── Expanders ────────────────────────────────────────────────
             st.divider()
 
-            with st.expander("Why did PitchIQ say this?"):
+            with st.expander("Why did auralis say this?"):
                 exp = data.get("explanation", {})
                 st.markdown(f"**Objection:** {exp.get('objection_reason', '')}")
                 st.markdown(f"**Persona:** {exp.get('persona_reason', '')}")
@@ -440,7 +440,7 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.title("🎙️ PitchIQ")
+        st.title("🎙️ auralis")
         st.caption("AI Sales Agent")
         st.divider()
         if st.button("Logout"):

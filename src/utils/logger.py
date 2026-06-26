@@ -125,23 +125,23 @@ def log_exception(
 
 _registry = CollectorRegistry()
 
-pitchiq_requests_total = Counter(
-    "pitchiq_requests_total",
+auralis_requests_total = Counter(
+    "auralis_requests_total",
     "Total HTTP requests processed",
     ["method", "path", "status_code", "objection_label"],
     registry=_registry,
 )
 
-pitchiq_latency_seconds = Histogram(
-    "pitchiq_latency_seconds",
+auralis_latency_seconds = Histogram(
+    "auralis_latency_seconds",
     "Request latency in seconds",
     ["method", "path"],
     buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
     registry=_registry,
 )
 
-pitchiq_handoff_total = Counter(
-    "pitchiq_handoff_total",
+auralis_handoff_total = Counter(
+    "auralis_handoff_total",
     "Total handoff escalations",
     ["trigger"],
     registry=_registry,
@@ -198,10 +198,10 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
                 error=str(exc),
                 traceback_str=tb_str,
             )
-            pitchiq_requests_total.labels(
+            auralis_requests_total.labels(
                 method=method, path=path, status_code=500, objection_label="",
             ).inc()
-            pitchiq_latency_seconds.labels(method=method, path=path).observe(
+            auralis_latency_seconds.labels(method=method, path=path).observe(
                 elapsed_ms / 1000
             )
             raise
@@ -227,17 +227,17 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
 
         # Prometheus counters
         objection_label = meta.get("objection_label", "")
-        pitchiq_requests_total.labels(
+        auralis_requests_total.labels(
             method=method, path=path,
             status_code=str(response.status_code),
             objection_label=objection_label,
         ).inc()
-        pitchiq_latency_seconds.labels(method=method, path=path).observe(
+        auralis_latency_seconds.labels(method=method, path=path).observe(
             elapsed_ms / 1000
         )
         if meta.get("handoff"):
             trigger = meta.get("handoff_trigger", "unknown")
-            pitchiq_handoff_total.labels(trigger=trigger).inc()
+            auralis_handoff_total.labels(trigger=trigger).inc()
 
         return response
 

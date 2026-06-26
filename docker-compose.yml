@@ -4,15 +4,15 @@ services:
     image: postgres:16-alpine
     container_name: auralis_postgres
     environment:
-      POSTGRES_DB: pitchiq
-      POSTGRES_USER: pitchiq
+      POSTGRES_DB: auralis
+      POSTGRES_USER: auralis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "5432:5432"
     volumes:
-      - pitchiq_pg_data:/var/lib/postgresql/data
+      - auralis_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pitchiq -d pitchiq"]
+      test: ["CMD-SHELL", "pg_isready -U auralis -d auralis"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - pitchiq_redis_data:/data
+      - auralis_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -64,5 +64,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  pitchiq_pg_data:
-  pitchiq_redis_data:
+  auralis_pg_data:
+  auralis_redis_data:
