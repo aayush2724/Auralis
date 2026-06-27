@@ -14,5 +14,6 @@ def get_zeroshot_pipeline():
     return pipeline(
         "zero-shot-classification",
         model="facebook/bart-large-mnli",
-        device="cpu"
+        device="cpu",
+        model_kwargs={"low_cpu_mem_usage": False}
     )

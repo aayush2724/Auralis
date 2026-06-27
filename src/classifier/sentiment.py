@@ -65,6 +65,7 @@ def _get_pipeline():
         "sentiment-analysis",
         model=MODEL_NAME,
         device="cpu",
+        model_kwargs={"low_cpu_mem_usage": False},
         truncation=True,
         max_length=512,
     )
