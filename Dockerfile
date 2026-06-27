@@ -11,6 +11,7 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 COPY scripts/ scripts/
 RUN python scripts/download_models.py
 RUN pip uninstall -y accelerate
+RUN pip install langchain-google-genai
 
 COPY . .
 

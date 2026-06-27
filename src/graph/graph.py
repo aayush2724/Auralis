@@ -46,7 +46,7 @@ from src.utils.logger import auralis_handoffs_total, auralis_objections_total
 
 logger = logging.getLogger("auralis.graph")
 
-from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # ─── LLM (lazy singleton) ─────────────────────────────────────────────────────
 
@@ -56,9 +56,12 @@ _llm = None
 def _get_llm():
     global _llm
     if _llm is None:
-        # Use a fake mock model to bypass all API keys and billing errors!
-        mock_response = "Thanks for reaching out! Our platform helps teams close deals faster with AI-powered objection handling. Based on your concerns, I'd love to show you how we stack up against your current solution. Would you be open to a quick demo?"
-        _llm = FakeListChatModel(responses=[mock_response])
+        _llm = ChatGoogleGenerativeAI(
+            model=os.getenv("LLM_MODEL", "gemini-1.5-flash"),
+            temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
+            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "1024")),
+            google_api_key=os.getenv("GEMINI_API_KEY"),
+        )
     return _llm
 
 
