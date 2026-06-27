@@ -57,18 +57,27 @@ class SentimentResult(TypedDict):
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
-@lru_cache(maxsize=1)
+import threading
+
+_pipeline = None
+_lock = threading.Lock()
+
 def _get_pipeline():
-    """Load the DistilBERT SST-2 pipeline once and cache it."""
-    logger.info("Loading sentiment model: %s", MODEL_NAME)
-    return pipeline(
-        "sentiment-analysis",
-        model=MODEL_NAME,
-        device="cpu",
-        model_kwargs={"low_cpu_mem_usage": False},
-        truncation=True,
-        max_length=512,
-    )
+    """Load the DistilBERT SST-2 pipeline once in a thread-safe manner."""
+    global _pipeline
+    if _pipeline is None:
+        with _lock:
+            if _pipeline is None:
+                logger.info("Loading sentiment model: %s", MODEL_NAME)
+                _pipeline = pipeline(
+                    "sentiment-analysis",
+                    model=MODEL_NAME,
+                    device="cpu",
+                    model_kwargs={"low_cpu_mem_usage": False},
+                    truncation=True,
+                    max_length=512,
+                )
+    return _pipeline
 
 
 # ─── Mapping helper ───────────────────────────────────────────────────────────
