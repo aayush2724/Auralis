@@ -41,13 +41,13 @@ logger = logging.getLogger("auralis.strategies.router")
 # "neutral" falls through to the discovery fallback (same as fit).
 
 _STRATEGY_REGISTRY: dict[str, Callable[[GraphState], str]] = {
-    "price":         price_strategy.build_prompt,
-    "trust":         trust_strategy.build_prompt,
-    "timing":        timing_strategy.build_prompt,
-    "competitor":    competitor_strategy.build_prompt,
-    "fit":           fit_strategy.build_prompt,
+    "price": price_strategy.build_prompt,
+    "trust": trust_strategy.build_prompt,
+    "timing": timing_strategy.build_prompt,
+    "competitor": competitor_strategy.build_prompt,
+    "fit": fit_strategy.build_prompt,
     "buying_signal": buying_signal_strategy.build_prompt,
-    "neutral":       fit_strategy.build_prompt,   # discovery fallback
+    "neutral": fit_strategy.build_prompt,  # discovery fallback
 }
 
 # ─── Public API ───────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ def get_strategy_prompt(state: GraphState) -> str:
     which is the safest option when the classifier is uncertain.
     """
     obj_label = (state.get("objection") or {}).get("label", "neutral")
-    build_fn  = _STRATEGY_REGISTRY.get(obj_label)
+    build_fn = _STRATEGY_REGISTRY.get(obj_label)
 
     if build_fn is None:
         logger.warning(

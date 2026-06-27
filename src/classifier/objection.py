@@ -55,13 +55,13 @@ CLASSES: list[str] = [
 # Human-readable hypothesis templates fed to the NLI model.
 # Written as statements the input text would *entail* if that class is true.
 _HYPOTHESIS_TEMPLATES: dict[str, str] = {
-    "price":         "This statement is about the cost, price, or budget being too high.",
-    "trust":         "This statement expresses doubt about credibility, security, or proof.",
-    "timing":        "This statement says now is not the right time or they need more time.",
-    "competitor":    "This statement mentions already using or considering a competing product.",
-    "fit":           "This statement says the product does not fit their needs or workflow.",
+    "price": "This statement is about the cost, price, or budget being too high.",
+    "trust": "This statement expresses doubt about credibility, security, or proof.",
+    "timing": "This statement says now is not the right time or they need more time.",
+    "competitor": "This statement mentions already using or considering a competing product.",
+    "fit": "This statement says the product does not fit their needs or workflow.",
     "buying_signal": "This statement expresses positive interest or readiness to buy.",
-    "neutral":       "This statement contains no clear sales objection or buying signal.",
+    "neutral": "This statement contains no clear sales objection or buying signal.",
 }
 
 # ─── Trigger-phrase patterns per class (Feature 9 — Explainability) ───────────
@@ -92,10 +92,18 @@ _TRIGGER_PATTERNS: dict[str, list[re.Pattern[str]]] = {
         re.compile(r"(planning|roadmap|budget cycle|Q[1-4])", re.I),
     ],
     "competitor": [
-        re.compile(r"(already use|currently use|using|we have)\b.{0,40}\b(hubspot|salesforce|pipedrive|zoho|monday|notion|slack|microsoft|google|intercom)", re.I),
-        re.compile(r"(competitor|alternative|rival|another (tool|solution|vendor|platform))", re.I),
+        re.compile(
+            r"(already use|currently use|using|we have)\b.{0,40}\b(hubspot|salesforce|pipedrive|zoho|monday|notion|slack|microsoft|google|intercom)",
+            re.I,
+        ),
+        re.compile(
+            r"(competitor|alternative|rival|another (tool|solution|vendor|platform))",
+            re.I,
+        ),
         re.compile(r"(we('re| are) (happy|satisfied|good) with)", re.I),
-        re.compile(r"(hubspot|salesforce|pipedrive|zoho|outreach|gong|chorus|drift)", re.I),
+        re.compile(
+            r"(hubspot|salesforce|pipedrive|zoho|outreach|gong|chorus|drift)", re.I
+        ),
     ],
     "fit": [
         re.compile(r"(doesn'?t? (fit|work|match)|not (a )?fit)", re.I),
@@ -118,22 +126,24 @@ _TRIGGER_PATTERNS: dict[str, list[re.Pattern[str]]] = {
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
 
-
 def _get_pipeline():
     return get_zeroshot_pipeline()
 
 
 # ─── TypedDict ────────────────────────────────────────────────────────────────
 
+
 class ObjectionResult(TypedDict):
     """Return type of classify()."""
-    label: str              # winning class
-    confidence: float       # softmax score of winning class (0.0–1.0)
-    all_scores: dict[str, float]   # label -> score for every class
-    triggers: list[str]     # exact phrases from input that fired the class
+
+    label: str  # winning class
+    confidence: float  # softmax score of winning class (0.0–1.0)
+    all_scores: dict[str, float]  # label -> score for every class
+    triggers: list[str]  # exact phrases from input that fired the class
 
 
 # ─── Trigger extraction ───────────────────────────────────────────────────────
+
 
 def _extract_triggers(text: str, label: str) -> list[str]:
     """
@@ -167,6 +177,7 @@ def _extract_triggers(text: str, label: str) -> list[str]:
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
+
 
 def classify(text: str) -> ObjectionResult:
     """
@@ -216,7 +227,9 @@ def classify(text: str) -> ObjectionResult:
 
     logger.debug(
         "classify | label=%s confidence=%.3f triggers=%s",
-        winning_label, confidence, triggers,
+        winning_label,
+        confidence,
+        triggers,
     )
 
     return ObjectionResult(
@@ -229,9 +242,10 @@ def classify(text: str) -> ObjectionResult:
 
 # ─── CLI smoke-test ───────────────────────────────────────────────────────────
 
+
 def _main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python -m src.classifier.objection \"<prospect utterance>\"")
+        print('Usage: python -m src.classifier.objection "<prospect utterance>"')
         sys.exit(1)
 
     text = " ".join(sys.argv[1:])

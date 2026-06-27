@@ -48,6 +48,7 @@ def _get_client() -> aioredis.Redis:
 
 # ─── Public API ───────────────────────────────────────────────────────────────
 
+
 async def get_cached(key: str) -> str | None:
     """
     Retrieve a cached string value.

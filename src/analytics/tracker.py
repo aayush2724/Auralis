@@ -84,20 +84,25 @@ async def init_analytics_db() -> None:
     """Create the ``conversation_events`` table and indexes if they don't exist."""
     engine = _get_engine()
     async with engine.begin() as conn:
-        for stmt in _CREATE_EVENTS_TABLE_SQL.split(';'):
+        for stmt in _CREATE_EVENTS_TABLE_SQL.split(";"):
             if stmt.strip():
                 await conn.execute(text(stmt))
         # Ensure 'variant' column exists if table was already created
         try:
-            await conn.execute(text(
-                "ALTER TABLE conversation_events ADD COLUMN IF NOT EXISTS variant VARCHAR(16) NOT NULL DEFAULT 'ADAPTIVE'"
-            ))
+            await conn.execute(
+                text(
+                    "ALTER TABLE conversation_events ADD COLUMN IF NOT EXISTS variant VARCHAR(16) NOT NULL DEFAULT 'ADAPTIVE'"
+                )
+            )
         except Exception as exc:
-            logger.warning("Could not add variant column to conversation_events: %s", exc)
+            logger.warning(
+                "Could not add variant column to conversation_events: %s", exc
+            )
     logger.info("conversation_events table initialised.")
 
 
 # ─── TypedDict ────────────────────────────────────────────────────────────────
+
 
 class DashboardData(TypedDict):
     """
@@ -113,26 +118,28 @@ class DashboardData(TypedDict):
     persona_distribution    Mapping of persona label → total event count.
     avg_confidence          Mean objection classifier confidence across all events.
     """
-    total_sessions:         int
-    conversion_rate:        float
+
+    total_sessions: int
+    conversion_rate: float
     objection_distribution: dict[str, int]
-    sentiment_trend:        list[dict[str, Any]]
-    persona_distribution:   dict[str, int]
-    avg_confidence:         float
+    sentiment_trend: list[dict[str, Any]]
+    persona_distribution: dict[str, int]
+    avg_confidence: float
 
 
 # ─── log_event ────────────────────────────────────────────────────────────────
 
+
 async def _insert_event(
-    session_id:      str,
-    state:           GraphState,
-    did_convert:     bool,
-    turn_number:     int,
+    session_id: str,
+    state: GraphState,
+    did_convert: bool,
+    turn_number: int,
 ) -> None:
     """Core insert logic, separated so log_event can wrap it safely."""
     objection = state.get("objection") or {}
     sentiment = state.get("sentiment") or {}
-    persona   = state.get("persona")   or {}
+    persona = state.get("persona") or {}
 
     engine = _get_engine()
     sql = text("""
@@ -144,15 +151,15 @@ async def _insert_event(
              :persona_label, :confidence, :did_convert, :variant, :now)
     """)
     params = {
-        "session_id":       session_id,
-        "turn_number":      turn_number,
-        "objection_label":  objection.get("label", "neutral"),
-        "sentiment_label":  sentiment.get("label", "neutral"),
-        "persona_label":    persona.get("label", "Unknown"),
-        "confidence":       float(objection.get("confidence", 0.0)),
-        "did_convert":      did_convert,
-        "variant":          state.get("variant", "ADAPTIVE"),
-        "now":              datetime.now(tz=timezone.utc),
+        "session_id": session_id,
+        "turn_number": turn_number,
+        "objection_label": objection.get("label", "neutral"),
+        "sentiment_label": sentiment.get("label", "neutral"),
+        "persona_label": persona.get("label", "Unknown"),
+        "confidence": float(objection.get("confidence", 0.0)),
+        "did_convert": did_convert,
+        "variant": state.get("variant", "ADAPTIVE"),
+        "now": datetime.now(tz=timezone.utc),
     }
     async with engine.begin() as conn:
         await conn.execute(sql, params)
@@ -168,8 +175,8 @@ async def _insert_event(
 
 
 async def log_event(
-    session_id:  str,
-    state:       GraphState,
+    session_id: str,
+    state: GraphState,
     did_convert: bool = False,
 ) -> None:
     """
@@ -190,12 +197,16 @@ async def log_event(
         engine = _get_engine()
         async with engine.connect() as conn:
             result = await conn.execute(
-                text("SELECT COUNT(*) FROM conversation_events WHERE session_id = :sid"),
+                text(
+                    "SELECT COUNT(*) FROM conversation_events WHERE session_id = :sid"
+                ),
                 {"sid": session_id},
             )
             turn_number = (result.scalar() or 0) + 1
     except Exception as exc:
-        logger.warning("log_event: could not fetch turn count for %s: %s", session_id, exc)
+        logger.warning(
+            "log_event: could not fetch turn count for %s: %s", session_id, exc
+        )
         turn_number = 1
 
     try:
@@ -206,6 +217,7 @@ async def log_event(
 
 
 # ─── get_dashboard_data ───────────────────────────────────────────────────────
+
 
 async def get_dashboard_data() -> DashboardData:
     """
@@ -240,7 +252,8 @@ async def get_dashboard_data() -> DashboardData:
         converting_sessions: int = r.scalar() or 0
         conversion_rate = (
             round(converting_sessions / total_sessions, 4)
-            if total_sessions > 0 else 0.0
+            if total_sessions > 0
+            else 0.0
         )
 
         # ── 3. Objection distribution ─────────────────────────────────────────
@@ -257,8 +270,7 @@ async def get_dashboard_data() -> DashboardData:
         }
 
         # ── 4. Sentiment trend (last 30 days, daily buckets) ──────────────────
-        r = await conn.execute(
-            text("""
+        r = await conn.execute(text("""
                 SELECT
                     DATE(created_at AT TIME ZONE 'UTC') AS day,
                     SUM(CASE WHEN sentiment_label = 'positive' THEN 1 ELSE 0 END) AS positive,
@@ -268,13 +280,12 @@ async def get_dashboard_data() -> DashboardData:
                 WHERE created_at >= now() - INTERVAL '30 days'
                 GROUP BY day
                 ORDER BY day DESC
-            """)
-        )
+            """))
         sentiment_trend: list[dict[str, Any]] = [
             {
-                "date":     str(row.day),
+                "date": str(row.day),
                 "positive": int(row.positive),
-                "neutral":  int(row.neutral),
+                "neutral": int(row.neutral),
                 "negative": int(row.negative),
             }
             for row in r.fetchall()
@@ -294,9 +305,7 @@ async def get_dashboard_data() -> DashboardData:
         }
 
         # ── 6. Average confidence ─────────────────────────────────────────────
-        r = await conn.execute(
-            text("SELECT AVG(confidence) FROM conversation_events")
-        )
+        r = await conn.execute(text("SELECT AVG(confidence) FROM conversation_events"))
         avg_raw = r.scalar()
         avg_confidence: float = round(float(avg_raw), 4) if avg_raw is not None else 0.0
 
@@ -308,10 +317,10 @@ async def get_dashboard_data() -> DashboardData:
     )
 
     return DashboardData(
-        total_sessions         = total_sessions,
-        conversion_rate        = conversion_rate,
-        objection_distribution = objection_distribution,
-        sentiment_trend        = sentiment_trend,
-        persona_distribution   = persona_distribution,
-        avg_confidence         = avg_confidence,
+        total_sessions=total_sessions,
+        conversion_rate=conversion_rate,
+        objection_distribution=objection_distribution,
+        sentiment_trend=sentiment_trend,
+        persona_distribution=persona_distribution,
+        avg_confidence=avg_confidence,
     )

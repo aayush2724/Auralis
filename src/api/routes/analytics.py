@@ -59,19 +59,19 @@ async def get_dashboard(
     # Convert the raw list[dict] sentiment_trend to typed SentimentDaySnapshot models.
     sentiment_trend = [
         SentimentDaySnapshot(
-            date     = entry["date"],
-            positive = entry["positive"],
-            neutral  = entry["neutral"],
-            negative = entry["negative"],
+            date=entry["date"],
+            positive=entry["positive"],
+            neutral=entry["neutral"],
+            negative=entry["negative"],
         )
         for entry in data["sentiment_trend"]
     ]
 
     return DashboardResponse(
-        total_sessions         = data["total_sessions"],
-        conversion_rate        = data["conversion_rate"],
-        objection_distribution = data["objection_distribution"],
-        sentiment_trend        = sentiment_trend,
-        persona_distribution   = data["persona_distribution"],
-        avg_confidence         = data["avg_confidence"],
+        total_sessions=data["total_sessions"],
+        conversion_rate=data["conversion_rate"],
+        objection_distribution=data["objection_distribution"],
+        sentiment_trend=sentiment_trend,
+        persona_distribution=data["persona_distribution"],
+        avg_confidence=data["avg_confidence"],
     )

@@ -25,18 +25,29 @@ router = APIRouter()
 
 # ─── Response schema ──────────────────────────────────────────────────────────
 
+
 class ABTestResultsResponse(BaseModel):
     """Aggregated A/B test metrics from conversation_events."""
-    static_conversion_rate:   float = Field(description="Conversion rate for STATIC variant.")
-    adaptive_conversion_rate: float = Field(description="Conversion rate for ADAPTIVE variant.")
-    static_avg_confidence:    float = Field(description="Mean confidence for STATIC variant.")
-    adaptive_avg_confidence:  float = Field(description="Mean confidence for ADAPTIVE variant.")
-    sessions_per_variant:     dict[str, int] = Field(
+
+    static_conversion_rate: float = Field(
+        description="Conversion rate for STATIC variant."
+    )
+    adaptive_conversion_rate: float = Field(
+        description="Conversion rate for ADAPTIVE variant."
+    )
+    static_avg_confidence: float = Field(
+        description="Mean confidence for STATIC variant."
+    )
+    adaptive_avg_confidence: float = Field(
+        description="Mean confidence for ADAPTIVE variant."
+    )
+    sessions_per_variant: dict[str, int] = Field(
         description="Distinct session count per variant.",
     )
 
 
 # ─── GET /ab-test/results ────────────────────────────────────────────────────
+
 
 @router.get(
     "/ab-test/results",
@@ -60,7 +71,8 @@ async def ab_test_results(
 ) -> ABTestResultsResponse:
     logger.info(
         "GET /ab-test/results | user=%s role=%s",
-        current_user.email, current_user.role,
+        current_user.email,
+        current_user.role,
     )
 
     try:
@@ -115,11 +127,11 @@ async def ab_test_results(
                     adaptive_conf = round(val, 4)
 
         return ABTestResultsResponse(
-            static_conversion_rate   = static_conv,
-            adaptive_conversion_rate = adaptive_conv,
-            static_avg_confidence    = static_conf,
-            adaptive_avg_confidence  = adaptive_conf,
-            sessions_per_variant     = sessions_per_variant,
+            static_conversion_rate=static_conv,
+            adaptive_conversion_rate=adaptive_conv,
+            static_avg_confidence=static_conf,
+            adaptive_avg_confidence=adaptive_conf,
+            sessions_per_variant=sessions_per_variant,
         )
 
     except Exception as exc:

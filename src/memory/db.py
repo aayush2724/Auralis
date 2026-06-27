@@ -33,7 +33,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 logger = logging.getLogger("auralis.memory.db")
 
@@ -90,13 +95,14 @@ async def init_db() -> None:
     """Create the customer_sessions table if it does not already exist."""
     engine = _get_engine()
     async with engine.begin() as conn:
-        for stmt in _CREATE_TABLE_SQL.split(';'):
+        for stmt in _CREATE_TABLE_SQL.split(";"):
             if stmt.strip():
                 await conn.execute(text(stmt))
     logger.info("customer_sessions table initialised.")
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
+
 
 async def save_session(session_id: str, facts_dict: dict[str, Any]) -> None:
     """
@@ -111,7 +117,7 @@ async def save_session(session_id: str, facts_dict: dict[str, Any]) -> None:
 
     now = datetime.now(tz=timezone.utc)
     objections_json = json.dumps(facts_dict.get("objections_raised", []))
-    tools_json      = json.dumps(facts_dict.get("tools_mentioned", []))
+    tools_json = json.dumps(facts_dict.get("tools_mentioned", []))
 
     upsert_sql = text("""
         INSERT INTO customer_sessions
@@ -132,13 +138,13 @@ async def save_session(session_id: str, facts_dict: dict[str, Any]) -> None:
     """)
 
     params = {
-        "session_id":      session_id,
-        "company_name":    facts_dict.get("company_name"),
-        "persona_label":   facts_dict.get("persona_label"),
+        "session_id": session_id,
+        "company_name": facts_dict.get("company_name"),
+        "persona_label": facts_dict.get("persona_label"),
         "objections_json": objections_json,
-        "tools_json":      tools_json,
-        "budget_signal":   facts_dict.get("budget_signal"),
-        "now":             now,
+        "tools_json": tools_json,
+        "budget_signal": facts_dict.get("budget_signal"),
+        "now": now,
     }
 
     async with _session_factory() as session:  # type: ignore[misc]
@@ -174,11 +180,11 @@ async def load_session(session_id: str) -> dict[str, Any] | None:
         return None
 
     facts: dict[str, Any] = {
-        "company_name":      row.company_name,
-        "persona_label":     row.persona_label,
+        "company_name": row.company_name,
+        "persona_label": row.persona_label,
         "objections_raised": row.objections_json or [],
-        "tools_mentioned":   row.tools_json or [],
-        "budget_signal":     row.budget_signal,
+        "tools_mentioned": row.tools_json or [],
+        "budget_signal": row.budget_signal,
     }
     logger.debug("Session loaded: %s | facts=%s", session_id, facts)
     return facts

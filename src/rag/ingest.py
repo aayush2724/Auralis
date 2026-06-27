@@ -22,16 +22,20 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any      
+from typing import Any
 
 # pyrefly: ignore [missing-import]
 import fitz  # PyMuPDF
+
 # pyrefly: ignore [missing-import]
 import pandas as pd
+
 # pyrefly: ignore [missing-import]
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 # pyrefly: ignore [missing-import]
 from langchain_community.vectorstores import FAISS
+
 # pyrefly: ignore [missing-import]
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
@@ -48,7 +52,7 @@ logger = logging.getLogger("auralis.ingest")
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 VECTORSTORE_PATH = Path(os.getenv("VECTORSTORE_PATH", "vectorstore"))
-CHUNK_SIZE = 512       # tokens (approx. characters / 4)
+CHUNK_SIZE = 512  # tokens (approx. characters / 4)
 CHUNK_OVERLAP = 64
 
 # ─── Document loaders ─────────────────────────────────────────────────────────
@@ -160,7 +164,9 @@ def _embed_and_persist(chunks: list[dict[str, Any]], vectorstore_path: Path) -> 
 # ─── Public API ───────────────────────────────────────────────────────────────
 
 
-def ingest_directory(data_dir: str | Path, vectorstore_path: str | Path | None = None) -> int:
+def ingest_directory(
+    data_dir: str | Path, vectorstore_path: str | Path | None = None
+) -> int:
     """
     Ingest all .pdf, .csv, and .md files in *data_dir*.
 

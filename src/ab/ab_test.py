@@ -29,7 +29,8 @@ _VARIANT_KEY_PREFIX = "auralis:ab:variant:"
 
 class ABVariant(str, Enum):
     """A/B test variant."""
-    STATIC   = "STATIC"
+
+    STATIC = "STATIC"
     ADAPTIVE = "ADAPTIVE"
 
 
@@ -45,6 +46,7 @@ _STATIC_PITCH = (
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
+
 
 async def assign_variant(session_id: str) -> ABVariant:
     """
@@ -69,7 +71,11 @@ async def assign_variant(session_id: str) -> ABVariant:
         try:
             return ABVariant(cached)
         except ValueError:
-            logger.warning("Invalid cached variant '%s' for session %s, re-assigning", cached, session_id)
+            logger.warning(
+                "Invalid cached variant '%s' for session %s, re-assigning",
+                cached,
+                session_id,
+            )
 
     # Temporarily force ADAPTIVE for testing
     variant = ABVariant.ADAPTIVE
@@ -77,7 +83,9 @@ async def assign_variant(session_id: str) -> ABVariant:
     # Persist in Redis (no TTL — assignment should be permanent for the session)
     await set_cached(cache_key, variant.value, ttl=0)
 
-    logger.info("A/B variant assigned | session=%s variant=%s", session_id, variant.value)
+    logger.info(
+        "A/B variant assigned | session=%s variant=%s", session_id, variant.value
+    )
     return variant
 
 

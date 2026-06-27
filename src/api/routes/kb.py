@@ -35,6 +35,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".csv", ".md"}
 
 # ─── POST /kb/ingest ─────────────────────────────────────────────────────────
 
+
 @router.post(
     "/ingest",
     response_model=KBIngestResponse,
@@ -58,7 +59,9 @@ async def kb_ingest(
 ) -> KBIngestResponse:
     logger.info(
         "POST /kb/ingest | user=%s role=%s files=%d",
-        current_user.email, current_user.role, len(files),
+        current_user.email,
+        current_user.role,
+        len(files),
     )
 
     if not files:
@@ -98,7 +101,9 @@ async def kb_ingest(
         from src.rag.ingest import ingest_directory  # noqa: PLC0415
 
         chunks_added = ingest_directory(str(upload_dir), str(VECTORSTORE_PATH))
-        logger.info("Ingestion complete: %d chunks from %d files", chunks_added, files_saved)
+        logger.info(
+            "Ingestion complete: %d chunks from %d files", chunks_added, files_saved
+        )
 
         return KBIngestResponse(
             files_processed=files_saved,
@@ -115,6 +120,7 @@ async def kb_ingest(
 
 
 # ─── GET /kb/stats ───────────────────────────────────────────────────────────
+
 
 @router.get(
     "/stats",
@@ -133,7 +139,9 @@ async def kb_ingest(
 async def kb_stats(
     current_user: User = require_roles("admin"),
 ) -> KBStatsResponse:
-    logger.info("GET /kb/stats | user=%s role=%s", current_user.email, current_user.role)
+    logger.info(
+        "GET /kb/stats | user=%s role=%s", current_user.email, current_user.role
+    )
 
     index_file = VECTORSTORE_PATH / "index.faiss"
     if not index_file.exists():
@@ -157,8 +165,14 @@ async def kb_stats(
             source_files: set[str] = set()
             total_chunks = 0
             for doc_id, doc in docstore.items():
-                meta = getattr(doc, "metadata", None) or (doc if isinstance(doc, dict) else {})
-                source = meta.get("source_file", "unknown") if isinstance(meta, dict) else "unknown"
+                meta = getattr(doc, "metadata", None) or (
+                    doc if isinstance(doc, dict) else {}
+                )
+                source = (
+                    meta.get("source_file", "unknown")
+                    if isinstance(meta, dict)
+                    else "unknown"
+                )
                 source_files.add(source)
                 total_chunks += 1
 

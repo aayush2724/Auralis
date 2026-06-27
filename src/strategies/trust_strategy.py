@@ -24,7 +24,6 @@ from __future__ import annotations
 
 from src.graph.graph import GraphState
 
-
 _PROMPT_TEMPLATE = """\
 ## AURALIS — Trust Objection Strategy: Social Proof & Credibility
 
@@ -81,25 +80,27 @@ Keep it under 220 words. Apply {sentiment_label} tone.
 
 
 def build_prompt(state: GraphState) -> str:
-    objection   = state.get("objection")   or {}
-    sentiment   = state.get("sentiment")   or {}
-    persona     = state.get("persona")     or {}
-    metadata    = state.get("metadata")    or {}
-    docs        = state.get("retrieved_docs") or []
+    objection = state.get("objection") or {}
+    sentiment = state.get("sentiment") or {}
+    persona = state.get("persona") or {}
+    metadata = state.get("metadata") or {}
+    docs = state.get("retrieved_docs") or []
 
-    knowledge_block = "\n\n".join(
-        f"[{i+1}] {d['text'][:400]}" for i, d in enumerate(docs)
-    ) or "No case studies retrieved — use generic credibility language."
+    knowledge_block = (
+        "\n\n".join(f"[{i+1}] {d['text'][:400]}" for i, d in enumerate(docs))
+        or "No case studies retrieved — use generic credibility language."
+    )
 
     return _PROMPT_TEMPLATE.format(
-        memory_context  = state.get("memory_context") or "No prior context.",
-        user_input      = state.get("user_input", ""),
-        confidence      = objection.get("confidence", 0.0),
-        persona_label   = persona.get("label", "Unknown"),
-        sentiment_label = sentiment.get("label", "neutral"),
-        triggers        = ", ".join(objection.get("triggers", [])) or "none",
-        pitch_angle     = metadata.get("pitch_angle") or persona.get("pitch_angle", ""),
-        tone_instruction= metadata.get("tone_instruction") or sentiment.get("tone_instruction", ""),
-        knowledge       = knowledge_block,
-        citations       = state.get("citations") or "No citations available.",
+        memory_context=state.get("memory_context") or "No prior context.",
+        user_input=state.get("user_input", ""),
+        confidence=objection.get("confidence", 0.0),
+        persona_label=persona.get("label", "Unknown"),
+        sentiment_label=sentiment.get("label", "neutral"),
+        triggers=", ".join(objection.get("triggers", [])) or "none",
+        pitch_angle=metadata.get("pitch_angle") or persona.get("pitch_angle", ""),
+        tone_instruction=metadata.get("tone_instruction")
+        or sentiment.get("tone_instruction", ""),
+        knowledge=knowledge_block,
+        citations=state.get("citations") or "No citations available.",
     )

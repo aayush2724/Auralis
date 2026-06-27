@@ -49,24 +49,70 @@ logger = logging.getLogger("auralis.memory")
 # Extend this list freely; matching is case-insensitive, whole-word.
 
 KNOWN_TOOLS: list[str] = [
-    "Salesforce", "HubSpot", "Pipedrive", "Zoho", "Zendesk",
-    "Monday", "Notion", "Slack", "Intercom", "Drift",
-    "Outreach", "Gong", "Chorus", "Marketo", "Pardot",
-    "Freshsales", "Copper", "Close", "Streak", "ActiveCampaign",
-    "Klaviyo", "Mailchimp", "Segment", "Mixpanel", "Amplitude",
-    "Jira", "Linear", "Asana", "Trello", "ClickUp",
-    "Figma", "Miro", "Loom", "Calendly", "Typeform",
-    "Snowflake", "Databricks", "dbt", "Tableau", "Looker",
-    "AWS", "Azure", "GCP", "Heroku", "Vercel",
-    "GitHub", "GitLab", "Bitbucket", "Jenkins", "CircleCI",
-    "Twilio", "Stripe", "Braintree", "Plaid", "Okta",
-    "Microsoft Teams", "Google Workspace", "Dropbox", "Box",
+    "Salesforce",
+    "HubSpot",
+    "Pipedrive",
+    "Zoho",
+    "Zendesk",
+    "Monday",
+    "Notion",
+    "Slack",
+    "Intercom",
+    "Drift",
+    "Outreach",
+    "Gong",
+    "Chorus",
+    "Marketo",
+    "Pardot",
+    "Freshsales",
+    "Copper",
+    "Close",
+    "Streak",
+    "ActiveCampaign",
+    "Klaviyo",
+    "Mailchimp",
+    "Segment",
+    "Mixpanel",
+    "Amplitude",
+    "Jira",
+    "Linear",
+    "Asana",
+    "Trello",
+    "ClickUp",
+    "Figma",
+    "Miro",
+    "Loom",
+    "Calendly",
+    "Typeform",
+    "Snowflake",
+    "Databricks",
+    "dbt",
+    "Tableau",
+    "Looker",
+    "AWS",
+    "Azure",
+    "GCP",
+    "Heroku",
+    "Vercel",
+    "GitHub",
+    "GitLab",
+    "Bitbucket",
+    "Jenkins",
+    "CircleCI",
+    "Twilio",
+    "Stripe",
+    "Braintree",
+    "Plaid",
+    "Okta",
+    "Microsoft Teams",
+    "Google Workspace",
+    "Dropbox",
+    "Box",
 ]
 
 # Pre-compile tool patterns once at import time
 _TOOL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    (tool, re.compile(rf"\b{re.escape(tool)}\b", re.IGNORECASE))
-    for tool in KNOWN_TOOLS
+    (tool, re.compile(rf"\b{re.escape(tool)}\b", re.IGNORECASE)) for tool in KNOWN_TOOLS
 ]
 
 # ─── Fact-extraction regexes ──────────────────────────────────────────────────
@@ -76,35 +122,55 @@ _COMPANY_PATTERNS: list[re.Pattern[str]] = [
     # "at Acme Corp" / "at Acme"
     re.compile(r"\bat\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,40}?)(?:\s*[,\.]|$)", re.MULTILINE),
     # "I work at / I'm at / work for"
-    re.compile(r"(?:I work at|I'm at|working at|work for)\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,40})(?:\s*[,\.]|$)", re.MULTILINE),
+    re.compile(
+        r"(?:I work at|I'm at|working at|work for)\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,40})(?:\s*[,\.]|$)",
+        re.MULTILINE,
+    ),
     # "from Acme Corp" / "from Acme"
-    re.compile(r"\bfrom\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,40})(?:\s*[,\.]|$)", re.MULTILINE),
+    re.compile(
+        r"\bfrom\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,40})(?:\s*[,\.]|$)", re.MULTILINE
+    ),
     # "our company is Acme" / "our company, Acme,"
-    re.compile(r"(?:our company(?:\s+is)?[,\s]+)([A-Z][A-Za-z0-9&\s\-'\.]{1,40})(?:\s*[,\.]|$)", re.MULTILINE),
+    re.compile(
+        r"(?:our company(?:\s+is)?[,\s]+)([A-Z][A-Za-z0-9&\s\-'\.]{1,40})(?:\s*[,\.]|$)",
+        re.MULTILINE,
+    ),
     # "we are Acme" at start of sentence
-    re.compile(r"(?:we are|we're)\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,30})(?:\s*[,\.]|$)", re.MULTILINE),
+    re.compile(
+        r"(?:we are|we're)\s+([A-Z][A-Za-z0-9&\s\-'\.]{1,30})(?:\s*[,\.]|$)",
+        re.MULTILINE,
+    ),
 ]
 
 # Budget signal — "$50k", "$1,200", "$2M", "50 000 dollars", etc.
 _BUDGET_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\$\s?[\d,]+(?:\.\d+)?(?:\s?[kKmMbB])?", re.IGNORECASE),
-    re.compile(r"\b[\d,]+(?:\.\d+)?\s?(?:k|thousand|million|m)\s?(?:dollars?|usd|budget)\b", re.IGNORECASE),
-    re.compile(r"\bbudget(?:\s+of)?\s+[\$£€]?\s?[\d,]+(?:\.\d+)?(?:\s?[kKmMbB])?\b", re.IGNORECASE),
+    re.compile(
+        r"\b[\d,]+(?:\.\d+)?\s?(?:k|thousand|million|m)\s?(?:dollars?|usd|budget)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bbudget(?:\s+of)?\s+[\$£€]?\s?[\d,]+(?:\.\d+)?(?:\s?[kKmMbB])?\b",
+        re.IGNORECASE,
+    ),
 ]
 
 
 # ─── Data model ───────────────────────────────────────────────────────────────
 
+
 @dataclass
 class Message:
     """A single conversation turn."""
-    role:     str                        # "user" | "assistant" | "system"
-    content:  str
+
+    role: str  # "user" | "assistant" | "system"
+    content: str
     metadata: dict[str, Any] = field(default_factory=dict)
-    turn:     int = 0                    # set by ConversationMemory.add()
+    turn: int = 0  # set by ConversationMemory.add()
 
 
 # ─── Fact extraction helpers ──────────────────────────────────────────────────
+
 
 def _extract_company(text: str) -> str | None:
     """Return the first company name found in *text*, or None."""
@@ -138,6 +204,7 @@ def _extract_budget(text: str) -> str | None:
 
 # ─── ConversationMemory ───────────────────────────────────────────────────────
 
+
 class ConversationMemory:
     """
     Session-scoped conversation state for Auralis.
@@ -157,9 +224,9 @@ class ConversationMemory:
         self._session_id: str | None = session_id
         self._messages: list[Message] = []
         self._facts: dict[str, Any] = {
-            "company_name":      None,
-            "tools_mentioned":   [],
-            "budget_signal":     None,
+            "company_name": None,
+            "tools_mentioned": [],
+            "budget_signal": None,
             "objections_raised": [],
         }
 
@@ -185,7 +252,9 @@ class ConversationMemory:
                    is an ObjectionResult TypedDict (from the classifier).
         """
         if not content or not content.strip():
-            logger.warning("add() called with empty content for role=%s — skipping.", role)
+            logger.warning(
+                "add() called with empty content for role=%s — skipping.", role
+            )
             return
 
         metadata = metadata or {}
@@ -247,9 +316,9 @@ class ConversationMemory:
         objections_raised.
         """
         return {
-            "company_name":      self._facts["company_name"],
-            "tools_mentioned":   list(self._facts["tools_mentioned"]),
-            "budget_signal":     self._facts["budget_signal"],
+            "company_name": self._facts["company_name"],
+            "tools_mentioned": list(self._facts["tools_mentioned"]),
+            "budget_signal": self._facts["budget_signal"],
             "objections_raised": [dict(o) for o in self._facts["objections_raised"]],
         }
 
@@ -261,9 +330,9 @@ class ConversationMemory:
         """Reset all messages and extracted facts (does NOT delete DB record)."""
         self._messages.clear()
         self._facts = {
-            "company_name":      None,
-            "tools_mentioned":   [],
-            "budget_signal":     None,
+            "company_name": None,
+            "tools_mentioned": [],
+            "budget_signal": None,
             "objections_raised": [],
         }
         logger.debug("Memory cleared (session_id=%s).", self._session_id)
@@ -290,6 +359,7 @@ class ConversationMemory:
             return
         try:
             from src.memory.db import save_session  # late import avoids circular dep
+
             facts = self.get_facts()
             # Persist detected persona if available in latest user message
             if self._messages:
@@ -301,7 +371,9 @@ class ConversationMemory:
             await save_session(self._session_id, facts)
             logger.debug("Session persisted: %s", self._session_id)
         except Exception as exc:
-            logger.warning("DB persist failed for session %s: %s", self._session_id, exc)
+            logger.warning(
+                "DB persist failed for session %s: %s", self._session_id, exc
+            )
 
     @classmethod
     async def from_session(cls, session_id: str) -> "ConversationMemory":
@@ -322,12 +394,15 @@ class ConversationMemory:
         instance = cls(session_id=session_id)
         try:
             from src.memory.db import load_session  # late import
+
             stored = await load_session(session_id)
             if stored:
-                instance._facts["company_name"]      = stored.get("company_name")
-                instance._facts["tools_mentioned"]   = stored.get("tools_mentioned") or []
-                instance._facts["budget_signal"]      = stored.get("budget_signal")
-                instance._facts["objections_raised"] = stored.get("objections_raised") or []
+                instance._facts["company_name"] = stored.get("company_name")
+                instance._facts["tools_mentioned"] = stored.get("tools_mentioned") or []
+                instance._facts["budget_signal"] = stored.get("budget_signal")
+                instance._facts["objections_raised"] = (
+                    stored.get("objections_raised") or []
+                )
                 logger.info(
                     "Loaded session %s from DB: company=%s tools=%s",
                     session_id,
@@ -335,7 +410,9 @@ class ConversationMemory:
                     stored.get("tools_mentioned"),
                 )
         except Exception as exc:
-            logger.warning("DB load failed for session %s: %s — starting fresh.", session_id, exc)
+            logger.warning(
+                "DB load failed for session %s: %s — starting fresh.", session_id, exc
+            )
         return instance
 
     # ── Fact extraction (private) ─────────────────────────────────────────────
@@ -367,19 +444,21 @@ class ConversationMemory:
         # Objection — read from metadata if the caller already ran the classifier
         objection = msg.metadata.get("objection")
         if objection and isinstance(objection, dict):
-            label      = objection.get("label", "")
+            label = objection.get("label", "")
             confidence = objection.get("confidence", 0.0)
             if label and label != "neutral":
                 self._facts["objections_raised"].append(
                     {
-                        "turn":       msg.turn,
-                        "label":      label,
+                        "turn": msg.turn,
+                        "label": label,
                         "confidence": float(confidence),
                     }
                 )
                 logger.debug(
                     "Recorded objection: %s (conf=%.2f, turn=%d)",
-                    label, confidence, msg.turn,
+                    label,
+                    confidence,
+                    msg.turn,
                 )
 
     # ── Dunder helpers ────────────────────────────────────────────────────────

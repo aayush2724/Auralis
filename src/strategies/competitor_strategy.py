@@ -24,7 +24,6 @@ from __future__ import annotations
 
 from src.graph.graph import GraphState
 
-
 _PROMPT_TEMPLATE = """\
 ## AURALIS — Competitor Objection Strategy: Differentiation
 
@@ -103,11 +102,11 @@ def build_prompt(state: GraphState) -> str:
     from src.classifier.competitor import detect_competitor
     from src.rag.retriever import retrieve
 
-    objection   = state.get("objection")   or {}
-    sentiment   = state.get("sentiment")   or {}
-    persona     = state.get("persona")     or {}
-    metadata    = state.get("metadata")    or {}
-    user_input  = state.get("user_input", "")
+    objection = state.get("objection") or {}
+    sentiment = state.get("sentiment") or {}
+    persona = state.get("persona") or {}
+    metadata = state.get("metadata") or {}
+    user_input = state.get("user_input", "")
 
     # ── Step 1: resolve competitor name ───────────────────────────────────────
     # Priority: fresh detection from live text > metadata set by strategy_node
@@ -139,15 +138,16 @@ def build_prompt(state: GraphState) -> str:
 
     # ── Step 3: render prompt ─────────────────────────────────────────────────
     return _PROMPT_TEMPLATE.format(
-        memory_context  = state.get("memory_context") or "No prior context.",
-        user_input      = user_input,
-        confidence      = objection.get("confidence", 0.0),
-        competitor_name = competitor_name,
-        persona_label   = persona.get("label", "Unknown"),
-        sentiment_label = sentiment.get("label", "neutral"),
-        triggers        = ", ".join(objection.get("triggers", [])) or "none",
-        pitch_angle     = metadata.get("pitch_angle") or persona.get("pitch_angle", ""),
-        tone_instruction= metadata.get("tone_instruction") or sentiment.get("tone_instruction", ""),
-        knowledge       = knowledge_block,
-        citations       = state.get("citations") or "No citations available.",
+        memory_context=state.get("memory_context") or "No prior context.",
+        user_input=user_input,
+        confidence=objection.get("confidence", 0.0),
+        competitor_name=competitor_name,
+        persona_label=persona.get("label", "Unknown"),
+        sentiment_label=sentiment.get("label", "neutral"),
+        triggers=", ".join(objection.get("triggers", [])) or "none",
+        pitch_angle=metadata.get("pitch_angle") or persona.get("pitch_angle", ""),
+        tone_instruction=metadata.get("tone_instruction")
+        or sentiment.get("tone_instruction", ""),
+        knowledge=knowledge_block,
+        citations=state.get("citations") or "No citations available.",
     )

@@ -35,32 +35,34 @@ logger = logging.getLogger("auralis.classifier.sentiment")
 MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
 
 # If the POSITIVE score falls inside this band the utterance is treated as neutral.
-_NEUTRAL_LOW  = 0.40
+_NEUTRAL_LOW = 0.40
 _NEUTRAL_HIGH = 0.60
 
 # Tone instructions appended to the generation prompt downstream.
 _TONE_INSTRUCTIONS: dict[str, str] = {
     "positive": "Match the customer energy, be enthusiastic.",
-    "neutral":  "Stay professional and informative.",
+    "neutral": "Stay professional and informative.",
     "negative": "Be empathetic, slow down, acknowledge frustration first.",
 }
 
 
 # ─── TypedDict ────────────────────────────────────────────────────────────────
 
+
 class SentimentResult(TypedDict):
     """Return type of analyze()."""
-    label:            Literal["positive", "neutral", "negative"]
-    score:            float   # confidence of the mapped label (0.0–1.0)
-    tone_instruction: str     # prompt suffix for the generation node
+
+    label: Literal["positive", "neutral", "negative"]
+    score: float  # confidence of the mapped label (0.0–1.0)
+    tone_instruction: str  # prompt suffix for the generation node
 
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
 
-
 _pipeline = None
 _lock = threading.Lock()
+
 
 def _get_pipeline():
     """Load the DistilBERT SST-2 pipeline once in a thread-safe manner."""
@@ -81,6 +83,7 @@ def _get_pipeline():
 
 
 # ─── Mapping helper ───────────────────────────────────────────────────────────
+
 
 def _map_to_sentiment(
     raw_label: str, positive_score: float
@@ -108,6 +111,7 @@ def _map_to_sentiment(
 
 # ─── Public API ───────────────────────────────────────────────────────────────
 
+
 def analyze(text: str) -> SentimentResult:
     """
     Analyze the sentiment of a sales utterance.
@@ -129,9 +133,9 @@ def analyze(text: str) -> SentimentResult:
         raise ValueError("`text` must be a non-empty string.")
 
     clf = _get_pipeline()
-    raw = clf(text)[0]          # {'label': 'POSITIVE'|'NEGATIVE', 'score': float}
+    raw = clf(text)[0]  # {'label': 'POSITIVE'|'NEGATIVE', 'score': float}
 
-    raw_label: str   = raw["label"]
+    raw_label: str = raw["label"]
     raw_score: float = raw["score"]
 
     # SST-2 always returns the score of the *predicted* class, not always positive.
@@ -143,7 +147,10 @@ def analyze(text: str) -> SentimentResult:
 
     logger.debug(
         "analyze | label=%s score=%.3f raw=(%s, %.3f)",
-        label, score, raw_label, raw_score,
+        label,
+        score,
+        raw_label,
+        raw_score,
     )
 
     return SentimentResult(
@@ -154,6 +161,7 @@ def analyze(text: str) -> SentimentResult:
 
 
 # ─── CLI smoke-test ───────────────────────────────────────────────────────────
+
 
 def _main() -> None:
     if len(sys.argv) < 2:

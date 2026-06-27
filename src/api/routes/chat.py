@@ -61,6 +61,7 @@ router = APIRouter()
 
 # ─── POST /chat ───────────────────────────────────────────────────────────────
 
+
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -86,17 +87,23 @@ async def chat(
     current_user: User = require_roles("sales_rep", "admin"),
 ) -> ChatResponse:
     session_id = request.session_id.strip()
-    message    = request.message.strip()
+    message = request.message.strip()
 
     if not session_id:
-        raise HTTPException(status_code=400, detail="`session_id` must be a non-empty string.")
+        raise HTTPException(
+            status_code=400, detail="`session_id` must be a non-empty string."
+        )
     if not message:
-        raise HTTPException(status_code=400, detail="`message` must be a non-empty string.")
+        raise HTTPException(
+            status_code=400, detail="`message` must be a non-empty string."
+        )
 
     start_time = time.perf_counter()
     logger.info(
         "POST /chat | user=%s role=%s session=%s",
-        current_user.email, current_user.role, session_id,
+        current_user.email,
+        current_user.role,
+        session_id,
     )
 
     try:
@@ -112,19 +119,19 @@ async def chat(
 
             # Build a minimal state dict for logging
             state = {
-                "user_input":      message,
-                "response":        response_text,
-                "confidence":      0.0,
-                "objection":       {"label": "neutral", "confidence": 0.0, "triggers": []},
-                "sentiment":       {"label": "neutral", "score": 0.0, "tone_instruction": ""},
-                "persona":         {"label": "Unknown", "pitch_angle": ""},
-                "strategy":        "static_pitch",
-                "citations":       "",
-                "should_handoff":  False,
+                "user_input": message,
+                "response": response_text,
+                "confidence": 0.0,
+                "objection": {"label": "neutral", "confidence": 0.0, "triggers": []},
+                "sentiment": {"label": "neutral", "score": 0.0, "tone_instruction": ""},
+                "persona": {"label": "Unknown", "pitch_angle": ""},
+                "strategy": "static_pitch",
+                "citations": "",
+                "should_handoff": False,
                 "handoff_trigger": None,
                 "handoff_message": "",
-                "retrieved_docs":  [],
-                "variant":         "STATIC",
+                "retrieved_docs": [],
+                "variant": "STATIC",
             }
 
             memory.add(role="user", content=message)
@@ -144,19 +151,19 @@ async def chat(
             )
 
             response = ChatResponse(
-                response        = response_text,
-                objection_label = "neutral",
-                confidence      = 0.0,
-                sentiment       = "neutral",
-                persona         = "Unknown",
-                strategy        = "static_pitch",
-                citations       = "",
-                should_handoff  = False,
-                handoff_trigger = None,
-                explanation     = explanation,
-                retrieved_docs  = [],
-                session_id      = session_id,
-                memory_context  = memory.get_context_string(),
+                response=response_text,
+                objection_label="neutral",
+                confidence=0.0,
+                sentiment="neutral",
+                persona="Unknown",
+                strategy="static_pitch",
+                citations="",
+                should_handoff=False,
+                handoff_trigger=None,
+                explanation=explanation,
+                retrieved_docs=[],
+                session_id=session_id,
+                memory_context=memory.get_context_string(),
             )
         else:
             # ── ADAPTIVE branch: run the full graph pipeline ───────────────────
@@ -166,23 +173,25 @@ async def chat(
             # When handoff triggered, use the handoff_message as the response.
             do_handoff = bool(state.get("should_handoff", False))
             if do_handoff:
-                response_text = state.get("handoff_message") or state.get("response", "")
+                response_text = state.get("handoff_message") or state.get(
+                    "response", ""
+                )
             else:
                 response_text = state.get("response", "")
 
             exp_dict = explain(state)
             explanation = ExplanationResponse(
-                objection_reason = exp_dict["objection_reason"],
-                persona_reason   = exp_dict["persona_reason"],
-                sentiment_reason = exp_dict["sentiment_reason"],
-                strategy_reason  = exp_dict["strategy_reason"],
-                trigger_phrases  = exp_dict["trigger_phrases"],
-                confidence_note  = exp_dict["confidence_note"],
-                handoff_reason   = exp_dict["handoff_reason"],
+                objection_reason=exp_dict["objection_reason"],
+                persona_reason=exp_dict["persona_reason"],
+                sentiment_reason=exp_dict["sentiment_reason"],
+                strategy_reason=exp_dict["strategy_reason"],
+                trigger_phrases=exp_dict["trigger_phrases"],
+                confidence_note=exp_dict["confidence_note"],
+                handoff_reason=exp_dict["handoff_reason"],
             )
 
             facts = memory.get_facts()
-            persona_dict  = state.get("persona") or {}
+            persona_dict = state.get("persona") or {}
             persona_label = persona_dict.get("label")
             if persona_label:
                 facts["persona_label"] = persona_label
@@ -194,28 +203,28 @@ async def chat(
 
             retrieved_docs = [
                 RetrievedDoc(
-                    text        = d.get("text", ""),
-                    source_file = d.get("source_file", ""),
-                    chunk_index = d.get("chunk_index", -1),
-                    score       = d.get("score", 0.0),
+                    text=d.get("text", ""),
+                    source_file=d.get("source_file", ""),
+                    chunk_index=d.get("chunk_index", -1),
+                    score=d.get("score", 0.0),
                 )
                 for d in (state.get("retrieved_docs") or [])
             ]
 
             response = ChatResponse(
-                response        = response_text,
-                objection_label = objection_dict.get("label", "neutral"),
-                confidence      = float(state.get("confidence", 1.0)),
-                sentiment       = sentiment_dict.get("label", "neutral"),
-                persona         = persona_dict.get("label", "Unknown"),
-                strategy        = state.get("strategy", "discovery_questions"),
-                citations       = state.get("citations", ""),
-                should_handoff  = do_handoff,
-                handoff_trigger = state.get("handoff_trigger"),
-                explanation     = explanation,
-                retrieved_docs  = retrieved_docs,
-                session_id      = session_id,
-                memory_context  = memory.get_context_string(),
+                response=response_text,
+                objection_label=objection_dict.get("label", "neutral"),
+                confidence=float(state.get("confidence", 1.0)),
+                sentiment=sentiment_dict.get("label", "neutral"),
+                persona=persona_dict.get("label", "Unknown"),
+                strategy=state.get("strategy", "discovery_questions"),
+                citations=state.get("citations", ""),
+                should_handoff=do_handoff,
+                handoff_trigger=state.get("handoff_trigger"),
+                explanation=explanation,
+                retrieved_docs=retrieved_docs,
+                session_id=session_id,
+                memory_context=memory.get_context_string(),
             )
 
         # ── Log analytics event (fire-and-forget) ─────────────────────────────
@@ -227,24 +236,27 @@ async def chat(
         if response.should_handoff:
             logger.info(
                 "Handoff triggered | session=%s trigger=%s",
-                session_id, state.get("handoff_trigger", "unknown"),
+                session_id,
+                state.get("handoff_trigger", "unknown"),
             )
 
         # ── Emit structured request log ─────────────────────────────────────
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-        log_request({
-            "session_id": session_id,
-            "user_input_length": len(message),
-            "objection_label": response.objection_label,
-            "objection_confidence": response.confidence,
-            "sentiment_label": response.sentiment,
-            "persona_label": response.persona,
-            "strategy_chosen": response.strategy,
-            "response_length": len(response.response),
-            "latency_ms": latency_ms,
-            "should_handoff": response.should_handoff,
-            "handoff_trigger": state.get("handoff_trigger"),
-        })
+        log_request(
+            {
+                "session_id": session_id,
+                "user_input_length": len(message),
+                "objection_label": response.objection_label,
+                "objection_confidence": response.confidence,
+                "sentiment_label": response.sentiment,
+                "persona_label": response.persona,
+                "strategy_chosen": response.strategy,
+                "response_length": len(response.response),
+                "latency_ms": latency_ms,
+                "should_handoff": response.should_handoff,
+                "handoff_trigger": state.get("handoff_trigger"),
+            }
+        )
 
         return response
 
@@ -259,6 +271,7 @@ async def chat(
 
 
 # ─── GET /session/{session_id} ────────────────────────────────────────────────
+
 
 @router.get(
     "/session/{session_id}",
@@ -288,11 +301,15 @@ async def get_session_facts(
 ) -> SessionFactsResponse:
     session_id = session_id.strip()
     if not session_id:
-        raise HTTPException(status_code=400, detail="`session_id` must be a non-empty string.")
+        raise HTTPException(
+            status_code=400, detail="`session_id` must be a non-empty string."
+        )
 
     logger.info(
         "GET /session/%s | user=%s role=%s",
-        session_id, current_user.email, current_user.role,
+        session_id,
+        current_user.email,
+        current_user.role,
     )
 
     try:
@@ -301,23 +318,23 @@ async def get_session_facts(
         if not facts:
             # Session not found — return a valid response with found=False
             return SessionFactsResponse(
-                session_id        = session_id,
-                company_name      = None,
-                persona_label     = None,
-                tools_mentioned   = [],
-                objections_raised = [],
-                budget_signal     = None,
-                found             = False,
+                session_id=session_id,
+                company_name=None,
+                persona_label=None,
+                tools_mentioned=[],
+                objections_raised=[],
+                budget_signal=None,
+                found=False,
             )
 
         return SessionFactsResponse(
-            session_id        = session_id,
-            company_name      = facts.get("company_name"),
-            persona_label     = facts.get("persona_label"),
-            tools_mentioned   = facts.get("tools_mentioned") or [],
-            objections_raised = facts.get("objections_raised") or [],
-            budget_signal     = facts.get("budget_signal"),
-            found             = True,
+            session_id=session_id,
+            company_name=facts.get("company_name"),
+            persona_label=facts.get("persona_label"),
+            tools_mentioned=facts.get("tools_mentioned") or [],
+            objections_raised=facts.get("objections_raised") or [],
+            budget_signal=facts.get("budget_signal"),
+            found=True,
         )
 
     except HTTPException:

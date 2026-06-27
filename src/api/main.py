@@ -48,6 +48,7 @@ logger = get_logger("auralis.api")
 
 # ─── Lifespan (Startup / Shutdown) ────────────────────────────────────────────
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -66,9 +67,12 @@ async def lifespan(app: FastAPI):
     logger.info("Auralis API starting up — initialising database …")
 
     import os
+
     gemini_key = os.getenv("GEMINI_API_KEY")
     if not gemini_key or gemini_key.startswith("your_"):
-        logger.critical("GEMINI_API_KEY is missing or set to default! Please configure it in .env.")
+        logger.critical(
+            "GEMINI_API_KEY is missing or set to default! Please configure it in .env."
+        )
         raise RuntimeError("Missing GEMINI_API_KEY")
 
     try:
@@ -136,13 +140,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # Restrict in production
+    allow_origins=["*"],  # Restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ─── Structured logging middleware ────────────────────────────────────────────
+
 
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next):
@@ -162,12 +167,14 @@ async def logging_middleware(request: Request, call_next):
         logger.error("unhandled_exception", error=str(e), path=request.url.path)
         raise
 
+
 # ─── Prometheus auto-instrumentation (adds /metrics) ─────────────────────────
 
 Instrumentator().instrument(app).expose(app)
 
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
+
 
 @app.get(
     "/health",
@@ -200,6 +207,7 @@ app.include_router(analytics_router)
 # This makes the Authorize 🔒 button appear in Swagger UI so testers can
 # paste a JWT without manually setting the header. (Feature 14)
 
+
 def _custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -212,7 +220,7 @@ def _custom_openapi():
     )
     schema.setdefault("components", {}).setdefault("securitySchemes", {})
     schema["components"]["securitySchemes"]["BearerAuth"] = {
-        "type":   "http",
+        "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "Paste the access_token returned by POST /auth/token.",
@@ -228,4 +236,5 @@ app.openapi = _custom_openapi  # type: ignore[method-assign]
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("src.api.main:app", host="0.0.0.0", port=8000, reload=True)

@@ -67,24 +67,24 @@ def _get_llm():
 _STRATEGY_MAP: dict[str, dict[str, str]] = {
     "price": {
         "_default": "value_reframe",
-        "CEO":      "roi_business_case",
-        "Founder":  "roi_business_case",
-        "CTO":      "value_reframe",
+        "CEO": "roi_business_case",
+        "Founder": "roi_business_case",
+        "CTO": "value_reframe",
     },
     "trust": {
         "_default": "social_proof",
-        "CTO":      "technical_proof",
+        "CTO": "technical_proof",
         "Developer": "technical_proof",
     },
     "timing": {
         "_default": "urgency_creation",
-        "CEO":      "strategic_timing",
-        "Founder":  "strategic_timing",
+        "CEO": "strategic_timing",
+        "Founder": "strategic_timing",
     },
     "competitor": {
         "_default": "competitive_differentiation",
         "Developer": "technical_differentiation",
-        "CTO":       "technical_differentiation",
+        "CTO": "technical_differentiation",
     },
     "fit": {
         "_default": "needs_discovery",
@@ -100,25 +100,28 @@ _STRATEGY_MAP: dict[str, dict[str, str]] = {
 
 # ─── GraphState ───────────────────────────────────────────────────────────────
 
+
 class GraphState(TypedDict, total=False):
     """Shared mutable state passed between every node in the graph."""
-    user_input:       str
-    objection:        ObjectionResult
-    sentiment:        SentimentResult
-    persona:          PersonaResult
-    retrieved_docs:   list[dict]
-    citations:        str
-    memory_context:   str
-    strategy:         str
-    response:         str
-    confidence:       float
-    should_handoff:   bool
-    handoff_trigger:  str | None
-    handoff_message:  str
-    metadata:         dict[str, Any]
+
+    user_input: str
+    objection: ObjectionResult
+    sentiment: SentimentResult
+    persona: PersonaResult
+    retrieved_docs: list[dict]
+    citations: str
+    memory_context: str
+    strategy: str
+    response: str
+    confidence: float
+    should_handoff: bool
+    handoff_trigger: str | None
+    handoff_message: str
+    metadata: dict[str, Any]
 
 
 # ─── Node: classify ───────────────────────────────────────────────────────────
+
 
 def classify_node(state: GraphState) -> dict[str, Any]:
     """
@@ -128,27 +131,28 @@ def classify_node(state: GraphState) -> dict[str, Any]:
     text = state["user_input"]
     logger.info("[classify_node] text='%s'", text[:80])
 
-
     objection = classify(text)
     sentiment = analyze(text)
-    persona   = detect(text)
+    persona = detect(text)
 
     logger.info(
         "[classify_node] objection=%s(%.2f) sentiment=%s persona=%s",
-        objection["label"], objection["confidence"],
-        sentiment["label"], persona["label"],
+        objection["label"],
+        objection["confidence"],
+        sentiment["label"],
+        persona["label"],
     )
 
     # Increment Prometheus objection counter
     auralis_objections_total.labels(objection_label=objection["label"]).inc()
 
     return {
-        "objection":  objection,
-        "sentiment":  sentiment,
-        "persona":    persona,
+        "objection": objection,
+        "sentiment": sentiment,
+        "persona": persona,
         "confidence": objection["confidence"],
         "metadata": {
-            "pitch_angle":      persona["pitch_angle"],
+            "pitch_angle": persona["pitch_angle"],
             "objection_triggers": objection["triggers"],
             "tone_instruction": sentiment["tone_instruction"],
         },
@@ -157,35 +161,39 @@ def classify_node(state: GraphState) -> dict[str, Any]:
 
 # ─── Node: retrieve ───────────────────────────────────────────────────────────
 
+
 def retrieve_node(state: GraphState) -> dict[str, Any]:
     """
     Build a targeted query from user_input + objection label, then retrieve
     matching docs from the FAISS knowledge base.
     """
     user_input = state["user_input"]
-    objection  = state.get("objection", {})
-    obj_label  = objection.get("label", "")
+    objection = state.get("objection", {})
+    obj_label = objection.get("label", "")
 
     # Enrich query with the objection class for better retrieval precision
     query = f"{user_input} {obj_label} objection handling" if obj_label else user_input
     logger.info("[retrieve_node] query='%s'", query[:100])
 
     try:
-        docs     = retrieve(query, top_k=5)
+        docs = retrieve(query, top_k=5)
         citations = format_citations(docs)
     except FileNotFoundError:
-        logger.warning("[retrieve_node] FAISS index not found — proceeding without retrieval.")
-        docs      = []
+        logger.warning(
+            "[retrieve_node] FAISS index not found — proceeding without retrieval."
+        )
+        docs = []
         citations = ""
 
     logger.info("[retrieve_node] %d docs retrieved", len(docs))
     return {
         "retrieved_docs": docs,
-        "citations":      citations,
+        "citations": citations,
     }
 
 
 # ─── Node: strategy ───────────────────────────────────────────────────────────
+
 
 def strategy_node(state: GraphState) -> dict[str, Any]:
     """
@@ -193,15 +201,19 @@ def strategy_node(state: GraphState) -> dict[str, Any]:
 
     Falls back to the objection-level default if no persona override exists.
     """
-    obj_label    = state.get("objection", {}).get("label", "neutral")
-    persona_label = state.get("persona",   {}).get("label", "Unknown")
+    obj_label = state.get("objection", {}).get("label", "neutral")
+    persona_label = state.get("persona", {}).get("label", "Unknown")
 
     persona_map = _STRATEGY_MAP.get(obj_label, {"_default": "discovery_questions"})
-    strategy    = persona_map.get(persona_label) or persona_map.get("_default", "discovery_questions")
+    strategy = persona_map.get(persona_label) or persona_map.get(
+        "_default", "discovery_questions"
+    )
 
     logger.info(
         "[strategy_node] objection=%s persona=%s → strategy=%s",
-        obj_label, persona_label, strategy,
+        obj_label,
+        persona_label,
+        strategy,
     )
 
     # Merge competitor name into metadata if applicable
@@ -238,7 +250,6 @@ Communication rules for CEO persona:
 - Keep the entire response under 150 words.
 - End with a question tied to their strategic goals, not product features.
 """,
-
     "CTO": """\
 You are Auralis, an elite AI sales assistant optimised for technical leadership.
 
@@ -253,7 +264,6 @@ Communication rules for CTO persona:
 - Keep the response under 200 words.
 - End with a technical discovery question: "What does your current stack look like?"
 """,
-
     "Developer": """\
 You are Auralis, an elite AI sales assistant optimised for developer audiences.
 
@@ -267,7 +277,6 @@ Communication rules for Developer persona:
 - Keep it concise and scannable; use code formatting where possible.
 - End with a practical question: "What's your current integration approach?"
 """,
-
     "Product_Manager": """\
 You are Auralis, an elite AI sales assistant optimised for Product Managers.
 
@@ -281,7 +290,6 @@ Communication rules for Product Manager persona:
 - Keep the response under 180 words.
 - End with a roadmap question: "Which user problem is your team most focused on this quarter?"
 """,
-
     "Founder": """\
 You are Auralis, an elite AI sales assistant optimised for startup founders.
 
@@ -296,7 +304,6 @@ Communication rules for Founder persona:
 - Keep it punchy and under 160 words.
 - End with a GTM question: "What's your biggest bottleneck to closing deals faster?"
 """,
-
     "Unknown": """\
 You are Auralis, an adaptive AI sales assistant.
 
@@ -340,7 +347,7 @@ def generate_node(state: GraphState) -> dict[str, Any]:
     """
     from src.strategies.router import get_strategy_prompt  # noqa: PLC0415
 
-    citations     = state.get("citations") or ""
+    citations = state.get("citations") or ""
     persona_label = (state.get("persona") or {}).get("label", "Unknown")
 
     logger.info(
@@ -356,13 +363,14 @@ def generate_node(state: GraphState) -> dict[str, Any]:
     llm = _get_llm()
     # pyrefly: ignore [missing-import]
     from langchain_core.messages import HumanMessage, SystemMessage  # noqa: PLC0415
+
     system_prompt = _get_system_prompt(persona_label)
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
     ]
     ai_msg_chunks = llm.stream(messages)
-    
+
     response_parts = []
     for chunk in ai_msg_chunks:
         if isinstance(chunk.content, list):
@@ -373,7 +381,7 @@ def generate_node(state: GraphState) -> dict[str, Any]:
                     response_parts.append(part)
         else:
             response_parts.append(str(chunk.content))
-            
+
     response_text = "".join(response_parts)
 
     # Append citations block if the strategy prompt didn't embed them
@@ -386,19 +394,21 @@ def generate_node(state: GraphState) -> dict[str, Any]:
 
 # ─── Node: handoff ────────────────────────────────────────────────────────────
 
+
 def handoff_node(state: GraphState) -> dict:
-    decision = evaluate_handoff(state, state['user_input'])
+    decision = evaluate_handoff(state, state["user_input"])
     if decision["should_handoff"]:
         trigger = decision["trigger"].value if decision["trigger"] else "unknown"
         auralis_handoffs_total.labels(trigger=trigger).inc()
     return {
-        'should_handoff': decision['should_handoff'],
-        'handoff_trigger': decision['trigger'].value if decision['trigger'] else None,
-        'handoff_message': decision['handoff_message'],
+        "should_handoff": decision["should_handoff"],
+        "handoff_trigger": decision["trigger"].value if decision["trigger"] else None,
+        "handoff_message": decision["handoff_message"],
     }
 
 
 # ─── Conditional router ───────────────────────────────────────────────────────
+
 
 def _should_handoff(state: GraphState) -> str:
     """
@@ -414,18 +424,19 @@ def _should_handoff(state: GraphState) -> str:
 
 # ─── Graph compilation ────────────────────────────────────────────────────────
 
+
 def _build_graph() -> StateGraph:
     builder = StateGraph(GraphState)
 
     # Register nodes
-    builder.add_node("classify_node",  classify_node)
-    builder.add_node("retrieve_node",  retrieve_node)
-    builder.add_node("strategy_node",  strategy_node)
-    builder.add_node("generate_node",  generate_node)
-    builder.add_node("handoff_node",   handoff_node)
+    builder.add_node("classify_node", classify_node)
+    builder.add_node("retrieve_node", retrieve_node)
+    builder.add_node("strategy_node", strategy_node)
+    builder.add_node("generate_node", generate_node)
+    builder.add_node("handoff_node", handoff_node)
 
     # Linear backbone
-    builder.add_edge(START,           "classify_node")
+    builder.add_edge(START, "classify_node")
     builder.add_edge("classify_node", "retrieve_node")
     builder.add_edge("retrieve_node", "strategy_node")
     builder.add_edge("strategy_node", "generate_node")
@@ -436,7 +447,7 @@ def _build_graph() -> StateGraph:
         _should_handoff,
         {
             "handoff": "handoff_node",
-            "end":     END,
+            "end": END,
         },
     )
 
@@ -451,6 +462,7 @@ _graph = _build_graph().compile()
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
+
 
 def run_graph(user_input: str, memory: ConversationMemory) -> GraphState:
     """
@@ -475,10 +487,10 @@ def run_graph(user_input: str, memory: ConversationMemory) -> GraphState:
 
     # Seed the initial state
     initial_state: GraphState = {
-        "user_input":     user_input.strip(),
+        "user_input": user_input.strip(),
         "memory_context": memory.get_context_string(),
         "should_handoff": False,
-        "metadata":       {},
+        "metadata": {},
     }
 
     logger.info("run_graph | input='%s'", user_input[:80])

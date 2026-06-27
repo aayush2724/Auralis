@@ -80,26 +80,27 @@ _HYPOTHESES: dict[str, str] = {
 
 # One-sentence pitch angle per persona.
 _PITCH_ANGLES: dict[str, str] = {
-    "CEO":             "Lead with ROI and operational cost savings.",
-    "CTO":             "Lead with architecture, scalability, and API quality.",
-    "Developer":       "Lead with REST APIs, SDKs, and developer experience.",
+    "CEO": "Lead with ROI and operational cost savings.",
+    "CTO": "Lead with architecture, scalability, and API quality.",
+    "Developer": "Lead with REST APIs, SDKs, and developer experience.",
     "Product_Manager": "Lead with workflow integration and measurable user outcomes.",
-    "Founder":         "Lead with speed-to-market and competitive moat.",
-    "Unknown":         "Lead with a broad value overview and ask discovery questions.",
+    "Founder": "Lead with speed-to-market and competitive moat.",
+    "Unknown": "Lead with a broad value overview and ask discovery questions.",
 }
 
 
 # ─── TypedDict ────────────────────────────────────────────────────────────────
 
+
 class PersonaResult(TypedDict):
     """Return type of detect()."""
-    label:      str    # one of PERSONAS
+
+    label: str  # one of PERSONAS
     confidence: float  # softmax score of winning persona (0.0–1.0)
-    pitch_angle: str   # one-sentence pitch instruction for this persona
+    pitch_angle: str  # one-sentence pitch instruction for this persona
 
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
-
 
 
 def _get_pipeline():
@@ -107,6 +108,7 @@ def _get_pipeline():
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
+
 
 def detect(text: str) -> PersonaResult:
     """
@@ -145,13 +147,13 @@ def detect(text: str) -> PersonaResult:
     result = clf(
         text,
         candidate_labels=hypotheses_values,
-        hypothesis_template="{}",   # hypotheses are already full sentences
+        hypothesis_template="{}",  # hypotheses are already full sentences
         multi_label=False,
     )
 
     # The result['labels'] will be the long hypothesis strings, map back to persona name
-    winning_label: str   = val_to_key[result["labels"][0]]
-    confidence: float    = round(float(result["scores"][0]), 4)
+    winning_label: str = val_to_key[result["labels"][0]]
+    confidence: float = round(float(result["scores"][0]), 4)
 
     # Apply unknown threshold
     if confidence < _UNKNOWN_THRESHOLD:
@@ -160,9 +162,7 @@ def detect(text: str) -> PersonaResult:
 
     pitch_angle = _PITCH_ANGLES[winning_label]
 
-    logger.debug(
-        "detect | label=%s confidence=%.3f", winning_label, confidence
-    )
+    logger.debug("detect | label=%s confidence=%.3f", winning_label, confidence)
 
     return PersonaResult(
         label=winning_label,
@@ -172,6 +172,7 @@ def detect(text: str) -> PersonaResult:
 
 
 # ─── CLI smoke-test ───────────────────────────────────────────────────────────
+
 
 def _main() -> None:
     if len(sys.argv) < 2:

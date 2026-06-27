@@ -29,19 +29,19 @@ logger = logging.getLogger("auralis.classifier.competitor")
 # value = list of regex patterns (case-insensitive) that match that competitor
 
 _COMPETITOR_ALIASES: dict[str, list[str]] = {
-    "HubSpot":    [r"hubspot", r"hub\s*spot"],
+    "HubSpot": [r"hubspot", r"hub\s*spot"],
     "Salesforce": [r"salesforce", r"sfdc", r"sales\s*force", r"sf\.com"],
-    "Pipedrive":  [r"pipedrive", r"pipe\s*drive"],
-    "Zoho":       [r"zoho"],
-    "Outreach":   [r"outreach\.io", r"\boutreach\b"],
-    "Gong":       [r"\bgong\b", r"gong\.io"],
-    "Chorus":     [r"\bchorus\b", r"chorus\.ai"],
-    "Intercom":   [r"\bintercom\b"],
-    "Drift":      [r"\bdrift\b"],
+    "Pipedrive": [r"pipedrive", r"pipe\s*drive"],
+    "Zoho": [r"zoho"],
+    "Outreach": [r"outreach\.io", r"\boutreach\b"],
+    "Gong": [r"\bgong\b", r"gong\.io"],
+    "Chorus": [r"\bchorus\b", r"chorus\.ai"],
+    "Intercom": [r"\bintercom\b"],
+    "Drift": [r"\bdrift\b"],
     "Freshsales": [r"freshsales", r"freshworks\s*crm"],
-    "Copper":     [r"\bcopper\s*crm\b", r"\bcopper\b(?=\s*crm|\s*for)"],
-    "Monday":     [r"monday\.com", r"\bmonday\b(?=\s*crm|\s*sales)"],
-    "Close":      [r"\bclose\.io\b", r"\bclose\s*crm\b"],
+    "Copper": [r"\bcopper\s*crm\b", r"\bcopper\b(?=\s*crm|\s*for)"],
+    "Monday": [r"monday\.com", r"\bmonday\b(?=\s*crm|\s*sales)"],
+    "Close": [r"\bclose\.io\b", r"\bclose\s*crm\b"],
     "ActiveCampaign": [r"activecampaign", r"active\s*campaign"],
 }
 
@@ -61,6 +61,7 @@ _COMPETITOR_CONTEXT_WORDS = re.compile(
 
 
 # ─── Regex detector ───────────────────────────────────────────────────────────
+
 
 def _regex_detect(text: str) -> str | None:
     """Return canonical competitor name if found by regex, else None."""
@@ -84,9 +85,7 @@ def _nli_detect(text: str) -> str | None:
     Only called when regex finds nothing but context words suggest a competitor.
     """
     candidate_labels = list(_COMPETITOR_ALIASES.keys())
-    hypothesis_template = (
-        "The speaker is mentioning, using, or comparing against {}."
-    )
+    hypothesis_template = "The speaker is mentioning, using, or comparing against {}."
 
     clf = _get_nli_pipeline()
     result = clf(
@@ -96,7 +95,7 @@ def _nli_detect(text: str) -> str | None:
         multi_label=False,
     )
 
-    top_label: str   = result["labels"][0]
+    top_label: str = result["labels"][0]
     top_score: float = result["scores"][0]
 
     # Only accept NLI result if it's confident enough
@@ -108,6 +107,7 @@ def _nli_detect(text: str) -> str | None:
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
+
 
 def detect_competitor(text: str) -> str | None:
     """

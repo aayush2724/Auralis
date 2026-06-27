@@ -45,7 +45,7 @@ def _get_embeddings() -> HuggingFaceEmbeddings:
         logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
         _embeddings = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL,
-            model_kwargs={"device": "cpu", "low_cpu_mem_usage": False}
+            model_kwargs={"device": "cpu", "low_cpu_mem_usage": False},
         )
     return _embeddings
 

@@ -2,16 +2,18 @@ from __future__ import annotations
 from typing import TypedDict
 
 PERSONA_PITCH_ANGLES = {
-    "CEO":             "Lead with ROI and operational cost savings.",
-    "CTO":             "Lead with architecture, scalability, and API quality.",
-    "Developer":       "Lead with REST APIs, SDKs, and developer experience.",
+    "CEO": "Lead with ROI and operational cost savings.",
+    "CTO": "Lead with architecture, scalability, and API quality.",
+    "Developer": "Lead with REST APIs, SDKs, and developer experience.",
     "Product_Manager": "Lead with workflow integration and measurable user outcomes.",
-    "Founder":         "Lead with speed-to-market and competitive moat.",
-    "Unknown":         "Lead with a broad value overview and ask discovery questions.",
+    "Founder": "Lead with speed-to-market and competitive moat.",
+    "Unknown": "Lead with a broad value overview and ask discovery questions.",
 }
+
 
 class ExplanationResult(TypedDict, total=False):
     """Human-readable audit trail of every model decision in the graph."""
+
     objection_reason: str
     persona_reason: str
     sentiment_reason: str
@@ -19,6 +21,7 @@ class ExplanationResult(TypedDict, total=False):
     trigger_phrases: list[str]
     confidence_note: str
     handoff_reason: str | None
+
 
 def explain(state: dict) -> ExplanationResult:
     """
@@ -30,7 +33,9 @@ def explain(state: dict) -> ExplanationResult:
     conf = objection_dict.get("confidence") or state.get("objection confidence")
     if conf is None:
         conf = state.get("confidence") or 0.0
-    triggers = objection_dict.get("triggers") or state.get("objection triggers list") or []
+    triggers = (
+        objection_dict.get("triggers") or state.get("objection triggers list") or []
+    )
 
     # 1. objection_reason
     if not triggers:
@@ -41,52 +46,96 @@ def explain(state: dict) -> ExplanationResult:
     # 2. persona_reason
     persona_dict = state.get("persona") or {}
     persona_label = persona_dict.get("label") or state.get("persona label") or "Unknown"
-    persona_conf = persona_dict.get("confidence") or state.get("persona confidence") or 0.0
-    pitch_angle = PERSONA_PITCH_ANGLES.get(persona_label, PERSONA_PITCH_ANGLES["Unknown"])
-    
+    persona_conf = (
+        persona_dict.get("confidence") or state.get("persona confidence") or 0.0
+    )
+    pitch_angle = PERSONA_PITCH_ANGLES.get(
+        persona_label, PERSONA_PITCH_ANGLES["Unknown"]
+    )
+
     persona_reason = f"Identified {persona_label} persona (confidence {persona_conf:.0%}). Pitch angle applied: {pitch_angle}."
 
     # 3. sentiment_reason
     sentiment_dict = state.get("sentiment") or {}
-    sentiment_label = sentiment_dict.get("label") or state.get("sentiment label") or "neutral"
+    sentiment_label = (
+        sentiment_dict.get("label") or state.get("sentiment label") or "neutral"
+    )
     sentiment_score = sentiment_dict.get("score") or state.get("sentiment score") or 0.0
-    tone_instruction = sentiment_dict.get("tone_instruction") or state.get("tone_instruction") or "Stay professional."
-    
+    tone_instruction = (
+        sentiment_dict.get("tone_instruction")
+        or state.get("tone_instruction")
+        or "Stay professional."
+    )
+
     sentiment_reason = f"Sentiment detected as {sentiment_label} (score {sentiment_score:.0%}). Tone instruction injected: {tone_instruction}."
 
     # 4. strategy_reason
-    strategy = state.get("strategy") or state.get("strategy name chosen") or "discovery_questions"
-    
+    strategy = (
+        state.get("strategy")
+        or state.get("strategy name chosen")
+        or "discovery_questions"
+    )
+
     # Rationale per strategy combo
     RATIONALES = {
-        ("price", "CTO"): "ROI framing is more persuasive than discounting for technical buyers.",
-        ("price", "CEO"): "CEOs need clear ROI framing and business case justifications to approve spend.",
-        ("price", "Founder"): "Founders want to understand the ROI and speed to market payback.",
-        ("trust", "CTO"): "CTOs require concrete technical proof like SOC2 compliance or architectural blueprints.",
-        ("trust", "Developer"): "Developers need technical proof including open source transparency and developer documentation.",
-        ("timing", "CEO"): "Strategic timing helps CEOs coordinate adoption with broader company roadmap goals.",
-        ("competitor", "Developer"): "Developers evaluate technical differentiation such as API design and SDK support.",
-        ("competitor", "CEO"): "Executive buyers need switching cost justification first.",
-        ("fit", "Product_Manager"): "Product Managers respond well to use-case mapping that targets specific workflow friction.",
-        ("buying_signal", "Unknown"): "Applied closing accelerator to capitalize on buying signals and streamline signup.",
+        (
+            "price",
+            "CTO",
+        ): "ROI framing is more persuasive than discounting for technical buyers.",
+        (
+            "price",
+            "CEO",
+        ): "CEOs need clear ROI framing and business case justifications to approve spend.",
+        (
+            "price",
+            "Founder",
+        ): "Founders want to understand the ROI and speed to market payback.",
+        (
+            "trust",
+            "CTO",
+        ): "CTOs require concrete technical proof like SOC2 compliance or architectural blueprints.",
+        (
+            "trust",
+            "Developer",
+        ): "Developers need technical proof including open source transparency and developer documentation.",
+        (
+            "timing",
+            "CEO",
+        ): "Strategic timing helps CEOs coordinate adoption with broader company roadmap goals.",
+        (
+            "competitor",
+            "Developer",
+        ): "Developers evaluate technical differentiation such as API design and SDK support.",
+        (
+            "competitor",
+            "CEO",
+        ): "Executive buyers need switching cost justification first.",
+        (
+            "fit",
+            "Product_Manager",
+        ): "Product Managers respond well to use-case mapping that targets specific workflow friction.",
+        (
+            "buying_signal",
+            "Unknown",
+        ): "Applied closing accelerator to capitalize on buying signals and streamline signup.",
     }
-    
+
     rationale = RATIONALES.get((label, persona_label))
     if not rationale:
         if label == "buying_signal":
             rationale = "Applied closing accelerator to capitalize on buying signals and streamline signup."
         else:
             rationale = "Our strategy focuses on resolving the specific concern with the most relevant role-based value."
-            
+
     strategy_reason = f"Applied {strategy} strategy because objection was {label} and persona was {persona_label}. {rationale}"
 
     # 5. confidence_note
     if conf < 0.5:
-        confidence_note = 'Low confidence — response may be less targeted.'
+        confidence_note = "Low confidence — response may be less targeted."
     elif conf < 0.75:
-        confidence_note = 'Moderate confidence — strategy is a best match.'
+        confidence_note = "Moderate confidence — strategy is a best match."
     else:
-        confidence_note = 'High confidence — strategy is well-matched.'
+        confidence_note = "High confidence — strategy is well-matched."
 
     # 6. trigger_phrases
     trigger_phrases = list(triggers)
@@ -106,9 +155,13 @@ def explain(state: dict) -> ExplanationResult:
             if conf < 0.40:
                 reasons.append(f"low classifier confidence ({conf:.0%})")
             if sentiment_label == "negative" and sentiment_score > 0.85:
-                reasons.append(f"high frustration signal ({sentiment_score:.0%} negative sentiment)")
+                reasons.append(
+                    f"high frustration signal ({sentiment_score:.0%} negative sentiment)"
+                )
             if reasons:
-                handoff_reason = f"Human handoff triggered due to: {' and '.join(reasons)}."
+                handoff_reason = (
+                    f"Human handoff triggered due to: {' and '.join(reasons)}."
+                )
             else:
                 handoff_reason = "Human handoff triggered (threshold condition met)."
 
@@ -119,5 +172,5 @@ def explain(state: dict) -> ExplanationResult:
         strategy_reason=strategy_reason,
         trigger_phrases=trigger_phrases,
         confidence_note=confidence_note,
-        handoff_reason=handoff_reason
+        handoff_reason=handoff_reason,
     )

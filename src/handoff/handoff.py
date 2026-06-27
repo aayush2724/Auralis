@@ -26,21 +26,23 @@ logger = logging.getLogger("auralis.handoff")
 
 class HandoffTrigger(str, Enum):
     """Reason for escalating to a human agent."""
-    LOW_CONFIDENCE   = "LOW_CONFIDENCE"
-    ANGRY_CUSTOMER   = "ANGRY_CUSTOMER"
-    USER_REQUESTED   = "USER_REQUESTED"
+
+    LOW_CONFIDENCE = "LOW_CONFIDENCE"
+    ANGRY_CUSTOMER = "ANGRY_CUSTOMER"
+    USER_REQUESTED = "USER_REQUESTED"
 
 
 class HandoffDecision(TypedDict):
     """Result of handoff evaluation."""
-    should_handoff:   bool
-    trigger:          HandoffTrigger | None
-    handoff_message:  str
+
+    should_handoff: bool
+    trigger: HandoffTrigger | None
+    handoff_message: str
 
 
 # ─── Thresholds ───────────────────────────────────────────────────────────────
 
-_LOW_CONFIDENCE_THRESHOLD  = 0.40
+_LOW_CONFIDENCE_THRESHOLD = 0.40
 _ANGRY_SENTIMENT_THRESHOLD = 0.85
 
 # Phrases that signal the user wants a human
@@ -78,6 +80,7 @@ _HANDOFF_MESSAGES: dict[HandoffTrigger, str] = {
 
 # ─── Public API ───────────────────────────────────────────────────────────────
 
+
 def evaluate_handoff(
     state: dict[str, Any],
     user_input: str,
@@ -105,7 +108,8 @@ def evaluate_handoff(
         if phrase in user_lower:
             msg = _HANDOFF_MESSAGES[HandoffTrigger.USER_REQUESTED]
             logger.info(
-                "[evaluate_handoff] trigger=USER_REQUESTED phrase='%s'", phrase,
+                "[evaluate_handoff] trigger=USER_REQUESTED phrase='%s'",
+                phrase,
             )
             return HandoffDecision(
                 should_handoff=True,
@@ -126,7 +130,8 @@ def evaluate_handoff(
     if obj_confidence < _LOW_CONFIDENCE_THRESHOLD and s_label != "negative":
         msg = _HANDOFF_MESSAGES[HandoffTrigger.LOW_CONFIDENCE]
         logger.info(
-            "[evaluate_handoff] trigger=LOW_CONFIDENCE confidence=%.2f", obj_confidence,
+            "[evaluate_handoff] trigger=LOW_CONFIDENCE confidence=%.2f",
+            obj_confidence,
         )
         return HandoffDecision(
             should_handoff=True,
@@ -139,10 +144,15 @@ def evaluate_handoff(
     # in these cases and the AI is specifically designed to handle them.
     is_standard_objection = obj_label in ("price", "competitor", "timing", "fit")
 
-    if s_label == "negative" and s_score > _ANGRY_SENTIMENT_THRESHOLD and not is_standard_objection:
+    if (
+        s_label == "negative"
+        and s_score > _ANGRY_SENTIMENT_THRESHOLD
+        and not is_standard_objection
+    ):
         msg = _HANDOFF_MESSAGES[HandoffTrigger.ANGRY_CUSTOMER]
         logger.info(
-            "[evaluate_handoff] trigger=ANGRY_CUSTOMER score=%.2f", s_score,
+            "[evaluate_handoff] trigger=ANGRY_CUSTOMER score=%.2f",
+            s_score,
         )
         return HandoffDecision(
             should_handoff=True,
@@ -163,21 +173,32 @@ def evaluate_handoff(
 if __name__ == "__main__":
     import sys
 
-    def _test(name: str, state: dict, user_input: str, expected_trigger: HandoffTrigger | None) -> None:
+    def _test(
+        name: str, state: dict, user_input: str, expected_trigger: HandoffTrigger | None
+    ) -> None:
         result = evaluate_handoff(state, user_input)
         status = "PASS" if result["trigger"] == expected_trigger else "FAIL"
         print(f"[{status}] {name}")
         if status == "FAIL":
-            print(f"  expected trigger={expected_trigger}, got trigger={result['trigger']}")
-            print(f"  should_handoff={result['should_handoff']}, message={result['handoff_message']!r}")
+            print(
+                f"  expected trigger={expected_trigger}, got trigger={result['trigger']}"
+            )
+            print(
+                f"  should_handoff={result['should_handoff']}, message={result['handoff_message']!r}"
+            )
             sys.exit(1)
         else:
-            print(f"  trigger={result['trigger']}, message={result['handoff_message'][:60]}...")
+            print(
+                f"  trigger={result['trigger']}, message={result['handoff_message'][:60]}..."
+            )
 
     # Test 1: USER_REQUESTED
     _test(
         "USER_REQUESTED trigger",
-        state={"objection": {"confidence": 0.9}, "sentiment": {"label": "neutral", "score": 0.1}},
+        state={
+            "objection": {"confidence": 0.9},
+            "sentiment": {"label": "neutral", "score": 0.1},
+        },
         user_input="I'd like to talk to a human please",
         expected_trigger=HandoffTrigger.USER_REQUESTED,
     )
@@ -185,7 +206,10 @@ if __name__ == "__main__":
     # Test 2: LOW_CONFIDENCE (negative sentiment present but label is not negative → fires)
     _test(
         "LOW_CONFIDENCE trigger",
-        state={"objection": {"confidence": 0.25}, "sentiment": {"label": "neutral", "score": 0.3}},
+        state={
+            "objection": {"confidence": 0.25},
+            "sentiment": {"label": "neutral", "score": 0.3},
+        },
         user_input="I'm not sure about this pricing model",
         expected_trigger=HandoffTrigger.LOW_CONFIDENCE,
     )
@@ -193,7 +217,10 @@ if __name__ == "__main__":
     # Test 3: ANGRY_CUSTOMER
     _test(
         "ANGRY_CUSTOMER trigger",
-        state={"objection": {"confidence": 0.9}, "sentiment": {"label": "negative", "score": 0.92}},
+        state={
+            "objection": {"confidence": 0.9},
+            "sentiment": {"label": "negative", "score": 0.92},
+        },
         user_input="This is absolutely terrible service, I'm furious!",
         expected_trigger=HandoffTrigger.ANGRY_CUSTOMER,
     )
@@ -201,7 +228,10 @@ if __name__ == "__main__":
     # Test 4: No trigger on normal confident positive message
     _test(
         "No trigger (normal message)",
-        state={"objection": {"confidence": 0.85}, "sentiment": {"label": "positive", "score": 0.7}},
+        state={
+            "objection": {"confidence": 0.85},
+            "sentiment": {"label": "positive", "score": 0.7},
+        },
         user_input="Sounds great, I'd love to hear more about the product",
         expected_trigger=None,
     )
@@ -209,7 +239,10 @@ if __name__ == "__main__":
     # Test 5: LOW_CONFIDENCE does NOT fire when sentiment is negative (ANGRY takes priority)
     _test(
         "LOW_CONFIDENCE skipped when negative sentiment",
-        state={"objection": {"confidence": 0.20}, "sentiment": {"label": "negative", "score": 0.90}},
+        state={
+            "objection": {"confidence": 0.20},
+            "sentiment": {"label": "negative", "score": 0.90},
+        },
         user_input="I hate this, it's too expensive and I'm angry",
         expected_trigger=HandoffTrigger.ANGRY_CUSTOMER,
     )

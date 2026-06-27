@@ -51,18 +51,18 @@ if "last_response" not in st.session_state:
 
 _SENTIMENT_EMOJI = {
     "positive": "😊",
-    "neutral":  "😐",
+    "neutral": "😐",
     "negative": "😠",
 }
 
 _OBJECTION_COLORS = {
-    "price":       "#ff6b6b",
-    "trust":       "#ffa94d",
-    "timing":      "#ffd43b",
-    "competitor":  "#69db7c",
-    "fit":         "#74c0fc",
+    "price": "#ff6b6b",
+    "trust": "#ffa94d",
+    "timing": "#ffd43b",
+    "competitor": "#69db7c",
+    "fit": "#74c0fc",
     "buying_signal": "#da77f2",
-    "neutral":     "#adb5bd",
+    "neutral": "#adb5bd",
 }
 
 
@@ -73,7 +73,13 @@ def _auth_headers() -> dict[str, str]:
 
 def _api_post(path: str, json: dict | None = None, **kwargs) -> httpx.Response | None:
     try:
-        return httpx.post(f"{API_BASE}{path}", json=json, headers=_auth_headers(), timeout=120.0, **kwargs)
+        return httpx.post(
+            f"{API_BASE}{path}",
+            json=json,
+            headers=_auth_headers(),
+            timeout=120.0,
+            **kwargs,
+        )
     except httpx.ConnectError:
         st.error("Cannot connect to auralis API. Is it running?")
         return None
@@ -81,7 +87,9 @@ def _api_post(path: str, json: dict | None = None, **kwargs) -> httpx.Response |
 
 def _api_get(path: str, **kwargs) -> httpx.Response | None:
     try:
-        return httpx.get(f"{API_BASE}{path}", headers=_auth_headers(), timeout=15, **kwargs)
+        return httpx.get(
+            f"{API_BASE}{path}", headers=_auth_headers(), timeout=15, **kwargs
+        )
     except httpx.ConnectError:
         st.error("Cannot connect to auralis API. Is it running?")
         return None
@@ -159,18 +167,23 @@ def _tab_chat():
             # Call API
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    resp = _api_post("/chat", json={
-                        "session_id": st.session_state.session_id,
-                        "message": prompt,
-                    })
+                    resp = _api_post(
+                        "/chat",
+                        json={
+                            "session_id": st.session_state.session_id,
+                            "message": prompt,
+                        },
+                    )
                     if resp and resp.status_code == 200:
                         data = resp.json()
                         st.session_state.last_response = data
                         st.markdown(data["response"])
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": data["response"],
-                        })
+                        st.session_state.messages.append(
+                            {
+                                "role": "assistant",
+                                "content": data["response"],
+                            }
+                        )
                     elif resp:
                         st.error(f"API error: {resp.status_code} — {resp.text}")
 
@@ -187,7 +200,7 @@ def _tab_chat():
             st.markdown(
                 f'<div style="background:{color};color:white;padding:8px 12px;'
                 f'border-radius:8px;text-align:center;margin-bottom:8px;">'
-                f'<b>{obj_label.upper()}</b><br>{conf:.0%} confidence</div>',
+                f"<b>{obj_label.upper()}</b><br>{conf:.0%} confidence</div>",
                 unsafe_allow_html=True,
             )
 
@@ -302,18 +315,30 @@ def _tab_analytics():
         if trend:
             dates = [d["date"] for d in reversed(trend)]
             fig_line = go.Figure()
-            fig_line.add_trace(go.Scatter(
-                x=dates, y=[d["positive"] for d in reversed(trend)],
-                name="Positive", line=dict(color="#51cf66", width=2),
-            ))
-            fig_line.add_trace(go.Scatter(
-                x=dates, y=[d["neutral"] for d in reversed(trend)],
-                name="Neutral", line=dict(color="#ffd43b", width=2),
-            ))
-            fig_line.add_trace(go.Scatter(
-                x=dates, y=[d["negative"] for d in reversed(trend)],
-                name="Negative", line=dict(color="#ff6b6b", width=2),
-            ))
+            fig_line.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=[d["positive"] for d in reversed(trend)],
+                    name="Positive",
+                    line=dict(color="#51cf66", width=2),
+                )
+            )
+            fig_line.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=[d["neutral"] for d in reversed(trend)],
+                    name="Neutral",
+                    line=dict(color="#ffd43b", width=2),
+                )
+            )
+            fig_line.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=[d["negative"] for d in reversed(trend)],
+                    name="Negative",
+                    line=dict(color="#ff6b6b", width=2),
+                )
+            )
             fig_line.update_layout(
                 title="Sentiment Trend (Last 30 Days)",
                 xaxis_title="Date",
@@ -340,16 +365,26 @@ def _tab_ab_test():
     static_conv = data["static_conversion_rate"]
     adaptive_conv = data["adaptive_conversion_rate"]
 
-    fig = go.Figure(data=[
-        go.Bar(
-            name="Static", x=["Conversion Rate"], y=[static_conv],
-            marker_color="#adb5bd", text=[f"{static_conv:.1%}"], textposition="auto",
-        ),
-        go.Bar(
-            name="Adaptive", x=["Conversion Rate"], y=[adaptive_conv],
-            marker_color="#51cf66", text=[f"{adaptive_conv:.1%}"], textposition="auto",
-        ),
-    ])
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                name="Static",
+                x=["Conversion Rate"],
+                y=[static_conv],
+                marker_color="#adb5bd",
+                text=[f"{static_conv:.1%}"],
+                textposition="auto",
+            ),
+            go.Bar(
+                name="Adaptive",
+                x=["Conversion Rate"],
+                y=[adaptive_conv],
+                marker_color="#51cf66",
+                text=[f"{adaptive_conv:.1%}"],
+                textposition="auto",
+            ),
+        ]
+    )
     fig.update_layout(
         barmode="group",
         title="Conversion Rate: Static vs Adaptive",
@@ -452,12 +487,14 @@ def main():
         st.caption(f"Session: `{st.session_state.session_id[:12]}...`")
 
     # Tabs
-    tab_chat, tab_analytics, tab_ab, tab_kb = st.tabs([
-        "💬 Sales Chat",
-        "📊 Analytics",
-        "🧪 A/B Test",
-        "📁 Knowledge Base",
-    ])
+    tab_chat, tab_analytics, tab_ab, tab_kb = st.tabs(
+        [
+            "💬 Sales Chat",
+            "📊 Analytics",
+            "🧪 A/B Test",
+            "📁 Knowledge Base",
+        ]
+    )
 
     with tab_chat:
         _tab_chat()

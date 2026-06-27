@@ -54,14 +54,18 @@ JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # Default admin seeded when the users table is empty
-_ADMIN_EMAIL:    str = os.getenv("ADMIN_EMAIL",    "admin@auralis.ai")
+_ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@auralis.ai")
 _ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "changeme")
 
 if JWT_SECRET_KEY == "CHANGE_ME_IN_PRODUCTION_USE_A_LONG_RANDOM_SECRET":
-    logger.warning("SECURITY WARNING: Using default insecure JWT_SECRET_KEY. Ensure this is overridden in production!")
+    logger.warning(
+        "SECURITY WARNING: Using default insecure JWT_SECRET_KEY. Ensure this is overridden in production!"
+    )
 
 if _ADMIN_PASSWORD == "changeme":
-    logger.warning("SECURITY WARNING: Using default ADMIN_PASSWORD ('changeme'). Change it in your production .env file!")
+    logger.warning(
+        "SECURITY WARNING: Using default ADMIN_PASSWORD ('changeme'). Change it in your production .env file!"
+    )
 
 # ─── Roles ────────────────────────────────────────────────────────────────────
 
@@ -87,6 +91,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 # ─── User dataclass ───────────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class User:
     """
@@ -98,9 +103,10 @@ class User:
     email : Unique email address.
     role  : One of "admin" | "sales_rep" | "viewer".
     """
-    id:    str
+
+    id: str
     email: str
-    role:  str
+    role: str
 
 
 # ─── DDL ──────────────────────────────────────────────────────────────────────
@@ -123,7 +129,7 @@ async def init_users_db() -> None:
     """Create the ``users`` table if it does not already exist."""
     engine = _get_engine()
     async with engine.begin() as conn:
-        for stmt in _CREATE_USERS_TABLE_SQL.split(';'):
+        for stmt in _CREATE_USERS_TABLE_SQL.split(";"):
             if stmt.strip():
                 await conn.execute(text(stmt))
     logger.info("users table initialised.")
@@ -157,6 +163,7 @@ async def seed_admin() -> None:
 
 # ─── DB helpers ───────────────────────────────────────────────────────────────
 
+
 async def get_user_by_email(email: str) -> dict | None:
     """
     Fetch a user row by email.
@@ -176,10 +183,10 @@ async def get_user_by_email(email: str) -> dict | None:
     if row is None:
         return None
     return {
-        "id":              row.id,
-        "email":           row.email,
+        "id": row.id,
+        "email": row.email,
         "hashed_password": row.hashed_password,
-        "role":            row.role,
+        "role": row.role,
     }
 
 
@@ -198,6 +205,7 @@ async def authenticate_user(email: str, password: str) -> User | None:
 
 
 # ─── JWT helpers ──────────────────────────────────────────────────────────────
+
 
 def create_access_token(
     data: dict,
@@ -250,8 +258,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         user_id: str | None = payload.get("sub")
-        email:   str | None = payload.get("email")
-        role:    str | None = payload.get("role")
+        email: str | None = payload.get("email")
+        role: str | None = payload.get("role")
         if not user_id or not email or not role:
             raise _credentials_exception
     except JWTError:
@@ -266,6 +274,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
 
 
 # ─── Role-guard factory ───────────────────────────────────────────────────────
+
 
 def require_roles(*allowed: str):
     """
@@ -287,6 +296,7 @@ def require_roles(*allowed: str):
         async def chat(...):
             ...
     """
+
     async def _guard(user: User = Depends(get_current_user)) -> User:
         if user.role not in allowed:
             raise HTTPException(
