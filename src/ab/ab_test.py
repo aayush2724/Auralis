@@ -71,10 +71,8 @@ async def assign_variant(session_id: str) -> ABVariant:
         except ValueError:
             logger.warning("Invalid cached variant '%s' for session %s, re-assigning", cached, session_id)
 
-    # Deterministic 50/50 split via hash
-    hash_digest = hashlib.sha256(session_id.encode()).hexdigest()
-    # Use first byte for uniform distribution
-    variant = ABVariant.STATIC if int(hash_digest[:2], 16) % 2 == 0 else ABVariant.ADAPTIVE
+    # Temporarily force ADAPTIVE for testing
+    variant = ABVariant.ADAPTIVE
 
     # Persist in Redis (no TTL — assignment should be permanent for the session)
     await set_cached(cache_key, variant.value, ttl=0)

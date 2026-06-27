@@ -13,7 +13,6 @@ Run with:
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -312,7 +311,6 @@ class TestRunGraph:
         return patches
 
     def test_run_graph_returns_graphstate(self):
-        import unittest.mock as um
         patches = self._patch_all()
         mocks = [p.start() for p in patches]
         llm_mock = mocks[-1]
@@ -330,7 +328,6 @@ class TestRunGraph:
                 p.stop()
 
     def test_run_graph_adds_to_memory(self):
-        import unittest.mock as um
         patches = self._patch_all()
         mocks = [p.start() for p in patches]
         mocks[-1].return_value.invoke.return_value = MagicMock(content="Response text.")

@@ -62,7 +62,7 @@ services:
     depends_on:
       - api
     environment:
-      API_URL: http://api:8000
+      AURALIS_API_URL: http://api:8000
     restart: on-failure
 
 volumes:

@@ -224,7 +224,7 @@ async def chat(
         )
 
         # ── Log handoff event if triggered ────────────────────────────────────
-        if do_handoff:
+        if response.should_handoff:
             logger.info(
                 "Handoff triggered | session=%s trigger=%s",
                 session_id, state.get("handoff_trigger", "unknown"),

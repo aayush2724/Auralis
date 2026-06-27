@@ -12,7 +12,6 @@ Run with:
 
 from __future__ import annotations
 
-import pytest
 
 from src.classifier.objection import classify
 from src.classifier.sentiment import analyze

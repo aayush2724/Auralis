@@ -64,6 +64,13 @@ async def lifespan(app: FastAPI):
     Logs a clean shutdown message.
     """
     logger.info("Auralis API starting up — initialising database …")
+
+    import os
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key or openai_key.startswith("sk-..."):
+        logger.critical("OPENAI_API_KEY is missing or set to default! Please configure it in .env.")
+        raise RuntimeError("Missing OPENAI_API_KEY")
+
     try:
         await init_db()
         logger.info("customer_sessions table ready.")

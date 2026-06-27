@@ -123,7 +123,9 @@ async def init_users_db() -> None:
     """Create the ``users`` table if it does not already exist."""
     engine = _get_engine()
     async with engine.begin() as conn:
-        await conn.execute(text(_CREATE_USERS_TABLE_SQL))
+        for stmt in _CREATE_USERS_TABLE_SQL.split(';'):
+            if stmt.strip():
+                await conn.execute(text(stmt))
     logger.info("users table initialised.")
 
 

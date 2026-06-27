@@ -23,7 +23,7 @@ from __future__ import annotations
 import pytest
 
 from src.graph.graph import GraphState
-from src.utils.explainability import ExplanationResult, explain
+from src.utils.explainability import explain
 
 # ─── Required keys ────────────────────────────────────────────────────────────
 

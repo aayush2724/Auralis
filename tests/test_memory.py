@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.memory.memory import ConversationMemory, Message
+from src.memory.memory import ConversationMemory
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────

@@ -120,15 +120,10 @@ _TRIGGER_PATTERNS: dict[str, list[re.Pattern[str]]] = {
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
-@lru_cache(maxsize=1)
+from src.classifier.shared_model import get_zeroshot_pipeline
+
 def _get_pipeline():
-    """Load the BART zero-shot pipeline once and cache it."""
-    logger.info("Loading zero-shot classifier: %s", MODEL_NAME)
-    return pipeline(
-        "zero-shot-classification",
-        model=MODEL_NAME,
-        device=-1,          # CPU; set to 0 for GPU
-    )
+    return get_zeroshot_pipeline()
 
 
 # ─── TypedDict ────────────────────────────────────────────────────────────────

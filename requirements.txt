@@ -2,6 +2,7 @@
 langchain
 langchain-community
 langchain-openai
+langchain-huggingface
 langgraph
 openai
 
@@ -19,7 +20,7 @@ uvicorn[standard]
 python-multipart          # required for OAuth2PasswordRequestForm (form body parsing)
 python-jose[cryptography] # JWT signing / verification
 passlib[bcrypt]           # bcrypt password hashing
-
+bcrypt==4.0.1             # passlib is incompatible with bcrypt >= 4.1.0
 # Database
 sqlalchemy
 asyncpg

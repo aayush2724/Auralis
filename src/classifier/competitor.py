@@ -73,15 +73,10 @@ def _regex_detect(text: str) -> str | None:
 
 # ─── NLI fallback ─────────────────────────────────────────────────────────────
 
-@lru_cache(maxsize=1)
+from src.classifier.shared_model import get_zeroshot_pipeline
+
 def _get_nli_pipeline():
-    from transformers import pipeline as hf_pipeline
-    logger.info("Loading NLI pipeline for competitor fallback detection.")
-    return hf_pipeline(
-        "zero-shot-classification",
-        model="facebook/bart-large-mnli",
-        device=-1,
-    )
+    return get_zeroshot_pipeline()
 
 
 def _nli_detect(text: str) -> str | None:

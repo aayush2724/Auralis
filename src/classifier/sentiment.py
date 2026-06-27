@@ -64,7 +64,7 @@ def _get_pipeline():
     return pipeline(
         "sentiment-analysis",
         model=MODEL_NAME,
-        device=-1,       # CPU; set to 0 for GPU
+
         truncation=True,
         max_length=512,
     )

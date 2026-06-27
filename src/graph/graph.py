@@ -30,7 +30,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, TypedDict
 
 # pyrefly: ignore [missing-import]
-from langchain_openai import ChatOpenAI
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 # pyrefly: ignore [missing-import]
 from langgraph.graph import END, START, StateGraph
 
@@ -48,17 +48,21 @@ logger = logging.getLogger("auralis.graph")
 
 # ─── LLM (lazy singleton) ─────────────────────────────────────────────────────
 
-_llm: ChatOpenAI | None = None
+_llm = None
 
 
-def _get_llm() -> ChatOpenAI:
+def _get_llm():
     global _llm
     if _llm is None:
-        _llm = ChatOpenAI(
-            model=os.getenv("LLM_MODEL", "gpt-4o"),
+        # Use a free open-source model via Hugging Face Inference API
+        hf_endpoint = HuggingFaceEndpoint(
+            repo_id="HuggingFaceH4/zephyr-7b-beta",
+            task="text-generation",
+            max_new_tokens=int(os.getenv("LLM_MAX_TOKENS", "1024")),
             temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
-            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "1024")),
+            huggingfacehub_api_token=os.getenv("HF_TOKEN"),
         )
+        _llm = ChatHuggingFace(llm=hf_endpoint)
     return _llm
 
 

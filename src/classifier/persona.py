@@ -102,15 +102,10 @@ class PersonaResult(TypedDict):
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
-@lru_cache(maxsize=1)
+from src.classifier.shared_model import get_zeroshot_pipeline
+
 def _get_pipeline():
-    """Load the BART zero-shot pipeline once and cache it (shared with objection)."""
-    logger.info("Loading persona classifier model: %s", MODEL_NAME)
-    return pipeline(
-        "zero-shot-classification",
-        model=MODEL_NAME,
-        device=-1,       # CPU; set to 0 for GPU
-    )
+    return get_zeroshot_pipeline()
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────

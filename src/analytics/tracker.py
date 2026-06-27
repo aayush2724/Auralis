@@ -84,7 +84,9 @@ async def init_analytics_db() -> None:
     """Create the ``conversation_events`` table and indexes if they don't exist."""
     engine = _get_engine()
     async with engine.begin() as conn:
-        await conn.execute(text(_CREATE_EVENTS_TABLE_SQL))
+        for stmt in _CREATE_EVENTS_TABLE_SQL.split(';'):
+            if stmt.strip():
+                await conn.execute(text(stmt))
         # Ensure 'variant' column exists if table was already created
         try:
             await conn.execute(text(

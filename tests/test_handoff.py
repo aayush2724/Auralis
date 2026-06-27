@@ -16,7 +16,6 @@ Run with:
 
 from __future__ import annotations
 
-import pytest
 
 from src.handoff.handoff import HandoffTrigger, evaluate_handoff
 
