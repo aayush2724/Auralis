@@ -383,7 +383,15 @@ def generate_node(state: GraphState) -> dict[str, Any]:
         HumanMessage(content=user_prompt),
     ]
     ai_msg = llm.invoke(messages)
-    response_text: str = ai_msg.content
+    
+    # The Gemini integration sometimes returns a list of blocks instead of a plain string.
+    if isinstance(ai_msg.content, list):
+        response_text = "".join(
+            part.get("text", "") if isinstance(part, dict) else str(part)
+            for part in ai_msg.content
+        )
+    else:
+        response_text = str(ai_msg.content)
 
     # Append citations block if the strategy prompt didn't embed them
     if citations and citations not in response_text:
