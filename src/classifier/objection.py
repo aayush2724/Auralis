@@ -194,8 +194,11 @@ def classify(text: str) -> ObjectionResult:
     clf = _get_pipeline()
 
     # Build one hypothesis per class and run multi-label NLI
-    candidate_labels = list(_HYPOTHESIS_TEMPLATES.keys())
-    hypothesis_template = "{}."   # the model appends the hypothesis itself
+    # We use the full sentences from _HYPOTHESIS_TEMPLATES.values() as candidate labels,
+    # and map them back to their short string keys after classification.
+    val_to_key = {v: k for k, v in _HYPOTHESIS_TEMPLATES.items()}
+    candidate_labels = list(_HYPOTHESIS_TEMPLATES.values())
+    hypothesis_template = "{}"
 
     result = clf(
         text,
@@ -206,11 +209,11 @@ def classify(text: str) -> ObjectionResult:
 
     # Align scores back to their labels
     all_scores: dict[str, float] = {
-        lbl: round(float(score), 4)
+        val_to_key[lbl]: round(float(score), 4)
         for lbl, score in zip(result["labels"], result["scores"])
     }
 
-    winning_label: str = result["labels"][0]
+    winning_label: str = val_to_key[result["labels"][0]]
     confidence: float = round(float(result["scores"][0]), 4)
     triggers = _extract_triggers(text, winning_label)
 

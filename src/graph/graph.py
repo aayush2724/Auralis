@@ -37,6 +37,7 @@ from langgraph.graph import END, START, StateGraph
 from src.classifier.objection import ObjectionResult, classify
 from src.classifier.persona import PersonaResult, detect
 from src.classifier.sentiment import SentimentResult, analyze
+from src.classifier.competitor import detect_competitor
 from src.handoff.handoff import evaluate_handoff
 from src.memory.memory import ConversationMemory
 from src.rag.retriever import format_citations, retrieve
@@ -57,9 +58,8 @@ def _get_llm():
     global _llm
     if _llm is None:
         _llm = ChatGoogleGenerativeAI(
-            model="gemini-3.5-flash",
+            model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
             temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),
-            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "1024")),
             google_api_key=os.getenv("GEMINI_API_KEY"),
         )
     return _llm
@@ -135,24 +135,9 @@ def classify_node(state: GraphState) -> dict[str, Any]:
 
     results: dict[str, Any] = {}
 
-    # Run three independent classifiers concurrently
-    with ThreadPoolExecutor(max_workers=3, thread_name_prefix="auralis-clf") as pool:
-        futures = {
-            pool.submit(classify, text): "objection",
-            pool.submit(analyze,  text): "sentiment",
-            pool.submit(detect,   text): "persona",
-        }
-        for future in as_completed(futures):
-            key = futures[future]
-            try:
-                results[key] = future.result()
-            except Exception as exc:
-                logger.error("[classify_node] %s classifier failed: %s", key, exc, exc_info=True)
-                raise
-
-    objection: ObjectionResult = results["objection"]
-    sentiment: SentimentResult = results["sentiment"]
-    persona:   PersonaResult   = results["persona"]
+    objection = classify(text)
+    sentiment = analyze(text)
+    persona   = detect(text)
 
     logger.info(
         "[classify_node] objection=%s(%.2f) sentiment=%s persona=%s",
@@ -228,8 +213,8 @@ def strategy_node(state: GraphState) -> dict[str, Any]:
     # Merge competitor name into metadata if applicable
     meta_update: dict[str, Any] = {}
     if obj_label == "competitor":
-        triggers = state.get("objection", {}).get("triggers", [])
-        meta_update["competitor_mentioned"] = triggers[0] if triggers else "unknown"
+        comp_name = detect_competitor(state["user_input"])
+        meta_update["competitor_mentioned"] = comp_name if comp_name else "unknown"
 
     current_meta = dict(state.get("metadata") or {})
     current_meta.update(meta_update)
@@ -382,16 +367,20 @@ def generate_node(state: GraphState) -> dict[str, Any]:
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
     ]
-    ai_msg = llm.invoke(messages)
+    ai_msg_chunks = llm.stream(messages)
     
-    # The Gemini integration sometimes returns a list of blocks instead of a plain string.
-    if isinstance(ai_msg.content, list):
-        response_text = "".join(
-            part.get("text", "") if isinstance(part, dict) else str(part)
-            for part in ai_msg.content
-        )
-    else:
-        response_text = str(ai_msg.content)
+    response_parts = []
+    for chunk in ai_msg_chunks:
+        if isinstance(chunk.content, list):
+            for part in chunk.content:
+                if isinstance(part, dict) and "text" in part:
+                    response_parts.append(part["text"])
+                elif isinstance(part, str):
+                    response_parts.append(part)
+        else:
+            response_parts.append(str(chunk.content))
+            
+    response_text = "".join(response_parts)
 
     # Append citations block if the strategy prompt didn't embed them
     if citations and citations not in response_text:

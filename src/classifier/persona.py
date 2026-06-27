@@ -141,16 +141,18 @@ def detect(text: str) -> PersonaResult:
     # Exclude "Unknown" from candidate labels — it will be applied as a
     # threshold fallback rather than letting the model "choose" unknown.
     candidate_personas = [p for p in PERSONAS if p != "Unknown"]
-    [_HYPOTHESES[p] for p in candidate_personas]
+    hypotheses_values = [_HYPOTHESES[p] for p in candidate_personas]
+    val_to_key = {v: k for k, v in _HYPOTHESES.items()}
 
     result = clf(
         text,
-        candidate_labels=candidate_personas,
+        candidate_labels=hypotheses_values,
         hypothesis_template="{}",   # hypotheses are already full sentences
         multi_label=False,
     )
 
-    winning_label: str   = result["labels"][0]
+    # The result['labels'] will be the long hypothesis strings, map back to persona name
+    winning_label: str   = val_to_key[result["labels"][0]]
     confidence: float    = round(float(result["scores"][0]), 4)
 
     # Apply unknown threshold

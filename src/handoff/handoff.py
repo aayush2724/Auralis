@@ -119,6 +119,7 @@ def evaluate_handoff(
     s_score = sentiment.get("score", 0.0)
 
     objection = state.get("objection") or {}
+    obj_label = objection.get("label", "")
     obj_confidence = objection.get("confidence", 1.0)
 
     # ── Check LOW_CONFIDENCE (skip if negative sentiment — ANGRY handles it)
@@ -134,7 +135,11 @@ def evaluate_handoff(
         )
 
     # ── Check ANGRY_CUSTOMER ─────────────────────────────────────────────
-    if s_label == "negative" and s_score > _ANGRY_SENTIMENT_THRESHOLD:
+    # We exempt standard sales objections because negative sentiment is normal
+    # in these cases and the AI is specifically designed to handle them.
+    is_standard_objection = obj_label in ("price", "competitor", "timing", "fit")
+
+    if s_label == "negative" and s_score > _ANGRY_SENTIMENT_THRESHOLD and not is_standard_objection:
         msg = _HANDOFF_MESSAGES[HandoffTrigger.ANGRY_CUSTOMER]
         logger.info(
             "[evaluate_handoff] trigger=ANGRY_CUSTOMER score=%.2f", s_score,

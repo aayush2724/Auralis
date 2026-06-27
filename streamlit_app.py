@@ -73,7 +73,7 @@ def _auth_headers() -> dict[str, str]:
 
 def _api_post(path: str, json: dict | None = None, **kwargs) -> httpx.Response | None:
     try:
-        return httpx.post(f"{API_BASE}{path}", json=json, headers=_auth_headers(), timeout=30, **kwargs)
+        return httpx.post(f"{API_BASE}{path}", json=json, headers=_auth_headers(), timeout=120.0, **kwargs)
     except httpx.ConnectError:
         st.error("Cannot connect to auralis API. Is it running?")
         return None
