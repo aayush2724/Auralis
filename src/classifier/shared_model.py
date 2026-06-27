@@ -13,5 +13,6 @@ def get_zeroshot_pipeline():
     logger.info("Loading shared zero-shot classifier: facebook/bart-large-mnli")
     return pipeline(
         "zero-shot-classification",
-        model="facebook/bart-large-mnli"
+        model="facebook/bart-large-mnli",
+        device="cpu"
     )

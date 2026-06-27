@@ -43,7 +43,10 @@ def _get_embeddings() -> HuggingFaceEmbeddings:
     global _embeddings
     if _embeddings is None:
         logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
-        _embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        _embeddings = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL,
+            model_kwargs={"device": "cpu"}
+        )
     return _embeddings
 
 
