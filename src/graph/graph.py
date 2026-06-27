@@ -26,12 +26,8 @@ from __future__ import annotations
 
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, TypedDict
-
-# pyrefly: ignore [missing-import]
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
-# pyrefly: ignore [missing-import]
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
 from src.classifier.objection import ObjectionResult, classify
@@ -47,7 +43,6 @@ from src.utils.logger import auralis_handoffs_total, auralis_objections_total
 
 logger = logging.getLogger("auralis.graph")
 
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 # ─── LLM (lazy singleton) ─────────────────────────────────────────────────────
 
@@ -133,7 +128,6 @@ def classify_node(state: GraphState) -> dict[str, Any]:
     text = state["user_input"]
     logger.info("[classify_node] text='%s'", text[:80])
 
-    results: dict[str, Any] = {}
 
     objection = classify(text)
     sentiment = analyze(text)

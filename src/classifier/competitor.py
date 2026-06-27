@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 import re
-from functools import lru_cache
+from src.classifier.shared_model import get_zeroshot_pipeline
 
 logger = logging.getLogger("auralis.classifier.competitor")
 
@@ -73,7 +73,6 @@ def _regex_detect(text: str) -> str | None:
 
 # ─── NLI fallback ─────────────────────────────────────────────────────────────
 
-from src.classifier.shared_model import get_zeroshot_pipeline
 
 def _get_nli_pipeline():
     return get_zeroshot_pipeline()

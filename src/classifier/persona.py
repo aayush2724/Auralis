@@ -25,10 +25,8 @@ from __future__ import annotations
 
 import logging
 import sys
-from functools import lru_cache
 from typing import TypedDict
-
-from transformers import pipeline
+from src.classifier.shared_model import get_zeroshot_pipeline
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -102,7 +100,7 @@ class PersonaResult(TypedDict):
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
-from src.classifier.shared_model import get_zeroshot_pipeline
+
 
 def _get_pipeline():
     return get_zeroshot_pipeline()

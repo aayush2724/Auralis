@@ -31,11 +31,8 @@ from __future__ import annotations
 import logging
 import re
 import sys
-from functools import lru_cache
 from typing import TypedDict
-
-# pyrefly: ignore [missing-import]
-from transformers import pipeline
+from src.classifier.shared_model import get_zeroshot_pipeline
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -120,7 +117,7 @@ _TRIGGER_PATTERNS: dict[str, list[re.Pattern[str]]] = {
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
-from src.classifier.shared_model import get_zeroshot_pipeline
+
 
 def _get_pipeline():
     return get_zeroshot_pipeline()

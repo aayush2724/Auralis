@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from functools import lru_cache
+import threading
 from typing import Literal, TypedDict
 
 from transformers import pipeline
@@ -57,7 +57,7 @@ class SentimentResult(TypedDict):
 
 # ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
 
-import threading
+
 
 _pipeline = None
 _lock = threading.Lock()
