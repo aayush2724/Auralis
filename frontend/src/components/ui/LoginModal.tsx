@@ -1,0 +1,115 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mic, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useLogin } from '../../api/hooks/useAuth';
+import { Button } from './Button';
+
+const LoginModal = () => {
+  const navigate = useNavigate();
+  const loginMutation = useLogin();
+  const [email, setEmail] = useState('admin@auralis.ai');
+  const [password, setPassword] = useState('');
+  
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      navigate(-1);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('username', email); // FastAPI OAuth2 uses 'username'
+    formData.append('password', password);
+    
+    loginMutation.mutate(formData, {
+      onSuccess: () => {
+        // Token is saved in useAuth, now redirect to dashboard
+        navigate('/dashboard', { replace: true });
+      }
+    });
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleBackdropClick}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="max-w-sm w-full bg-white rounded-2xl p-8 shadow-2xl"
+        >
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-auralis-sage to-auralis-green flex items-center justify-center mb-4">
+              <Mic className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-2xl font-display font-normal tracking-tight text-auralis-green">Welcome back</h2>
+            <p className="text-sm font-sans font-light text-auralis-mist mt-1">Sign in to your workspace</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-auralis-frost rounded-xl px-4 py-3 focus:border-auralis-sage focus:ring-1 focus:ring-auralis-sage outline-none transition-all text-auralis-green font-sans"
+              />
+            </div>
+            
+            <div>
+              <label className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-auralis-frost rounded-xl px-4 py-3 focus:border-auralis-sage focus:ring-1 focus:ring-auralis-sage outline-none transition-all text-auralis-green font-sans"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loginMutation.isPending}
+              className="w-full flex items-center justify-center space-x-2 mt-2"
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
+            </Button>
+
+            <AnimatePresence>
+              {loginMutation.isError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-4 text-red-600 text-sm bg-red-50 rounded-lg px-4 py-2"
+                >
+                  Invalid credentials. Please try again.
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export default LoginModal;

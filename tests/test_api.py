@@ -12,6 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+import src.api.main
+
 # Mock the database init so we don't connect to a real PostgreSQL on import/lifespan startup
 with patch("src.api.main.init_db", new_callable=AsyncMock) as mock_startup_init, \
      patch("src.api.main.init_users_db", new_callable=AsyncMock), \
