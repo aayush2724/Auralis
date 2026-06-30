@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import client from '../client';
+import { chatRequest } from '../client';
 import type { ChatResponse, ChatRequest, Message } from '../../types/api';
 
 export const useChat = (sessionId: string) => {
@@ -10,16 +10,17 @@ export const useChat = (sessionId: string) => {
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
       const req: ChatRequest = { session_id: sessionId, message };
-      const { data } = await client.post<ChatResponse>('/chat', req);
-      return data;
+      return chatRequest<ChatResponse>(req);
     },
-    onSuccess: (data) => {
+    onSuccess: (data, message) => {
       setLastResponse(data);
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: data.response,
         timestamp: new Date(),
+        responseMeta: data,
+        sourceMessage: message,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     },

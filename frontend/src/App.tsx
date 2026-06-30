@@ -1,9 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { queryClient } from './api/client';
 import { useAuthStore } from './store/authStore';
-import LandingPage from './pages/LandingPage';
-import DashboardPage from './pages/DashboardPage';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
@@ -34,24 +37,30 @@ const AnimatedRoutes = () => {
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.25 }}
       >
-        <Routes location={location} key={location.pathname}>
-          <Route
-            path="/"
-            element={
-              <PublicRoute>
-                <LandingPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <Suspense fallback={
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-auralis-sage border-t-transparent rounded-full animate-spin" />
+          </div>
+        }>
+          <Routes location={location} key={location.pathname}>
+            <Route
+              path="/"
+              element={
+                <PublicRoute>
+                  <LandingPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );
@@ -61,7 +70,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AnimatedRoutes />
+        <ErrorBoundary>
+          <AnimatedRoutes />
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   );

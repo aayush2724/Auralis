@@ -67,7 +67,7 @@ export default function KnowledgeBasePanel() {
       <h3 className="text-lg font-display font-normal text-auralis-green mb-4">Current Statistics</h3>
       
       {statsLoading ? (
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />

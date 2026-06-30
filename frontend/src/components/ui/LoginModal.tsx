@@ -56,8 +56,9 @@ const LoginModal = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Email</label>
+              <label htmlFor="login-email" className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Email</label>
               <input
+                id="login-email"
                 type="email"
                 required
                 value={email}
@@ -67,8 +68,9 @@ const LoginModal = () => {
             </div>
             
             <div>
-              <label className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Password</label>
+              <label htmlFor="login-password" className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Password</label>
               <input
+                id="login-password"
                 type="password"
                 required
                 value={password}

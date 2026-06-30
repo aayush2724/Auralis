@@ -20,7 +20,7 @@ export default {
           frost:  '#F1F3F1',
           paper:  '#FAFBF9',
           cream:  '#EAECE9',
-          text:   '#738273',
+          text:   '#5C6D5C',
           faded:  '#9DB89A',
         }
       },

@@ -1,13 +1,15 @@
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, TrendingUp, Brain, AlertCircle } from 'lucide-react';
+import { Users, TrendingUp, Brain, AlertCircle, RefreshCw } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid, ReferenceLine
+  PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid
 } from 'recharts';
 import { useAnalyticsDashboard } from '../../api/hooks/useAnalytics';
 import MetricCard from './MetricCard';
 import Skeleton from '../ui/Skeleton';
+import { Button } from '../ui/Button';
 
 const OBJECTION_COLORS: Record<string, string> = {
   price: '#ef4444',
@@ -20,14 +22,48 @@ const OBJECTION_COLORS: Record<string, string> = {
 };
 
 const PIE_COLORS = ['#1C2E1E', '#4D6D47', '#5A635A', '#a3b1a3', '#d0d8d0'];
+const REFRESH_OPTIONS = [
+  { label: 'Off', value: 0 },
+  { label: '15s', value: 15000 },
+  { label: '30s', value: 30000 },
+  { label: '60s', value: 60000 },
+];
 
 export default function AnalyticsDashboard() {
-  const { data, isLoading, isError } = useAnalyticsDashboard();
+  const [refreshMs, setRefreshMs] = useState(0);
+  const { data, isPending, isError, isSuccess, isFetching, refetch } = useAnalyticsDashboard(refreshMs || false);
 
-  if (isLoading) {
+  const Header = () => (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-2xl font-display font-normal text-auralis-green tracking-tight">Analytics</h2>
+      <div className="flex items-center gap-2">
+        <select
+          value={refreshMs}
+          onChange={(event) => setRefreshMs(Number(event.target.value))}
+          className="h-10 rounded-xl border border-auralis-frost bg-white px-3 text-xs font-medium text-auralis-green outline-none focus:border-auralis-sage"
+          aria-label="Analytics auto refresh interval"
+        >
+          {REFRESH_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>Auto {option.label}</option>
+          ))}
+        </select>
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isPending) {
     return (
       <div className="px-6 py-8 overflow-y-auto h-full">
-        <h2 className="text-2xl font-display font-normal text-auralis-green mb-6">Analytics</h2>
+        <Header />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {[1, 2, 3].map(i => (
             <Skeleton key={i} className="h-[130px]" />
@@ -45,7 +81,7 @@ export default function AnalyticsDashboard() {
   if (isError || !data) {
     return (
       <div className="px-6 py-8 overflow-y-auto h-full">
-        <h2 className="text-2xl font-display font-normal text-auralis-green mb-6">Analytics</h2>
+        <Header />
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-center space-x-3">
           <AlertCircle className="w-5 h-5" />
           <span>Failed to load analytics data. Please make sure the backend is running.</span>
@@ -64,6 +100,10 @@ export default function AnalyticsDashboard() {
     name,
     value,
   }));
+  const isEmpty = isSuccess && data.total_sessions === 0
+    && objectionData.every((entry) => entry.value === 0)
+    && personaData.every((entry) => entry.value === 0)
+    && data.sentiment_trend.length === 0;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -84,7 +124,7 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="px-6 py-8 overflow-y-auto h-full bg-[#FAFBF9]">
-      <h2 className="text-2xl font-display font-normal text-auralis-green mb-6 tracking-tight">Analytics</h2>
+      <Header />
 
       <motion.div 
         variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
@@ -112,6 +152,14 @@ export default function AnalyticsDashboard() {
           color="purple" 
         />
       </motion.div>
+
+      {isEmpty && (
+        <div className="mb-6 rounded-2xl border border-auralis-frost bg-white p-8 text-center shadow-sm">
+          <Brain className="mx-auto mb-3 h-8 w-8 text-auralis-mist" />
+          <h3 className="font-display text-lg text-auralis-green">No analytics events yet</h3>
+          <p className="mt-1 text-sm font-light text-auralis-mist">Conversation telemetry will appear here after live chat sessions are recorded.</p>
+        </div>
+      )}
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -178,21 +226,7 @@ export default function AnalyticsDashboard() {
           <h3 className="text-lg font-display font-normal text-auralis-green mb-4">Sentiment Trend</h3>
           <div className="w-full h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.sentiment_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorNeu" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorNeg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+              <LineChart data={data.sentiment_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F3F1" />
                 <XAxis 
                   dataKey="date" 
@@ -206,12 +240,11 @@ export default function AnalyticsDashboard() {
                 />
                 <YAxis tick={{ fontSize: 10, fill: '#5A635A', fontFamily: 'DM Sans' }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine y={0} stroke="#EAECE9" />
-                <Area type="monotone" dataKey="positive" name="Positive" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorPos)" animationDuration={1000} animationEasing="ease-out" />
-                <Area type="monotone" dataKey="neutral" name="Neutral" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorNeu)" animationDuration={1000} animationEasing="ease-out" />
-                <Area type="monotone" dataKey="negative" name="Negative" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorNeg)" animationDuration={1000} animationEasing="ease-out" />
+                <Line type="monotone" dataKey="positive" name="Positive" stroke="#22c55e" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={1000} />
+                <Line type="monotone" dataKey="neutral" name="Neutral" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={1000} />
+                <Line type="monotone" dataKey="negative" name="Negative" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={1000} />
                 <Legend verticalAlign="bottom" height={20} iconType="rect" wrapperStyle={{ fontSize: '11px', paddingTop: '10px', fontFamily: 'DM Sans' }} />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </motion.div>

@@ -92,7 +92,7 @@ export default function FileDropzone({ onIngest, isIngesting, isSuccess, error, 
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border-2 rounded-2xl p-12 cursor-pointer flex flex-col items-center justify-center transition-colors ${
+        className={`border-2 rounded-2xl p-6 sm:p-12 cursor-pointer flex flex-col items-center justify-center transition-colors ${
           isDragging ? 'border-auralis-sage bg-auralis-cream border-solid' : 'border-auralis-frost bg-white hover:bg-auralis-paper border-dashed'
         }`}
       >

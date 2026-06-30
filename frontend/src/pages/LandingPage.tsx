@@ -107,6 +107,8 @@ const LandingPage = () => {
         <button 
           className="md:hidden relative w-6 h-[16px] flex flex-col justify-between z-20"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMobileMenuOpen}
         >
           <span className={`w-6 h-[2px] bg-black transition-all duration-300 origin-center ${isMobileMenuOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
           <span className={`w-6 h-[2px] bg-black transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
@@ -170,13 +172,14 @@ const LandingPage = () => {
             <p className="opacity-85 text-[#738273] mb-8">Select all that apply</p>
           </div>
 
-          <div className="flex flex-wrap gap-3 mb-6">
+          <div className="flex flex-wrap gap-3 mb-6" role="group" aria-label="Service selection">
             {serviceOptions.map((service) => {
               const isActive = selectedServices.includes(service);
               return (
                 <motion.button
                   key={service}
                   onClick={() => toggleService(service)}
+                  aria-pressed={isActive}
                   className={`
                     ${isActive 
                       ? 'bg-[#1C2E1E] text-white shadow-md shadow-emerald-950/5' 

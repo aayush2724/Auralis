@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { 
   SmilePlus, Frown, Meh, User, Zap, AlertTriangle, ChevronDown, ChevronUp
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ChatResponse } from '../../types/api';
 
-const sentimentIcons: Record<string, any> = {
+const sentimentIcons: Record<string, LucideIcon> = {
   positive: SmilePlus,
   negative: Frown,
   neutral: Meh,
@@ -129,9 +130,23 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
                 <p className="text-xs leading-relaxed">{data.explanation.objection_reason}</p>
               </div>
               <div>
+                <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Persona Reasoning</span>
+                <p className="text-xs leading-relaxed">{data.explanation.persona_reason}</p>
+              </div>
+              <div>
+                <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Sentiment Reasoning</span>
+                <p className="text-xs leading-relaxed">{data.explanation.sentiment_reason}</p>
+              </div>
+              <div>
                 <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Strategy</span>
                 <p className="text-xs leading-relaxed">{data.explanation.strategy_reason}</p>
               </div>
+              {data.explanation.confidence_note && (
+                <div>
+                  <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Confidence Note</span>
+                  <p className="text-xs leading-relaxed">{data.explanation.confidence_note}</p>
+                </div>
+              )}
               {data.explanation.trigger_phrases && data.explanation.trigger_phrases.length > 0 && (
                 <div>
                   <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Trigger Phrases</span>

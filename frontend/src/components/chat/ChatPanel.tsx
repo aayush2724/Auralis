@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic } from 'lucide-react';
+import { Send, Mic, ChevronDown, ChevronUp, FileText, Gauge, Lightbulb, ShieldAlert, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '../../api/hooks/useChat';
 import ReactMarkdown from 'react-markdown';
@@ -7,11 +8,184 @@ import remarkGfm from 'remark-gfm';
 import DiagnosticsPanel from './DiagnosticsPanel';
 import TypingIndicator from './TypingIndicator';
 import { Button } from '../ui/Button';
+import type { ChatResponse, Message } from '../../types/api';
+
+function highlightTriggerPhrases(text: string, phrases: string[]) {
+  const cleanPhrases = phrases.map((phrase) => phrase.trim()).filter(Boolean);
+  if (cleanPhrases.length === 0) return text;
+
+  const escaped = cleanPhrases.map((phrase) => phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const matcher = new RegExp(`(${escaped.join('|')})`, 'gi');
+
+  return text.split(matcher).map((part, index) => {
+    const isTrigger = cleanPhrases.some((phrase) => phrase.toLowerCase() === part.toLowerCase());
+    if (!isTrigger) return <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
+
+    return (
+      <mark key={`${part}-${index}`} className="rounded bg-amber-200/80 px-1 py-0.5 text-auralis-green">
+        {part}
+      </mark>
+    );
+  });
+}
+
+function ConfidenceIndicator({ confidence }: { confidence: number }) {
+  const percent = Math.round(confidence * 100);
+  const stroke = 2 * Math.PI * 14;
+  const offset = stroke - (stroke * percent) / 100;
+
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-auralis-frost bg-white px-2.5 py-1 text-[11px] font-medium text-auralis-green shadow-sm">
+      <span className="relative h-8 w-8">
+        <svg className="h-8 w-8 -rotate-90" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="14" fill="none" stroke="#EAECE9" strokeWidth="3" />
+          <circle
+            cx="16"
+            cy="16"
+            r="14"
+            fill="none"
+            stroke="#4D6D47"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={stroke}
+            strokeDashoffset={offset}
+          />
+        </svg>
+        <Gauge className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-auralis-sage" />
+      </span>
+      <span>{percent}% confidence</span>
+    </div>
+  );
+}
+
+function MessageAccordion({ title, icon: Icon, children, defaultOpen = false }: {
+  title: string;
+  icon: LucideIcon;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-auralis-frost bg-white/80">
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-medium text-auralis-green"
+      >
+        <span className="flex items-center gap-2">
+          <Icon className="h-3.5 w-3.5 text-auralis-sage" />
+          {title}
+        </span>
+        {isOpen ? <ChevronUp className="h-4 w-4 text-auralis-mist" /> : <ChevronDown className="h-4 w-4 text-auralis-mist" />}
+      </button>
+      {isOpen && (
+        <div className="border-t border-auralis-frost px-3 py-3 text-xs text-auralis-mist">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WhyThisResponse({ data, sourceMessage }: { data: ChatResponse; sourceMessage?: string }) {
+  const explanationRows = [
+    { label: `Objection: ${data.objection_label.replace(/_/g, ' ')}`, reason: data.explanation.objection_reason },
+    { label: `Persona: ${data.persona}`, reason: data.explanation.persona_reason },
+    { label: `Sentiment: ${data.sentiment}`, reason: data.explanation.sentiment_reason },
+    { label: `Strategy: ${data.strategy.replace(/_/g, ' ')}`, reason: data.explanation.strategy_reason },
+  ];
+
+  return (
+    <MessageAccordion title="Why this response" icon={Lightbulb} defaultOpen>
+      <div className="space-y-3">
+        {sourceMessage && (
+          <div className="rounded-lg bg-auralis-paper p-3 leading-relaxed text-auralis-green">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-auralis-mist">Original signal</span>
+            <p>{highlightTriggerPhrases(sourceMessage, data.explanation.trigger_phrases)}</p>
+          </div>
+        )}
+
+        <div className="grid gap-2">
+          {explanationRows.map((row) => (
+            <div key={row.label} className="rounded-lg border border-auralis-frost bg-white p-3">
+              <span className="block text-[10px] font-semibold uppercase tracking-widest text-auralis-green">{row.label}</span>
+              <p className="mt-1 leading-relaxed">{row.reason}</p>
+            </div>
+          ))}
+        </div>
+
+        {data.explanation.confidence_note && (
+          <div className="rounded-lg bg-auralis-cream/70 p-3 leading-relaxed text-auralis-green">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-auralis-sage">Confidence note</span>
+            {data.explanation.confidence_note}
+          </div>
+        )}
+      </div>
+    </MessageAccordion>
+  );
+}
+
+function SourcesUsed({ data }: { data: ChatResponse }) {
+  if (!data.retrieved_docs.length) return null;
+
+  return (
+    <MessageAccordion title="Sources used" icon={FileText}>
+      <div className="space-y-2">
+        {data.retrieved_docs.map((doc, index) => (
+          <div key={`${doc.source_file}-${doc.chunk_index}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-auralis-paper px-3 py-2">
+            <span className="min-w-0 truncate font-mono text-[11px] text-auralis-green">
+              {doc.source_file} · chunk {doc.chunk_index}
+            </span>
+            <span className="shrink-0 rounded-full bg-white px-2 py-0.5 font-mono text-[10px] text-auralis-mist">
+              {Math.round(doc.score * 100)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </MessageAccordion>
+  );
+}
+
+function AssistantMessageMeta({ message }: { message: Message }) {
+  const data = message.responseMeta;
+  if (!data) return null;
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <ConfidenceIndicator confidence={data.confidence} />
+        <span className="rounded-full border border-auralis-frost bg-white px-2.5 py-1 text-[11px] font-medium capitalize text-auralis-mist">
+          {data.objection_label.replace(/_/g, ' ')}
+        </span>
+      </div>
+
+      {data.should_handoff && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800">
+          <div className="flex items-start gap-2">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold">Escalate to a human rep</p>
+              <p className="mt-1 text-xs leading-relaxed">
+                Auralis recommends human handoff for this response.
+                {data.explanation.handoff_reason ? ` ${data.explanation.handoff_reason}` : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <WhyThisResponse data={data} sourceMessage={message.sourceMessage} />
+      <SourcesUsed data={data} />
+    </div>
+  );
+}
 
 export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: string }) {
   const [currentSessionId, setCurrentSessionId] = useState(initialSessionId);
   const { messages, sendMessage, isLoading, lastResponse, clearMessages } = useChat(currentSessionId);
   const [input, setInput] = useState('');
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -52,27 +226,33 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
 
   return (
     <div className="flex flex-row h-full w-full bg-white">
-      {/* Left Area: Chat */}
       <div className="flex flex-col flex-1 h-full min-w-0 relative">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-auralis-frost bg-white/50 backdrop-blur-sm z-10 sticky top-0">
-          <div className="flex items-center space-x-2 truncate">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-auralis-frost bg-white/50 backdrop-blur-sm z-10 sticky top-0">
+          <div className="flex items-center space-x-2 truncate min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
             <span className="font-mono text-xs text-auralis-mist truncate">
               {currentSessionId}
             </span>
           </div>
-          <Button 
-            variant="outline"
-            onClick={handleNewSession}
-            className="flex-shrink-0"
-          >
-            New Session
-          </Button>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <button
+              onClick={() => setDiagnosticsOpen(!diagnosticsOpen)}
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-auralis-frost text-auralis-green hover:bg-auralis-paper transition-colors"
+              aria-label={diagnosticsOpen ? 'Hide diagnostics' : 'Show diagnostics'}
+            >
+              {diagnosticsOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
+            </button>
+            <Button 
+              variant="outline"
+              onClick={handleNewSession}
+              className="flex-shrink-0"
+            >
+              New Session
+            </Button>
+          </div>
         </div>
 
-        {/* Message List */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-32">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-32">
           <div className="max-w-3xl mx-auto flex flex-col space-y-6">
             <AnimatePresence initial={false}>
               {messages.map((msg) => {
@@ -87,7 +267,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                   >
                     {!isUser && (
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-auralis-sage to-auralis-green flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-auralis-sage to-auralis-green flex items-center justify-center" aria-hidden="true">
                           <Mic className="w-4 h-4 text-white" />
                         </div>
                       </div>
@@ -105,22 +285,23 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            p: ({node, ...props}) => <p className="mb-3 last:mb-0" {...props} />,
-                            ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-auralis-sage" {...props} />,
-                            ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-auralis-sage" {...props} />,
-                            li: ({node, ...props}) => <li className="pl-1" {...props} />,
-                            strong: ({node, ...props}) => <strong className="font-semibold text-current" {...props} />,
-                            a: ({node, ...props}) => <a className="underline hover:opacity-80 underline-offset-2" {...props} />
+                            p: (props) => <p className="mb-3 last:mb-0" {...props} />,
+                            ul: (props) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-auralis-sage" {...props} />,
+                            ol: (props) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-auralis-sage" {...props} />,
+                            li: (props) => <li className="pl-1" {...props} />,
+                            strong: (props) => <strong className="font-semibold text-current" {...props} />,
+                            a: (props) => <a className="underline hover:opacity-80 underline-offset-2" {...props} />
                           }}
                         >
                           {msg.content}
                         </ReactMarkdown>
                       )}
+                      {!isUser && <AssistantMessageMeta message={msg} />}
                     </div>
 
                     {isUser && (
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-8 h-8 rounded-full bg-auralis-frost border border-auralis-cream flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-auralis-frost border border-auralis-cream flex items-center justify-center" aria-hidden="true">
                           <span className="text-auralis-mist text-xs font-bold">U</span>
                         </div>
                       </div>
@@ -134,10 +315,11 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
           </div>
         </div>
 
-        {/* Input Bar */}
-        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-auralis-frost p-4">
+        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-auralis-frost p-3 sm:p-4">
           <div className="max-w-3xl mx-auto flex items-end space-x-3 bg-white">
+            <label htmlFor="chat-input" className="sr-only">Type your message</label>
             <textarea
+              id="chat-input"
               ref={textareaRef}
               rows={1}
               value={input}
@@ -151,6 +333,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
               onClick={handleSubmit}
               disabled={!input.trim() || isLoading}
               className="flex-shrink-0 w-12 h-[46px] p-0 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Send message"
             >
               <Send className="w-5 h-5" />
             </Button>
@@ -158,8 +341,33 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
         </div>
       </div>
 
-      {/* Right Area: Diagnostics */}
-      <DiagnosticsPanel data={lastResponse} />
+      <div className="hidden lg:block">
+        <DiagnosticsPanel data={lastResponse} />
+      </div>
+
+      <AnimatePresence>
+        {diagnosticsOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm lg:hidden"
+              onClick={() => setDiagnosticsOpen(false)}
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="fixed right-0 top-0 bottom-0 z-40 lg:hidden"
+            >
+              <DiagnosticsPanel data={lastResponse} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

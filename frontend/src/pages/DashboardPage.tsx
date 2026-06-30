@@ -8,11 +8,21 @@ import KnowledgeBasePanel from '../components/kb/KnowledgeBasePanel';
 const DashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [sessionId, setSessionId] = useState<string>('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    // Generate or fetch session ID once per dashboard load
     const id = crypto.randomUUID();
     setSessionId(id);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const renderContent = () => {
@@ -32,8 +42,14 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sessionId={sessionId} />
-      <main className="ml-[240px] h-screen overflow-y-auto">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        sessionId={sessionId}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
+      <main className="lg:ml-[240px] h-screen overflow-y-auto pt-16 lg:pt-0">
         {renderContent()}
       </main>
     </div>
