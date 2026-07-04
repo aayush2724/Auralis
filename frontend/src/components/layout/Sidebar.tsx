@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
     <>
       <button
         onClick={onToggle}
-        className="fixed top-4 left-4 z-50 lg:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-[#F1F3F1] shadow-sm text-auralis-green hover:bg-auralis-paper transition-colors"
+        className="fixed top-4 left-4 z-50 lg:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-[#F1F3F1] shadow-sm text-[#0a0a0a] hover:bg-[#f9fafb] transition-colors"
         aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
       >
         <Menu className="w-5 h-5" />
@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
       >
         <div>
           <div className="p-6 flex items-center space-x-2">
-            <span className="text-xl font-semibold text-auralis-green tracking-tight font-display font-normal">auralis</span>
+            <span className="text-xl font-semibold text-[#0a0a0a] tracking-tight font-display font-normal">auralis</span>
             <div className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-blink" aria-hidden="true"></div>
           </div>
           
@@ -85,14 +85,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
                   aria-current={isActive ? 'page' : undefined}
                   className={`relative w-full flex items-center px-3 py-2 rounded-lg transition-all font-sans text-sm ${
                     isActive
-                      ? 'text-auralis-green font-medium'
-                      : 'text-auralis-text font-light hover:bg-auralis-frost'
+                      ? 'text-[#0a0a0a] font-medium'
+                      : 'text-auralis-text font-light hover:bg-[#f9fafb]'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-pill"
-                      className="absolute inset-0 bg-auralis-cream rounded-lg z-0"
+                      className="absolute inset-0 bg-[#f9fafb] rounded-lg z-0"
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
                   )}
@@ -109,14 +109,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
         <div className="p-4 border-t border-[#F1F3F1]">
           <div className="flex items-center justify-between mb-4 px-2">
             <span className="text-xs font-sans font-medium text-auralis-text uppercase tracking-widest">Session</span>
-            <span className="text-xs font-mono text-auralis-mist bg-auralis-paper px-2 py-1 rounded">
+            <span className="text-xs font-mono text-[#6b7280] bg-[#f9fafb] px-2 py-1 rounded">
               {sessionId.slice(0, 8)}
             </span>
           </div>
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-auralis-mist hover:text-auralis-sage no-underline"
+            className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-[#6b7280] hover:text-[#dd6668] no-underline"
           >
             <LogOut className="w-4 h-4" aria-hidden="true" />
             <span>Logout</span>

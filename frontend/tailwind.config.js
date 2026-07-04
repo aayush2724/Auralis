@@ -22,6 +22,9 @@ export default {
           cream:  '#EAECE9',
           text:   '#5C6D5C',
           faded:  '#9DB89A',
+          accent: '#dd6668',
+          dark:   '#0a0a0a',
+          border: '#e5e7eb',
         }
       },
       animation: {

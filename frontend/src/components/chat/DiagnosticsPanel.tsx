@@ -25,16 +25,16 @@ const badgeColors: Record<string, string> = {
 function Accordion({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
-    <div className="border border-auralis-frost rounded-xl overflow-hidden mb-4">
+    <div className="border border-[#f9fafb] rounded-xl overflow-hidden mb-4">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-auralis-paper transition-colors text-left font-sans"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-[#f9fafb] transition-colors text-left font-sans"
       >
-        <span className="font-medium text-sm text-auralis-green">{title}</span>
-        {isOpen ? <ChevronUp className="w-4 h-4 text-auralis-mist" /> : <ChevronDown className="w-4 h-4 text-auralis-mist" />}
+        <span className="font-medium text-sm text-[#0a0a0a]">{title}</span>
+        {isOpen ? <ChevronUp className="w-4 h-4 text-[#6b7280]" /> : <ChevronDown className="w-4 h-4 text-[#6b7280]" />}
       </button>
       {isOpen && (
-        <div className="px-4 py-3 bg-white border-t border-auralis-frost text-sm text-auralis-mist">
+        <div className="px-4 py-3 bg-white border-t border-[#f9fafb] text-sm text-[#6b7280]">
           {children}
         </div>
       )}
@@ -45,11 +45,11 @@ function Accordion({ title, children, defaultOpen = false }: { title: string, ch
 export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }) {
   if (!data) {
     return (
-      <div className="w-72 border-l border-auralis-frost bg-white h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-auralis-paper flex items-center justify-center mb-4">
-          <Zap className="w-8 h-8 text-auralis-mist opacity-50" />
+      <div className="w-72 border-l border-[#f9fafb] bg-white h-full flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-[#f9fafb] flex items-center justify-center mb-4">
+          <Zap className="w-8 h-8 text-[#6b7280] opacity-50" />
         </div>
-        <p className="text-auralis-mist text-sm leading-relaxed font-sans font-light">Send a message to see live diagnostics</p>
+        <p className="text-[#6b7280] text-sm leading-relaxed font-sans font-light">Send a message to see live diagnostics</p>
       </div>
     );
   }
@@ -61,17 +61,17 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="w-72 border-l border-auralis-frost bg-white h-full flex flex-col overflow-y-auto"
+      className="w-72 border-l border-[#f9fafb] bg-white h-full flex flex-col overflow-y-auto"
     >
       <div className="p-5 space-y-6">
         
         {/* Objection Badge */}
         <div>
-          <h4 className="text-xs font-sans font-medium text-auralis-mist uppercase tracking-widest mb-2">Primary Objection</h4>
+          <h4 className="text-xs font-sans font-medium text-[#6b7280] uppercase tracking-widest mb-2">Primary Objection</h4>
           <div className={`w-full border rounded-xl p-3 flex flex-col items-center justify-center text-center ${badgeClass}`}>
             <span className="font-sans font-bold text-sm tracking-wide uppercase">{data.objection_label.replace('_', ' ')}</span>
           </div>
-          <div className="mt-2 w-full bg-auralis-frost rounded-full h-1.5 overflow-hidden relative">
+          <div className="mt-2 w-full bg-[#f9fafb] rounded-full h-1.5 overflow-hidden relative">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${Math.round(data.confidence * 100)}%` }}
@@ -79,7 +79,7 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
               className="absolute left-0 top-0 bottom-0 bg-current opacity-70"
             />
           </div>
-          <p className="text-right text-[10px] text-auralis-mist mt-1 font-mono">
+          <p className="text-right text-[10px] text-[#6b7280] mt-1 font-mono">
             {Math.round(data.confidence * 100)}% CONFIDENCE
           </p>
         </div>
@@ -98,16 +98,16 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
 
         {/* Quick Stats */}
         <div className="space-y-3">
-          <div className="flex items-center space-x-3 text-sm text-auralis-green">
-            <SentimentIcon className="w-4 h-4 text-auralis-mist" />
+          <div className="flex items-center space-x-3 text-sm text-[#0a0a0a]">
+            <SentimentIcon className="w-4 h-4 text-[#6b7280]" />
             <span className="capitalize">{data.sentiment} Sentiment</span>
           </div>
-          <div className="flex items-center space-x-3 text-sm text-auralis-green">
-            <User className="w-4 h-4 text-auralis-mist" />
+          <div className="flex items-center space-x-3 text-sm text-[#0a0a0a]">
+            <User className="w-4 h-4 text-[#6b7280]" />
             <span className="capitalize">{data.persona}</span>
           </div>
-          <div className="flex items-center space-x-3 text-sm text-auralis-green">
-            <Zap className="w-4 h-4 text-auralis-mist" />
+          <div className="flex items-center space-x-3 text-sm text-[#0a0a0a]">
+            <Zap className="w-4 h-4 text-[#6b7280]" />
             <span className="capitalize">{data.strategy.replace(/_/g, ' ')} Strategy</span>
           </div>
         </div>
@@ -126,33 +126,33 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
           <Accordion title="Why did Auralis say this?">
             <div className="space-y-3">
               <div>
-                <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Objection Reasoning</span>
+                <span className="block text-[10px] font-semibold text-[#0a0a0a] uppercase mb-1">Objection Reasoning</span>
                 <p className="text-xs leading-relaxed">{data.explanation.objection_reason}</p>
               </div>
               <div>
-                <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Persona Reasoning</span>
+                <span className="block text-[10px] font-semibold text-[#0a0a0a] uppercase mb-1">Persona Reasoning</span>
                 <p className="text-xs leading-relaxed">{data.explanation.persona_reason}</p>
               </div>
               <div>
-                <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Sentiment Reasoning</span>
+                <span className="block text-[10px] font-semibold text-[#0a0a0a] uppercase mb-1">Sentiment Reasoning</span>
                 <p className="text-xs leading-relaxed">{data.explanation.sentiment_reason}</p>
               </div>
               <div>
-                <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Strategy</span>
+                <span className="block text-[10px] font-semibold text-[#0a0a0a] uppercase mb-1">Strategy</span>
                 <p className="text-xs leading-relaxed">{data.explanation.strategy_reason}</p>
               </div>
               {data.explanation.confidence_note && (
                 <div>
-                  <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Confidence Note</span>
+                  <span className="block text-[10px] font-semibold text-[#0a0a0a] uppercase mb-1">Confidence Note</span>
                   <p className="text-xs leading-relaxed">{data.explanation.confidence_note}</p>
                 </div>
               )}
               {data.explanation.trigger_phrases && data.explanation.trigger_phrases.length > 0 && (
                 <div>
-                  <span className="block text-[10px] font-semibold text-auralis-green uppercase mb-1">Trigger Phrases</span>
+                  <span className="block text-[10px] font-semibold text-[#0a0a0a] uppercase mb-1">Trigger Phrases</span>
                   <div className="flex flex-wrap gap-1">
                     {data.explanation.trigger_phrases.map((tp, idx) => (
-                      <span key={idx} className="bg-auralis-paper border border-auralis-frost text-auralis-green text-[10px] px-2 py-0.5 rounded-md font-mono">
+                      <span key={idx} className="bg-[#f9fafb] border border-[#f9fafb] text-[#0a0a0a] text-[10px] px-2 py-0.5 rounded-md font-mono">
                         "{tp}"
                       </span>
                     ))}
@@ -170,13 +170,13 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
               {data.retrieved_docs.map((doc, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] truncate pr-2 text-auralis-green">
+                    <span className="font-mono text-[10px] truncate pr-2 text-[#0a0a0a]">
                       {doc.source_file} (Chunk {doc.chunk_index})
                     </span>
-                    <span className="text-[10px] text-auralis-mist">{Math.round(doc.score * 100)}%</span>
+                    <span className="text-[10px] text-[#6b7280]">{Math.round(doc.score * 100)}%</span>
                   </div>
-                  <div className="w-full bg-auralis-paper h-1 rounded-full overflow-hidden relative">
-                    <div className="absolute left-0 top-0 bottom-0 bg-auralis-sage" style={{ width: `${doc.score * 100}%` }} />
+                  <div className="w-full bg-[#f9fafb] h-1 rounded-full overflow-hidden relative">
+                    <div className="absolute left-0 top-0 bottom-0 bg-[#dd6668]" style={{ width: `${doc.score * 100}%` }} />
                   </div>
                   <p className="text-[10px] leading-snug line-clamp-3 italic opacity-80 mt-1">
                     {doc.text.substring(0, 300)}

@@ -34,7 +34,7 @@ export default function StatsBar() {
   const isVisible = useInView(ref, { once: true, margin: "-100px 0px" });
 
   return (
-    <section id="stats" className="relative z-20 bg-auralis-green py-16 px-6" ref={ref}>
+    <section id="stats" className="relative z-20 bg-[#0a0a0a] py-16 px-6" ref={ref}>
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         {stats.map((stat, i) => (
           <StatTile key={stat.label} stat={stat} i={i} isVisible={isVisible} />

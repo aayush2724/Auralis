@@ -47,35 +47,35 @@ const LoginModal = () => {
           className="max-w-sm w-full bg-white rounded-2xl p-8 shadow-2xl"
         >
           <div className="flex flex-col items-center mb-6">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-auralis-sage to-auralis-green flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#dd6668] to-[#0a0a0a] flex items-center justify-center mb-4">
               <Mic className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-2xl font-display font-normal tracking-tight text-auralis-green">Welcome back</h2>
-            <p className="text-sm font-sans font-light text-auralis-mist mt-1">Sign in to your workspace</p>
+            <h2 className="text-2xl font-display font-normal tracking-tight text-[#0a0a0a]">Welcome back</h2>
+            <p className="text-sm font-sans font-light text-[#6b7280] mt-1">Sign in to your workspace</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="login-email" className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Email</label>
+              <label htmlFor="login-email" className="block font-sans font-medium text-xs uppercase tracking-widest text-[#0a0a0a] mb-1">Email</label>
               <input
                 id="login-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-auralis-frost rounded-xl px-4 py-3 focus:border-auralis-sage focus:ring-1 focus:ring-auralis-sage outline-none transition-all text-auralis-green font-sans"
+                className="w-full border border-[#f9fafb] rounded-xl px-4 py-3 focus:border-[#dd6668] focus:ring-1 focus:ring-[#dd6668] outline-none transition-all text-[#0a0a0a] font-sans"
               />
             </div>
             
             <div>
-              <label htmlFor="login-password" className="block font-sans font-medium text-xs uppercase tracking-widest text-auralis-green mb-1">Password</label>
+              <label htmlFor="login-password" className="block font-sans font-medium text-xs uppercase tracking-widest text-[#0a0a0a] mb-1">Password</label>
               <input
                 id="login-password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-auralis-frost rounded-xl px-4 py-3 focus:border-auralis-sage focus:ring-1 focus:ring-auralis-sage outline-none transition-all text-auralis-green font-sans"
+                className="w-full border border-[#f9fafb] rounded-xl px-4 py-3 focus:border-[#dd6668] focus:ring-1 focus:ring-[#dd6668] outline-none transition-all text-[#0a0a0a] font-sans"
               />
             </div>
 

@@ -5,7 +5,7 @@ interface SkeletonProps {
 export default function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div 
-      className={`bg-gradient-to-r from-auralis-frost via-white to-auralis-frost animate-shimmer rounded-2xl ${className}`}
+      className={`bg-gradient-to-r from-[#f9fafb] via-white to-[#f9fafb] animate-shimmer rounded-2xl ${className}`}
       style={{ backgroundSize: '200% 100%' }}
     />
   );

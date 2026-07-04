@@ -21,7 +21,7 @@ const OBJECTION_COLORS: Record<string, string> = {
   neutral: '#6b7280',
 };
 
-const PIE_COLORS = ['#1C2E1E', '#4D6D47', '#5A635A', '#a3b1a3', '#d0d8d0'];
+const PIE_COLORS = ['#0a0a0a', '#dd6668', '#5A635A', '#a3b1a3', '#d0d8d0'];
 const REFRESH_OPTIONS = [
   { label: 'Off', value: 0 },
   { label: '15s', value: 15000 },
@@ -35,12 +35,12 @@ export default function AnalyticsDashboard() {
 
   const Header = () => (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-2xl font-display font-normal text-auralis-green tracking-tight">Analytics</h2>
+      <h2 className="text-2xl font-display font-normal text-[#0a0a0a] tracking-tight">Analytics</h2>
       <div className="flex items-center gap-2">
         <select
           value={refreshMs}
           onChange={(event) => setRefreshMs(Number(event.target.value))}
-          className="h-10 rounded-xl border border-auralis-frost bg-white px-3 text-xs font-medium text-auralis-green outline-none focus:border-auralis-sage"
+          className="h-10 rounded-xl border border-[#f9fafb] bg-white px-3 text-xs font-medium text-[#0a0a0a] outline-none focus:border-[#dd6668]"
           aria-label="Analytics auto refresh interval"
         >
           {REFRESH_OPTIONS.map((option) => (
@@ -108,10 +108,10 @@ export default function AnalyticsDashboard() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-auralis-frost rounded-lg p-3 shadow-md z-50 relative">
-          {label && <p className="text-xs font-sans font-medium tracking-widest uppercase text-auralis-mist mb-1">{label}</p>}
+        <div className="bg-white border border-[#f9fafb] rounded-lg p-3 shadow-md z-50 relative">
+          {label && <p className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-1">{label}</p>}
           {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center space-x-2 text-sm font-sans font-light text-auralis-green">
+            <div key={index} className="flex items-center space-x-2 text-sm font-sans font-light text-[#0a0a0a]">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
               <span>{entry.name}: {entry.value}</span>
             </div>
@@ -136,7 +136,7 @@ export default function AnalyticsDashboard() {
           label="Total Sessions" 
           value={data.total_sessions} 
           icon={Users} 
-          color="auralis-sage" 
+          color="[#dd6668]" 
         />
         <MetricCard 
           label="Conversion Rate" 
@@ -154,10 +154,10 @@ export default function AnalyticsDashboard() {
       </motion.div>
 
       {isEmpty && (
-        <div className="mb-6 rounded-2xl border border-auralis-frost bg-white p-8 text-center shadow-sm">
-          <Brain className="mx-auto mb-3 h-8 w-8 text-auralis-mist" />
-          <h3 className="font-display text-lg text-auralis-green">No analytics events yet</h3>
-          <p className="mt-1 text-sm font-light text-auralis-mist">Conversation telemetry will appear here after live chat sessions are recorded.</p>
+        <div className="mb-6 rounded-2xl border border-[#f9fafb] bg-white p-8 text-center shadow-sm">
+          <Brain className="mx-auto mb-3 h-8 w-8 text-[#6b7280]" />
+          <h3 className="font-display text-lg text-[#0a0a0a]">No analytics events yet</h3>
+          <p className="mt-1 text-sm font-light text-[#6b7280]">Conversation telemetry will appear here after live chat sessions are recorded.</p>
         </div>
       )}
 
@@ -165,9 +165,9 @@ export default function AnalyticsDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white border border-auralis-frost rounded-2xl p-6 mb-6 shadow-sm"
+        className="bg-white border border-[#f9fafb] rounded-2xl p-6 mb-6 shadow-sm"
       >
-        <h3 className="text-lg font-display font-normal text-auralis-green mb-4">Objection Distribution</h3>
+        <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-4">Objection Distribution</h3>
         <div className="w-full h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={objectionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -189,9 +189,9 @@ export default function AnalyticsDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white border border-auralis-frost rounded-2xl p-6 shadow-sm"
+          className="bg-white border border-[#f9fafb] rounded-2xl p-6 shadow-sm"
         >
-          <h3 className="text-lg font-display font-normal text-auralis-green mb-4">Persona Distribution</h3>
+          <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-4">Persona Distribution</h3>
           <div className="w-full h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -221,9 +221,9 @@ export default function AnalyticsDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white border border-auralis-frost rounded-2xl p-6 shadow-sm"
+          className="bg-white border border-[#f9fafb] rounded-2xl p-6 shadow-sm"
         >
-          <h3 className="text-lg font-display font-normal text-auralis-green mb-4">Sentiment Trend</h3>
+          <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-4">Sentiment Trend</h3>
           <div className="w-full h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data.sentiment_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

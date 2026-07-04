@@ -8,18 +8,23 @@ export function useTypewriter(text: string, speed = 38, startDelay = 600) {
     setDisplayed('');
     setDone(false);
     let i = 0;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
     const timeout = setTimeout(() => {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         i++;
         setDisplayed(text.slice(0, i));
         if (i >= text.length) {
-          clearInterval(interval);
+          clearInterval(interval!);
           setDone(true);
         }
       }, speed);
-      return () => clearInterval(interval);
     }, startDelay);
-    return () => clearTimeout(timeout);
+
+    return () => {
+      clearTimeout(timeout);
+      if (interval !== null) clearInterval(interval);
+    };
   }, [text, speed, startDelay]);
 
   return { displayed, done };

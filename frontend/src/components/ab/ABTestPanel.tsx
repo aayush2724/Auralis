@@ -39,12 +39,12 @@ export default function ABTestPanel() {
 
   const Header = () => (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-2xl font-display font-normal text-auralis-green tracking-tight">A/B Test Results</h2>
+      <h2 className="text-2xl font-display font-normal text-[#0a0a0a] tracking-tight">A/B Test Results</h2>
       <div className="flex items-center gap-2">
         <select
           value={refreshMs}
           onChange={(event) => setRefreshMs(Number(event.target.value))}
-          className="h-10 rounded-xl border border-auralis-frost bg-white px-3 text-xs font-medium text-auralis-green outline-none focus:border-auralis-sage"
+          className="h-10 rounded-xl border border-[#f9fafb] bg-white px-3 text-xs font-medium text-[#0a0a0a] outline-none focus:border-[#dd6668]"
           aria-label="A/B test auto refresh interval"
         >
           {REFRESH_OPTIONS.map((option) => (
@@ -115,10 +115,10 @@ export default function ABTestPanel() {
       <Header />
 
       {isEmpty && (
-        <div className="mb-6 rounded-2xl border border-auralis-frost bg-white p-8 text-center shadow-sm">
-          <FlaskConical className="mx-auto mb-3 h-8 w-8 text-auralis-mist" />
-          <h3 className="font-display text-lg text-auralis-green">No A/B test sessions yet</h3>
-          <p className="mt-1 text-sm font-light text-auralis-mist">STATIC and ADAPTIVE performance will populate after conversations are logged.</p>
+        <div className="mb-6 rounded-2xl border border-[#f9fafb] bg-white p-8 text-center shadow-sm">
+          <FlaskConical className="mx-auto mb-3 h-8 w-8 text-[#6b7280]" />
+          <h3 className="font-display text-lg text-[#0a0a0a]">No A/B test sessions yet</h3>
+          <p className="mt-1 text-sm font-light text-[#6b7280]">STATIC and ADAPTIVE performance will populate after conversations are logged.</p>
         </div>
       )}
 
@@ -129,23 +129,23 @@ export default function ABTestPanel() {
             variants={itemVariants}
             whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(28,46,30,0.08)" }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className={`bg-white border-2 rounded-2xl p-6 relative ${!adaptiveWins && totalSessions > 0 ? 'border-auralis-sage' : 'border-[#F1F3F1]'}`}
+            className={`bg-white border-2 rounded-2xl p-6 relative ${!adaptiveWins && totalSessions > 0 ? 'border-[#dd6668]' : 'border-[#F1F3F1]'}`}
           >
-            {!adaptiveWins && totalSessions > 0 && <Crown className="absolute top-6 right-6 w-6 h-6 text-auralis-sage" />}
-            <div className="text-xs font-sans font-medium tracking-widest uppercase text-auralis-mist mb-2">STATIC</div>
-            <div className="flex items-start text-auralis-green mb-6">
+            {!adaptiveWins && totalSessions > 0 && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#dd6668]" />}
+            <div className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-2">STATIC</div>
+            <div className="flex items-start text-[#0a0a0a] mb-6">
               <span className="text-6xl font-display font-normal tracking-tight">{staticRate.toFixed(1)}</span>
-              <span className="text-2xl font-sans font-light text-auralis-mist mt-1">%</span>
+              <span className="text-2xl font-sans font-light text-[#6b7280] mt-1">%</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 border-t border-auralis-frost pt-4">
+            <div className="grid grid-cols-2 gap-4 border-t border-[#f9fafb] pt-4">
               <div>
-                <div className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Sessions</div>
-                <div className="text-lg font-display font-normal text-auralis-green">{Math.round(staticSessions)}</div>
+                <div className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Sessions</div>
+                <div className="text-lg font-display font-normal text-[#0a0a0a]">{Math.round(staticSessions)}</div>
               </div>
               <div>
-                <div className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Avg Confidence</div>
-                <div className="text-lg font-display font-normal text-auralis-green">{staticConf.toFixed(0)}%</div>
+                <div className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Avg Confidence</div>
+                <div className="text-lg font-display font-normal text-[#0a0a0a]">{staticConf.toFixed(0)}%</div>
               </div>
             </div>
           </motion.div>
@@ -155,23 +155,23 @@ export default function ABTestPanel() {
             variants={itemVariants}
             whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(28,46,30,0.08)" }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className={`bg-white border-2 rounded-2xl p-6 relative ${adaptiveWins ? 'border-auralis-sage bg-auralis-cream/30 shadow-[0_12px_40px_rgba(77,109,71,0.14)]' : 'border-[#F1F3F1]'}`}
+            className={`bg-white border-2 rounded-2xl p-6 relative ${adaptiveWins ? 'border-[#dd6668] bg-[#f9fafb]/30 shadow-[0_12px_40px_rgba(77,109,71,0.14)]' : 'border-[#F1F3F1]'}`}
           >
-            {adaptiveWins && <Crown className="absolute top-6 right-6 w-6 h-6 text-auralis-sage" />}
-            <div className="text-xs font-sans font-medium tracking-widest uppercase text-auralis-mist mb-2">ADAPTIVE</div>
-            <div className="flex items-start text-auralis-green mb-6">
+            {adaptiveWins && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#dd6668]" />}
+            <div className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-2">ADAPTIVE</div>
+            <div className="flex items-start text-[#0a0a0a] mb-6">
               <span className="text-6xl font-display font-normal tracking-tight">{adaptiveRate.toFixed(1)}</span>
-              <span className="text-2xl font-sans font-light text-auralis-mist mt-1">%</span>
+              <span className="text-2xl font-sans font-light text-[#6b7280] mt-1">%</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 border-t border-auralis-frost pt-4">
+            <div className="grid grid-cols-2 gap-4 border-t border-[#f9fafb] pt-4">
               <div>
-                <div className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Sessions</div>
-                <div className="text-lg font-display font-normal text-auralis-green">{Math.round(adaptiveSessions)}</div>
+                <div className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Sessions</div>
+                <div className="text-lg font-display font-normal text-[#0a0a0a]">{Math.round(adaptiveSessions)}</div>
               </div>
               <div>
-                <div className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Avg Confidence</div>
-                <div className="text-lg font-display font-normal text-auralis-green">{adaptiveConf.toFixed(0)}%</div>
+                <div className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Avg Confidence</div>
+                <div className="text-lg font-display font-normal text-[#0a0a0a]">{adaptiveConf.toFixed(0)}%</div>
               </div>
             </div>
           </motion.div>
@@ -184,7 +184,7 @@ export default function ABTestPanel() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-            <div className="mb-6 bg-auralis-cream rounded-2xl px-6 py-4 flex items-center justify-center space-x-3 text-auralis-sage font-medium">
+            <div className="mb-6 bg-[#f9fafb] rounded-2xl px-6 py-4 flex items-center justify-center space-x-3 text-[#dd6668] font-medium">
               <ArrowUpRight className="w-5 h-5" />
               <span>Adaptive is outperforming static by {improvement.toFixed(1)}%</span>
             </div>
@@ -197,9 +197,9 @@ export default function ABTestPanel() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white border border-auralis-frost rounded-2xl p-6 shadow-sm flex flex-col"
+          className="bg-white border border-[#f9fafb] rounded-2xl p-6 shadow-sm flex flex-col"
         >
-          <h3 className="text-lg font-display font-normal text-auralis-green mb-6">Conversion Comparison</h3>
+          <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-6">Conversion Comparison</h3>
           <div className="w-full h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
@@ -210,8 +210,8 @@ export default function ABTestPanel() {
                 <Bar dataKey="STATIC" fill="#D1D5DB" radius={[6, 6, 0, 0]} animationDuration={1500}>
                   <LabelList dataKey="STATIC" position="top" fill="#5A635A" fontSize={12} formatter={(val: any) => `${val}%`} />
                 </Bar>
-                <Bar dataKey="ADAPTIVE" fill="#4D6D47" radius={[6, 6, 0, 0]} animationDuration={1500}>
-                  <LabelList dataKey="ADAPTIVE" position="top" fill="#4D6D47" fontSize={12} fontWeight={500} formatter={(val: any) => `${val}%`} />
+                <Bar dataKey="ADAPTIVE" fill="#dd6668" radius={[6, 6, 0, 0]} animationDuration={1500}>
+                  <LabelList dataKey="ADAPTIVE" position="top" fill="#dd6668" fontSize={12} fontWeight={500} formatter={(val: any) => `${val}%`} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -226,35 +226,35 @@ export default function ABTestPanel() {
           className="grid grid-cols-2 gap-4"
         >
           {/* STATIC Column */}
-          <motion.div variants={itemVariants} className="bg-white border border-auralis-frost rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Static Sessions</p>
-            <p className="text-xl font-display font-normal text-auralis-green">{data.sessions_per_variant.STATIC}</p>
+          <motion.div variants={itemVariants} className="bg-white border border-[#f9fafb] rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Static Sessions</p>
+            <p className="text-xl font-display font-normal text-[#0a0a0a]">{data.sessions_per_variant.STATIC}</p>
           </motion.div>
           
           {/* ADAPTIVE Column */}
-          <motion.div variants={itemVariants} className="bg-auralis-cream/50 border border-auralis-sage/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-sage mb-1">Adaptive Sessions</p>
-            <p className="text-xl font-display font-normal text-auralis-green">{data.sessions_per_variant.ADAPTIVE}</p>
+          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#dd6668]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#dd6668] mb-1">Adaptive Sessions</p>
+            <p className="text-xl font-display font-normal text-[#0a0a0a]">{data.sessions_per_variant.ADAPTIVE}</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-white border border-auralis-frost rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Static Conv.</p>
-            <p className="text-xl font-display font-normal text-auralis-green">{staticRate}%</p>
+          <motion.div variants={itemVariants} className="bg-white border border-[#f9fafb] rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Static Conv.</p>
+            <p className="text-xl font-display font-normal text-[#0a0a0a]">{staticRate}%</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-auralis-cream/50 border border-auralis-sage/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-sage mb-1">Adaptive Conv.</p>
-            <p className="text-xl font-display font-normal text-auralis-green">{adaptiveRate}%</p>
+          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#dd6668]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#dd6668] mb-1">Adaptive Conv.</p>
+            <p className="text-xl font-display font-normal text-[#0a0a0a]">{adaptiveRate}%</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-white border border-auralis-frost rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-mist mb-1">Static Conf.</p>
-            <p className="text-xl font-display font-normal text-auralis-green">{(data.static_avg_confidence * 100).toFixed(0)}%</p>
+          <motion.div variants={itemVariants} className="bg-white border border-[#f9fafb] rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mb-1">Static Conf.</p>
+            <p className="text-xl font-display font-normal text-[#0a0a0a]">{(data.static_avg_confidence * 100).toFixed(0)}%</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-auralis-cream/50 border border-auralis-sage/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-auralis-sage mb-1">Adaptive Conf.</p>
-            <p className="text-xl font-display font-normal text-auralis-green">{(data.adaptive_avg_confidence * 100).toFixed(0)}%</p>
+          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#dd6668]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#dd6668] mb-1">Adaptive Conf.</p>
+            <p className="text-xl font-display font-normal text-[#0a0a0a]">{(data.adaptive_avg_confidence * 100).toFixed(0)}%</p>
           </motion.div>
         </motion.div>
       </div>

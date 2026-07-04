@@ -93,12 +93,12 @@ export default function FileDropzone({ onIngest, isIngesting, isSuccess, error, 
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`border-2 rounded-2xl p-6 sm:p-12 cursor-pointer flex flex-col items-center justify-center transition-colors ${
-          isDragging ? 'border-auralis-sage bg-auralis-cream border-solid' : 'border-auralis-frost bg-white hover:bg-auralis-paper border-dashed'
+          isDragging ? 'border-[#dd6668] bg-[#f9fafb] border-solid' : 'border-[#f9fafb] bg-white hover:bg-[#f9fafb] border-dashed'
         }`}
       >
-        <UploadCloud className="w-12 h-12 text-auralis-sage mb-4" />
-        <p className="text-sm font-sans font-light text-auralis-mist">Drop PDF, CSV, or Markdown files here</p>
-        <p className="text-xs font-sans font-medium text-auralis-sage underline mt-1">or click to browse</p>
+        <UploadCloud className="w-12 h-12 text-[#dd6668] mb-4" />
+        <p className="text-sm font-sans font-light text-[#6b7280]">Drop PDF, CSV, or Markdown files here</p>
+        <p className="text-xs font-sans font-medium text-[#dd6668] underline mt-1">or click to browse</p>
       </motion.div>
 
       <div className="mt-6">
@@ -109,18 +109,18 @@ export default function FileDropzone({ onIngest, isIngesting, isSuccess, error, 
               initial={{ opacity: 0, height: 0, marginBottom: 0 }}
               animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className="flex items-center justify-between bg-white border border-auralis-frost rounded-xl p-3 overflow-hidden"
+              className="flex items-center justify-between bg-white border border-[#f9fafb] rounded-xl p-3 overflow-hidden"
             >
               <div className="flex items-center space-x-3 truncate pr-4">
                 {getFileIcon(file.name)}
                 <div className="truncate">
-                  <p className="text-sm font-sans font-medium text-auralis-green truncate">{file.name}</p>
-                  <p className="text-xs font-sans font-light text-auralis-mist">{formatSize(file.size)}</p>
+                  <p className="text-sm font-sans font-medium text-[#0a0a0a] truncate">{file.name}</p>
+                  <p className="text-xs font-sans font-light text-[#6b7280]">{formatSize(file.size)}</p>
                 </div>
               </div>
               <button 
                 onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
-                className="p-1.5 hover:bg-auralis-cream rounded-lg transition-colors text-auralis-mist hover:text-red-500 flex-shrink-0"
+                className="p-1.5 hover:bg-[#f9fafb] rounded-lg transition-colors text-[#6b7280] hover:text-red-500 flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>

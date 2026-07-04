@@ -22,7 +22,7 @@ function highlightTriggerPhrases(text: string, phrases: string[]) {
     if (!isTrigger) return <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
 
     return (
-      <mark key={`${part}-${index}`} className="rounded bg-amber-200/80 px-1 py-0.5 text-auralis-green">
+      <mark key={`${part}-${index}`} className="rounded bg-amber-200/80 px-1 py-0.5 text-[#0a0a0a]">
         {part}
       </mark>
     );
@@ -35,7 +35,7 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
   const offset = stroke - (stroke * percent) / 100;
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-auralis-frost bg-white px-2.5 py-1 text-[11px] font-medium text-auralis-green shadow-sm">
+    <div className="flex items-center gap-2 rounded-full border border-[#f9fafb] bg-white px-2.5 py-1 text-[11px] font-medium text-[#0a0a0a] shadow-sm">
       <span className="relative h-8 w-8">
         <svg className="h-8 w-8 -rotate-90" viewBox="0 0 32 32" aria-hidden="true">
           <circle cx="16" cy="16" r="14" fill="none" stroke="#EAECE9" strokeWidth="3" />
@@ -44,14 +44,14 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
             cy="16"
             r="14"
             fill="none"
-            stroke="#4D6D47"
+            stroke="#dd6668"
             strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={stroke}
             strokeDashoffset={offset}
           />
         </svg>
-        <Gauge className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-auralis-sage" />
+        <Gauge className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-[#dd6668]" />
       </span>
       <span>{percent}% confidence</span>
     </div>
@@ -67,20 +67,20 @@ function MessageAccordion({ title, icon: Icon, children, defaultOpen = false }: 
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-auralis-frost bg-white/80">
+    <div className="overflow-hidden rounded-xl border border-[#f9fafb] bg-white/80">
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-medium text-auralis-green"
+        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-medium text-[#0a0a0a]"
       >
         <span className="flex items-center gap-2">
-          <Icon className="h-3.5 w-3.5 text-auralis-sage" />
+          <Icon className="h-3.5 w-3.5 text-[#dd6668]" />
           {title}
         </span>
-        {isOpen ? <ChevronUp className="h-4 w-4 text-auralis-mist" /> : <ChevronDown className="h-4 w-4 text-auralis-mist" />}
+        {isOpen ? <ChevronUp className="h-4 w-4 text-[#6b7280]" /> : <ChevronDown className="h-4 w-4 text-[#6b7280]" />}
       </button>
       {isOpen && (
-        <div className="border-t border-auralis-frost px-3 py-3 text-xs text-auralis-mist">
+        <div className="border-t border-[#f9fafb] px-3 py-3 text-xs text-[#6b7280]">
           {children}
         </div>
       )}
@@ -100,24 +100,24 @@ function WhyThisResponse({ data, sourceMessage }: { data: ChatResponse; sourceMe
     <MessageAccordion title="Why this response" icon={Lightbulb} defaultOpen>
       <div className="space-y-3">
         {sourceMessage && (
-          <div className="rounded-lg bg-auralis-paper p-3 leading-relaxed text-auralis-green">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-auralis-mist">Original signal</span>
+          <div className="rounded-lg bg-[#f9fafb] p-3 leading-relaxed text-[#0a0a0a]">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#6b7280]">Original signal</span>
             <p>{highlightTriggerPhrases(sourceMessage, data.explanation.trigger_phrases)}</p>
           </div>
         )}
 
         <div className="grid gap-2">
           {explanationRows.map((row) => (
-            <div key={row.label} className="rounded-lg border border-auralis-frost bg-white p-3">
-              <span className="block text-[10px] font-semibold uppercase tracking-widest text-auralis-green">{row.label}</span>
+            <div key={row.label} className="rounded-lg border border-[#f9fafb] bg-white p-3">
+              <span className="block text-[10px] font-semibold uppercase tracking-widest text-[#0a0a0a]">{row.label}</span>
               <p className="mt-1 leading-relaxed">{row.reason}</p>
             </div>
           ))}
         </div>
 
         {data.explanation.confidence_note && (
-          <div className="rounded-lg bg-auralis-cream/70 p-3 leading-relaxed text-auralis-green">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-auralis-sage">Confidence note</span>
+          <div className="rounded-lg bg-[#f9fafb]/70 p-3 leading-relaxed text-[#0a0a0a]">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#dd6668]">Confidence note</span>
             {data.explanation.confidence_note}
           </div>
         )}
@@ -133,11 +133,11 @@ function SourcesUsed({ data }: { data: ChatResponse }) {
     <MessageAccordion title="Sources used" icon={FileText}>
       <div className="space-y-2">
         {data.retrieved_docs.map((doc, index) => (
-          <div key={`${doc.source_file}-${doc.chunk_index}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-auralis-paper px-3 py-2">
-            <span className="min-w-0 truncate font-mono text-[11px] text-auralis-green">
+          <div key={`${doc.source_file}-${doc.chunk_index}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-[#f9fafb] px-3 py-2">
+            <span className="min-w-0 truncate font-mono text-[11px] text-[#0a0a0a]">
               {doc.source_file} · chunk {doc.chunk_index}
             </span>
-            <span className="shrink-0 rounded-full bg-white px-2 py-0.5 font-mono text-[10px] text-auralis-mist">
+            <span className="shrink-0 rounded-full bg-white px-2 py-0.5 font-mono text-[10px] text-[#6b7280]">
               {Math.round(doc.score * 100)}%
             </span>
           </div>
@@ -155,7 +155,7 @@ function AssistantMessageMeta({ message }: { message: Message }) {
     <div className="mt-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <ConfidenceIndicator confidence={data.confidence} />
-        <span className="rounded-full border border-auralis-frost bg-white px-2.5 py-1 text-[11px] font-medium capitalize text-auralis-mist">
+        <span className="rounded-full border border-[#f9fafb] bg-white px-2.5 py-1 text-[11px] font-medium capitalize text-[#6b7280]">
           {data.objection_label.replace(/_/g, ' ')}
         </span>
       </div>
@@ -227,17 +227,17 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
   return (
     <div className="flex flex-row h-full w-full bg-white">
       <div className="flex flex-col flex-1 h-full min-w-0 relative">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-auralis-frost bg-white/50 backdrop-blur-sm z-10 sticky top-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#f9fafb] bg-white/50 backdrop-blur-sm z-10 sticky top-0">
           <div className="flex items-center space-x-2 truncate min-w-0">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
-            <span className="font-mono text-xs text-auralis-mist truncate">
+            <span className="font-mono text-xs text-[#6b7280] truncate">
               {currentSessionId}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
             <button
               onClick={() => setDiagnosticsOpen(!diagnosticsOpen)}
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-auralis-frost text-auralis-green hover:bg-auralis-paper transition-colors"
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-[#f9fafb] text-[#0a0a0a] hover:bg-[#f9fafb] transition-colors"
               aria-label={diagnosticsOpen ? 'Hide diagnostics' : 'Show diagnostics'}
             >
               {diagnosticsOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
@@ -267,7 +267,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                   >
                     {!isUser && (
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-auralis-sage to-auralis-green flex items-center justify-center" aria-hidden="true">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#dd6668] to-[#0a0a0a] flex items-center justify-center" aria-hidden="true">
                           <Mic className="w-4 h-4 text-white" />
                         </div>
                       </div>
@@ -276,8 +276,8 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                     <div className={`
                       px-5 py-4 max-w-[80%] text-sm leading-relaxed shadow-sm font-sans font-light
                       ${isUser 
-                        ? 'bg-auralis-green text-white rounded-2xl rounded-tr-sm' 
-                        : 'bg-auralis-frost text-auralis-green rounded-2xl rounded-tl-sm'}
+                        ? 'bg-[#0a0a0a] text-white rounded-2xl rounded-tr-sm' 
+                        : 'bg-[#f9fafb] text-[#0a0a0a] rounded-2xl rounded-tl-sm'}
                     `}>
                       {isUser ? (
                         <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -286,8 +286,8 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                           remarkPlugins={[remarkGfm]}
                           components={{
                             p: (props) => <p className="mb-3 last:mb-0" {...props} />,
-                            ul: (props) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-auralis-sage" {...props} />,
-                            ol: (props) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-auralis-sage" {...props} />,
+                            ul: (props) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-[#dd6668]" {...props} />,
+                            ol: (props) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-[#dd6668]" {...props} />,
                             li: (props) => <li className="pl-1" {...props} />,
                             strong: (props) => <strong className="font-semibold text-current" {...props} />,
                             a: (props) => <a className="underline hover:opacity-80 underline-offset-2" {...props} />
@@ -301,8 +301,8 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
 
                     {isUser && (
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-8 h-8 rounded-full bg-auralis-frost border border-auralis-cream flex items-center justify-center" aria-hidden="true">
-                          <span className="text-auralis-mist text-xs font-bold">U</span>
+                        <div className="w-8 h-8 rounded-full bg-[#f9fafb] border border-[#f9fafb] flex items-center justify-center" aria-hidden="true">
+                          <span className="text-[#6b7280] text-xs font-bold">U</span>
                         </div>
                       </div>
                     )}
@@ -315,7 +315,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
           </div>
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-auralis-frost p-3 sm:p-4">
+        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-[#f9fafb] p-3 sm:p-4">
           <div className="max-w-3xl mx-auto flex items-end space-x-3 bg-white">
             <label htmlFor="chat-input" className="sr-only">Type your message</label>
             <textarea
@@ -326,7 +326,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
               onChange={handleInput}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="flex-1 rounded-2xl border border-auralis-frost px-4 py-3 resize-none outline-none focus:border-auralis-sage bg-auralis-paper focus:bg-white transition-colors text-sm max-h-[120px] font-sans font-light"
+              className="flex-1 rounded-2xl border border-[#f9fafb] px-4 py-3 resize-none outline-none focus:border-[#dd6668] bg-[#f9fafb] focus:bg-white transition-colors text-sm max-h-[120px] font-sans font-light"
             />
             <Button
               variant="primary"
