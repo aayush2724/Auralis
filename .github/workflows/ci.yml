@@ -66,8 +66,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cp .env.example .env
-      - run: docker compose build
-      - run: docker compose up -d
-      - run: sleep 15
-      - run: curl -f http://localhost:8000/health
-      - run: docker compose down
+      - run: echo "GEMINI_API_KEY=ci-dummy-key" >> .env
+      - name: Build and run docker compose
+        run: |
+          docker compose build
+          docker compose up -d
+
+      - name: Wait for HTTP health endpoint
+        run: |
+          set -e
+          MAX_RETRIES=20
+          RETRY=0
+          until curl -fsS http://localhost:8000/health >/dev/null 2>&1; do
+            RETRY=$((RETRY+1))
+            echo "Health check attempt $RETRY/$MAX_RETRIES failed; waiting 3s..."
+            if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
+              echo "Service did not become ready — collecting diagnostic logs"
+              docker compose ps --all
+              docker compose logs --no-color --tail=200 || true
+              exit 1
+            fi
+            sleep 3
+          done
+          echo "Service is healthy"
+
+      - name: Tear down
+        run: docker compose down --volumes --remove-orphans
