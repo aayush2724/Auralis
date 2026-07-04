@@ -23,6 +23,30 @@ class ExplanationResult(TypedDict, total=False):
     handoff_reason: str | None
 
 
+def _get_confidence_note(state: dict) -> str:
+    objection = state.get("objection") or {}
+    obj_confidence = objection.get("confidence", 0)
+    sentiment = state.get("sentiment") or {}
+    sentiment_score = sentiment.get("score", 0)
+
+    # High confidence + non-negative sentiment → no note
+    if obj_confidence >= 0.85 and sentiment.get("label") != "negative":
+        return ""
+
+    # Low confidence → note
+    if obj_confidence < 0.50:
+        return (
+            "Low confidence in objection classification — "
+            "recommend verifying with customer."
+        )
+
+    # High negative sentiment → escalation note
+    if sentiment.get("label") == "negative" and sentiment_score >= 0.90:
+        return "High frustration detected — consider escalation."
+
+    return ""
+
+
 def explain(state: dict) -> ExplanationResult:
     """
     Build a human-readable explanation of every model decision from the GraphState.
@@ -130,12 +154,7 @@ def explain(state: dict) -> ExplanationResult:
     strategy_reason = f"Applied {strategy} strategy because objection was {label} and persona was {persona_label}. {rationale}"
 
     # 5. confidence_note
-    if conf < 0.5:
-        confidence_note = "Low confidence — response may be less targeted."
-    elif conf < 0.75:
-        confidence_note = "Moderate confidence — strategy is a best match."
-    else:
-        confidence_note = "High confidence — strategy is well-matched."
+    confidence_note = _get_confidence_note(state)
 
     # 6. trigger_phrases
     trigger_phrases = list(triggers)

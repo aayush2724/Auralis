@@ -216,18 +216,17 @@ def strategy_node(state: GraphState) -> dict[str, Any]:
         strategy,
     )
 
-    # Merge competitor name into metadata if applicable
-    meta_update: dict[str, Any] = {}
-    if obj_label == "competitor":
-        comp_name = detect_competitor(state["user_input"])
-        meta_update["competitor_mentioned"] = comp_name if comp_name else "unknown"
+    objection = state.get("objection", {})
+    metadata = state.get("metadata", {}).copy()
 
-    current_meta = dict(state.get("metadata") or {})
-    current_meta.update(meta_update)
+    if objection.get("label") == "competitor":
+        triggers = objection.get("triggers", [])
+        if triggers:
+            metadata["competitor_mentioned"] = triggers[0]
 
     return {
         "strategy": strategy,
-        "metadata": current_meta,
+        "metadata": metadata,
     }
 
 
@@ -396,14 +395,12 @@ def generate_node(state: GraphState) -> dict[str, Any]:
 
 
 def handoff_node(state: GraphState) -> dict:
-    decision = evaluate_handoff(state, state["user_input"])
-    if decision["should_handoff"]:
-        trigger = decision["trigger"].value if decision["trigger"] else "unknown"
-        auralis_handoffs_total.labels(trigger=trigger).inc()
     return {
-        "should_handoff": decision["should_handoff"],
-        "handoff_trigger": decision["trigger"].value if decision["trigger"] else None,
-        "handoff_message": decision["handoff_message"],
+        "should_handoff": True,
+        "handoff_message": (
+            "I need to connect you with a specialist who can better assist "
+            "with your request."
+        ),
     }
 
 
@@ -411,14 +408,19 @@ def handoff_node(state: GraphState) -> dict:
 
 
 def _should_handoff(state: GraphState) -> str:
-    """
-    Router called after generate_node.
-    Returns 'handoff' or 'end' to control the conditional edge.
-    """
-    decision = evaluate_handoff(state, state.get("user_input", ""))
-    if decision["should_handoff"]:
-        logger.info("[router] handoff: trigger=%s", decision["trigger"])
+    confidence_threshold = 0.40
+    negative_sentiment_threshold = 0.90
+
+    if state.get("confidence", 1.0) < confidence_threshold:
         return "handoff"
+
+    sentiment = state.get("sentiment", {})
+    if (
+        sentiment.get("label") == "negative"
+        and sentiment.get("score", 0) >= negative_sentiment_threshold
+    ):
+        return "handoff"
+
     return "end"
 
 
