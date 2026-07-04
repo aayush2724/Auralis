@@ -33,11 +33,10 @@ from langgraph.graph import END, START, StateGraph
 from src.classifier.objection import ObjectionResult, classify
 from src.classifier.persona import PersonaResult, detect
 from src.classifier.sentiment import SentimentResult, analyze
-from src.classifier.competitor import detect_competitor
-from src.handoff.handoff import evaluate_handoff
+
 from src.memory.memory import ConversationMemory
 from src.rag.retriever import format_citations, retrieve
-from src.utils.logger import auralis_handoffs_total, auralis_objections_total
+from src.utils.logger import auralis_objections_total
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
