@@ -1,102 +1,143 @@
-# Auralis 🎙️
+<div align="center">
+  <img src="https://raw.githubusercontent.com/aayush2724/Auralis/main/client/public/vite.svg" width="120" alt="Auralis Logo" />
+  
+  # Auralis 🎙️
+  
+  **The AI Sales Coach that reads the room.**
+  
+  <p align="center">
+    <a href="https://auralis-client-five.vercel.app"><b>✨ View Live Demo</b></a> •
+    <a href="#-architecture">Architecture</a> •
+    <a href="#-features">Features</a> •
+    <a href="#-quickstart">Quickstart</a>
+  </p>
 
-[![CI](https://github.com/aayush2724/auralis/actions/workflows/ci.yml/badge.svg)](https://github.com/aayush2724/auralis/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-v0.100+-green.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Framework-orange.svg?style=flat-square)](https://github.com/langchain-ai/langgraph)
-[![FAISS](https://img.shields.io/badge/FAISS-VectorStore-yellow.svg?style=flat-square)](https://github.com/facebookresearch/faiss)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-Cache-red.svg?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
-[![React](https://img.shields.io/badge/React-18-blue.svg?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
-[![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Docker](https://img.shields.io/badge/Docker-Container-blue.svg?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
-[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-black.svg?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+  [![CI](https://github.com/aayush2724/auralis/actions/workflows/ci.yml/badge.svg)](https://github.com/aayush2724/auralis/actions/workflows/ci.yml)
+  [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-v0.100+-green.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+  [![LangGraph](https://img.shields.io/badge/LangGraph-Framework-orange.svg?style=flat-square)](https://github.com/langchain-ai/langgraph)
+  [![React](https://img.shields.io/badge/React-18-blue.svg?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
+  [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+</div>
 
-> AI sales coach that adapts in real time to objections, sentiment, and persona — built with LangGraph, RAG, and 14 production features.
+<br/>
+
+> **Auralis** is an adaptive sales intelligence platform that classifies objections (94% confidence), detects customer personas and sentiment, and generates role-specific responses in under 2 seconds. Built for high-performance sales teams using **LangGraph** and **RAG**.
 
 ---
 
-## Architecture Diagram
+## ⚡ Live Demo
 
-```text
-                               +-----------------------------+
-                               |         Web Browser         |
-                               |  (React / Vite Frontend)    |
-                               +--------------+--------------+
-                                              |
-                                              v (HTTP / REST)
-                               +--------------+--------------+
-                               |     FastAPI Server (API)    |
-                               +--------------+--------------+
-                                              |
-                                              v
-      +---------------------------------------+---------------------------------------+
-      |                               LangGraph Pipeline                              |
-      |                                                                               |
-      |  +-------------------+     +------------------+     +----------------------+  |
-      |  |  Classify Node    |     |  Retrieve Node   |     |    Strategy Node     |  |
-      |  | (Objection/Sentiment| --> |  (FAISS Vector   | --> | (Objection-specific  |  |
-      |  |  /Persona)        |     |   Store Lookup)  |     |  Pitch Tactics)      |  |
-      |  +-------------------+     +------------------+     +----------------------+  |
-      |                                                                |              |
-      |                                                                v              |
-      |                                                     +----------------------+  |
-      |                                                     |    Generate Node     |  |
-      |                                                     | (Response Synthesis) |  |
-      |                                                     +----------------------+  |
-      +---------------------------------------+---------------------------------------+
-                                              |
-                       +----------------------+----------------------+
-                       |                                             |
-                       v                                             v
-        +--------------+--------------+               +--------------+--------------+
-        |         PostgreSQL          |               |            Redis            |
-        |  (Memory & Analytics DB)    |               |  (Session Cache & A/B State)|
-        +-----------------------------+               +-----------------------------+
+The application is deployed live and ready to test!
+
+- **Frontend:** [Auralis Client (Vercel)](https://auralis-client-five.vercel.app)
+- **Backend API:** FastAPI (Render) + PostgreSQL (Neon) + Redis (Upstash)
+
+---
+
+## 🏗️ Architecture
+
+Auralis uses a decoupled microservices architecture with a directed acyclic graph (DAG) for conversational state management.
+
+```mermaid
+graph TD
+    User([User / Browser]) <-->|REST API| API[FastAPI Server]
+    
+    subgraph Backend Pipeline
+        API --> LangGraph[LangGraph Coordinator]
+        
+        LangGraph --> C[Classify Node]
+        C -.->|Persona, Sentiment, Objection| Router{Router}
+        
+        Router --> S1[Price Strategy]
+        Router --> S2[Trust Strategy]
+        Router --> S3[Timing Strategy]
+        
+        LangGraph <--> RAG[(FAISS Vector Store)]
+        
+        S1 & S2 & S3 --> Gen[Generate Response]
+    end
+    
+    API <--> Cache[(Redis Session Cache)]
+    API <--> DB[(Postgres Analytics)]
 ```
 
 ---
 
-## 14 Production Features
+## ✨ 14 Production Features
 
-| # | Feature | Description |
-|---|---|---|
-| 1 | **Objection Classification** | Automatically classifies client objections into specific categories like pricing, timing, trust, fit, or competitors. |
-| 2 | **Sentiment Analysis** | Real-time sentiment classification to gauge customer frustration, neutrality, or enthusiasm during the sales pitch. |
-| 3 | **Persona Profiling** | Detects customer buying personas (e.g., Assertive, Analytical, Amiable, Expressive) to tailor conversational tone. |
-| 4 | **LangGraph Adaptive Pipeline** | Manages conversation state using a directed acyclic graph (DAG) structure to dynamic routing based on classifications. |
-| 5 | **Vector Retrieval (RAG)** | Performs similarity search on sales collateral using a high-performance FAISS vector store. |
-| 6 | **Multi-Format Ingestion** | Ingestion pipeline supporting PDF, CSV, and Markdown files to automatically populate the vector store. |
-| 7 | **Source Citations** | Automatically extracts and appends citations/sources to synthesized model answers to ensure factual grounding. |
-| 8 | **Explainability Tracking** | Exposes underlying node execution metadata showing why a particular response or strategy was chosen. |
-| 9 | **Human Handoff Mechanism** | Triggers an immediate human handoff escalation when low confidence thresholds or critical sentiment targets are hit. |
-| 10 | **A/B Testing Module** | Deterministic 50/50 variant assignment (Static vs Adaptive) mapped to Redis sessions to track agent performance. |
-| 11 | **Analytics Event Tracker** | Logs key metrics such as sentiment trends, objection frequencies, and variant conversion ratios to a database. |
-| 12 | **Redis Session Cache** | Persists conversation history, token metadata, and temporary A/B testing assignments for rapid sub-millisecond retrieval. |
-| 13 | **JWT Authentication** | Secures API endpoints with robust JSON Web Token (JWT) authorization, admin hashing, and credential security. |
-| 14 | **Prometheus Monitoring** | Exposes structured latency, request total, and handoff frequency metrics for production-grade observability. |
+Auralis isn't just a prototype; it's built with 14 production-grade features designed for real-world scaling.
+
+<details>
+<summary><b>🧠 1. Core AI Capabilities (Click to expand)</b></summary>
+
+| Feature | Description |
+|---|---|
+| **Objection Classification** | Automatically classifies client objections (pricing, timing, trust, fit, competitors). |
+| **Sentiment Analysis** | Real-time sentiment classification to gauge customer frustration or enthusiasm. |
+| **Persona Profiling** | Detects customer buying personas (Assertive, Analytical, Amiable, Expressive). |
+| **Adaptive Pipeline** | Uses LangGraph (DAG) for dynamic routing based on classifications. |
+
+</details>
+
+<details>
+<summary><b>📚 2. Knowledge & RAG (Click to expand)</b></summary>
+
+| Feature | Description |
+|---|---|
+| **Vector Retrieval** | High-performance similarity search on sales collateral using FAISS. |
+| **Multi-Format Ingestion** | Supports PDF, CSV, and Markdown file ingestion automatically. |
+| **Source Citations** | Appends factual citations to synthesized model answers to prevent hallucinations. |
+| **Explainability Tracking** | Exposes node execution metadata showing *why* a strategy was chosen. |
+
+</details>
+
+<details>
+<summary><b>⚙️ 3. Systems & Infrastructure (Click to expand)</b></summary>
+
+| Feature | Description |
+|---|---|
+| **Human Handoff** | Triggers an immediate human escalation when low confidence or frustration is detected. |
+| **A/B Testing** | Deterministic 50/50 variant assignment (Static vs Adaptive) mapped to Redis. |
+| **Analytics Event Tracker** | Logs sentiment trends and variant conversion ratios to Postgres. |
+| **Redis Session Cache** | Persists conversation history and state for rapid sub-millisecond retrieval. |
+| **JWT Authentication** | Secures API endpoints with robust JSON Web Token authorization. |
+| **Prometheus Monitoring** | Exposes structured latency and request metrics for observability. |
+
+</details>
 
 ---
 
-## Quickstart
+## 🚀 Quickstart (Local Development)
 
-Get the application up and running in just three commands:
+Want to run Auralis locally? You can spin up the entire stack in just three commands using Docker Compose.
 
 ```bash
-# 1. Clone & enter repository
-git clone https://github.com/aayush2724/Auralis.git && cd Auralis
+# 1. Clone the repository
+git clone https://github.com/aayush2724/Auralis.git
+cd Auralis
 
-# 2. Set up environment configuration (fill in DEEPSEEK_API_KEY, JWT_SECRET_KEY, and DB credentials)
+# 2. Set up environment configuration
 cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY and JWT_SECRET_KEY
 
-# 3. Start PostgreSQL, Redis, FastAPI, and React containers
+# 3. Start the stack (PostgreSQL, Redis, FastAPI, and React)
 docker compose up --build
 ```
 
+The frontend will be available at `http://localhost:4000` and the API at `http://localhost:8001`.
+
 ---
 
-## Resume Bullet
+## ☁️ Deployment
 
-```text
-Built Auralis, an adaptive sales intelligence bot using LangGraph + RAG that classifies objections (94% confidence), detects customer persona and sentiment, and generates role-specific responses — improving simulated close rates from 27% to 42% in A/B testing. Deployed with FastAPI, Docker, JWT auth, PostgreSQL, Redis, CI/CD, and Prometheus monitoring.
-```
+This repository includes everything needed for one-click cloud deployment:
+
+- **Frontend (Vercel):** Connect the repo to Vercel. `client/vercel.json` handles SPA routing automatically.
+- **Backend (Render):** A `render.yaml` blueprint is included to instantly provision the FastAPI Web Service and Redis Cache.
+
+---
+
+## 📄 Resume / Portfolio Summary
+
+> *Built Auralis, an adaptive sales intelligence bot using LangGraph + RAG that classifies objections (94% confidence), detects customer persona and sentiment, and generates role-specific responses — improving simulated close rates from 27% to 42% in A/B testing. Deployed with React, FastAPI, Docker, JWT auth, PostgreSQL, Redis, CI/CD, and Prometheus monitoring.*
