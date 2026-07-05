@@ -1,12 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import client, { queryClient } from '../client';
 import type { TokenResponse } from '../../types/api';
+import { useAuthStore } from '../../store/authStore';
 
 export const useLogin = () => {
   return useMutation({
     mutationFn: async (formData: FormData) => {
       const { data } = await client.post<TokenResponse>('/auth/token', formData);
-      localStorage.setItem('auralis_token', data.access_token);
+      useAuthStore.getState().setToken(data.access_token);
       return data;
     },
   });
@@ -14,12 +15,12 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   return () => {
-    localStorage.removeItem('auralis_token');
+    useAuthStore.getState().clearToken();
     queryClient.clear();
     window.location.href = '/';
   };
 };
 
 export const useIsAuthenticated = () => {
-  return !!localStorage.getItem('auralis_token');
+  return useAuthStore((state) => state.isAuthenticated());
 };

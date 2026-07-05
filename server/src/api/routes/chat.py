@@ -116,6 +116,7 @@ async def chat(
         if variant == ABVariant.STATIC:
             # ── STATIC branch: return canned pitch, skip the graph ────────────
             response_text = static_response(message)
+            do_handoff = False
 
             # Build a minimal state dict for logging
             state = {
@@ -229,7 +230,7 @@ async def chat(
 
         # ── Log analytics event (fire-and-forget) ─────────────────────────────
         asyncio.create_task(
-            log_event(session_id=session_id, state=state, did_convert=False)
+            log_event(session_id=session_id, state=state, did_convert=do_handoff)
         )
 
         # ── Log handoff event if triggered ────────────────────────────────────

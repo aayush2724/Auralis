@@ -83,7 +83,10 @@ async def set_cached(key: str, value: str, ttl: int = 300) -> None:
     """
     try:
         client = _get_client()
-        await client.set(key, value, ex=ttl)
+        if ttl == 0:
+            await client.set(key, value)
+        else:
+            await client.set(key, value, ex=ttl)
         logger.debug("cache SET %s (ttl=%ds)", key, ttl)
     except Exception as exc:
         logger.warning("Redis SET failed for key '%s': %s", key, exc)

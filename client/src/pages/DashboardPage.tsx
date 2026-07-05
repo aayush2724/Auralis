@@ -7,13 +7,8 @@ import KnowledgeBasePanel from '../components/kb/KnowledgeBasePanel';
 
 const DashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
-  const [sessionId, setSessionId] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    const id = crypto.randomUUID();
-    setSessionId(id);
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -49,7 +44,7 @@ const DashboardPage: React.FC = () => {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
-      <main className="lg:ml-[240px] h-screen overflow-y-auto pt-16 lg:pt-0">
+      <main className="lg:ml-[240px] h-screen flex flex-col pt-16 lg:pt-0 overflow-hidden">
         {renderContent()}
       </main>
     </div>

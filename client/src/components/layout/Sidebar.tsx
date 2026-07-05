@@ -60,11 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
         )}
       </AnimatePresence>
 
-      <motion.aside
-        initial={false}
-        animate={{ x: isOpen ? 0 : -280 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="fixed left-0 top-0 h-screen w-[240px] border-r border-[#F1F3F1] bg-white flex flex-col justify-between z-40 lg:translate-x-0 lg:z-auto"
+      <aside
+        className={`fixed left-0 top-0 h-screen w-[240px] border-r border-[#F1F3F1] bg-white flex flex-col justify-between z-40 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
         role="navigation"
         aria-label="Dashboard navigation"
       >
@@ -122,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
             <span>Logout</span>
           </Button>
         </div>
-      </motion.aside>
+      </aside>
     </>
   );
 };

@@ -147,7 +147,8 @@ export default function AnalyticsDashboard() {
         />
         <MetricCard 
           label="Avg Confidence" 
-          value={data.avg_confidence.toFixed(2)} 
+          value={(data.avg_confidence * 100).toFixed(1)} 
+          suffix="%"
           icon={Brain} 
           color="purple" 
         />

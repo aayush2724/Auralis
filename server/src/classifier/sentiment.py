@@ -30,13 +30,9 @@ from transformers import pipeline
 
 logger = logging.getLogger("auralis.classifier.sentiment")
 
+from src.classifier.shared_model import get_zeroshot_pipeline
+
 # ─── Constants ────────────────────────────────────────────────────────────────
-
-MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
-
-# If the POSITIVE score falls inside this band the utterance is treated as neutral.
-_NEUTRAL_LOW = 0.40
-_NEUTRAL_HIGH = 0.60
 
 # Tone instructions appended to the generation prompt downstream.
 _TONE_INSTRUCTIONS: dict[str, str] = {
@@ -55,58 +51,6 @@ class SentimentResult(TypedDict):
     label: Literal["positive", "neutral", "negative"]
     score: float  # confidence of the mapped label (0.0–1.0)
     tone_instruction: str  # prompt suffix for the generation node
-
-
-# ─── Model (lazy-loaded singleton) ────────────────────────────────────────────
-
-
-_pipeline = None
-_lock = threading.Lock()
-
-
-def _get_pipeline():
-    """Load the DistilBERT SST-2 pipeline once in a thread-safe manner."""
-    global _pipeline
-    if _pipeline is None:
-        with _lock:
-            if _pipeline is None:
-                logger.info("Loading sentiment model: %s", MODEL_NAME)
-                _pipeline = pipeline(
-                    "sentiment-analysis",
-                    model=MODEL_NAME,
-                    device="cpu",
-                    model_kwargs={"low_cpu_mem_usage": False},
-                    truncation=True,
-                    max_length=512,
-                )
-    return _pipeline
-
-
-# ─── Mapping helper ───────────────────────────────────────────────────────────
-
-
-def _map_to_sentiment(
-    raw_label: str, positive_score: float
-) -> tuple[Literal["positive", "neutral", "negative"], float]:
-    """
-    Map the binary SST-2 output to a three-way sentiment label.
-
-    Logic
-    -----
-    - If positive_score ∈ [_NEUTRAL_LOW, _NEUTRAL_HIGH] → neutral
-      score = distance from the mid-point (0.5), converted to a certainty signal
-    - Else if raw_label == "POSITIVE" → positive, score = positive_score
-    - Else                            → negative, score = 1 - positive_score
-    """
-    if _NEUTRAL_LOW <= positive_score <= _NEUTRAL_HIGH:
-        # Certainty of "neutralness": how close to 0.5 (max certainty) the score is.
-        certainty = 1.0 - abs(positive_score - 0.5) * 2  # 1.0 at 0.5, 0.0 at boundary
-        return "neutral", round(certainty, 4)
-
-    if raw_label.upper() == "POSITIVE":
-        return "positive", round(positive_score, 4)
-
-    return "negative", round(1.0 - positive_score, 4)
 
 
 # ─── Public API ───────────────────────────────────────────────────────────────
@@ -132,30 +76,25 @@ def analyze(text: str) -> SentimentResult:
     if not text:
         raise ValueError("`text` must be a non-empty string.")
 
-    clf = _get_pipeline()
-    raw = clf(text)[0]  # {'label': 'POSITIVE'|'NEGATIVE', 'score': float}
-
-    raw_label: str = raw["label"]
-    raw_score: float = raw["score"]
-
-    # SST-2 always returns the score of the *predicted* class, not always positive.
-    # Normalise: we always want the probability that the text is POSITIVE.
-    positive_score = raw_score if raw_label.upper() == "POSITIVE" else 1.0 - raw_score
-
-    label, score = _map_to_sentiment(raw_label, positive_score)
-    tone_instruction = _TONE_INSTRUCTIONS[label]
+    clf = get_zeroshot_pipeline()
+    candidate_labels = ["positive", "neutral", "negative"]
+    
+    res = clf(text, candidate_labels)
+    
+    best_label = res["labels"][0]
+    best_score = res["scores"][0]
+    
+    tone_instruction = _TONE_INSTRUCTIONS[best_label]
 
     logger.debug(
-        "analyze | label=%s score=%.3f raw=(%s, %.3f)",
-        label,
-        score,
-        raw_label,
-        raw_score,
+        "analyze | label=%s score=%.3f",
+        best_label,
+        best_score,
     )
 
     return SentimentResult(
-        label=label,
-        score=score,
+        label=best_label,  # type: ignore
+        score=round(best_score, 4),
         tone_instruction=tone_instruction,
     )
 

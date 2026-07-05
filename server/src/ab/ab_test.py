@@ -78,9 +78,10 @@ async def assign_variant(session_id: str) -> ABVariant:
                 session_id,
             )
 
-    # Deterministic split: hash the session_id
-    hash_val = int(hashlib.sha256(session_id.encode("utf-8")).hexdigest(), 16)
-    variant = ABVariant.STATIC if hash_val % 2 == 0 else ABVariant.ADAPTIVE
+    # For testing purposes, we'll force the ADAPTIVE variant so the user can see the AI in action.
+    # hash_val = int(hashlib.sha256(session_id.encode("utf-8")).hexdigest(), 16)
+    # variant = ABVariant.STATIC if hash_val % 2 == 0 else ABVariant.ADAPTIVE
+    variant = ABVariant.ADAPTIVE
 
     # Persist in Redis (no TTL — assignment should be permanent for the session)
     await set_cached(cache_key, variant.value, ttl=0)
