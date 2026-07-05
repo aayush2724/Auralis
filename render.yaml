@@ -25,6 +25,10 @@ services:
         value: production
       - key: CORS_ORIGINS
         value: "*" # Update this to your Vercel URL once deployed
+      - key: MALLOC_ARENA_MAX
+        value: 2
+      - key: OMP_NUM_THREADS
+        value: 1
 
   - type: redis
     name: auralis-redis
