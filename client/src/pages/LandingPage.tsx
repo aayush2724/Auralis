@@ -97,7 +97,7 @@ const LandingPage = () => {
 
     {/* Static hero text — left side */}
     <div className="relative z-10 h-full min-h-screen flex flex-col
-                    justify-center px-6 max-w-7xl mx-auto">
+                    justify-center px-8 md:px-12 lg:px-20 max-w-7xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -108,7 +108,7 @@ const LandingPage = () => {
                          text-sm font-semibold mb-4 block">
           AI SALES INTELLIGENCE
         </span>
-        <h1 className="font-display text-[52px] lg:text-[76px] text-[#0a0a0a]
+        <h1 className="font-display text-[48px] lg:text-[64px] text-[#0a0a0a]
                        leading-[1.08] mb-6">
           Turn every objection<br />into a closed deal.
         </h1>

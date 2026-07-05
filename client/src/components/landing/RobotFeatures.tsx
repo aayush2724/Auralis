@@ -90,7 +90,7 @@ const RobotFeatures = () => {
   
           {/* Text stages */}
           <div className="relative z-10 h-full flex flex-col justify-center
-                          px-6 max-w-7xl mx-auto w-full pointer-events-none">
+                          px-8 md:px-12 lg:px-20 max-w-7xl mx-auto w-full pointer-events-none">
             <div className="relative max-w-lg" style={{ minHeight: '360px' }}>
   
               {/* Stage 1 — intro */}
@@ -102,7 +102,7 @@ const RobotFeatures = () => {
                                  text-sm font-semibold mb-4 block">
                   BUILT FOR EVERY MOMENT
                 </span>
-                <h2 className="font-display text-[52px] lg:text-[72px] text-[#0a0a0a]
+                <h2 className="font-display text-[48px] lg:text-[64px] text-[#0a0a0a]
                                leading-[1.08] mb-6">
                   Four capabilities.<br />One seamless experience.
                 </h2>
@@ -122,7 +122,7 @@ const RobotFeatures = () => {
                                  text-sm font-semibold mb-4 block">
                   OBJECTION CLASSIFICATION
                 </span>
-                <h2 className="font-display text-[52px] lg:text-[72px] text-[#0a0a0a]
+                <h2 className="font-display text-[48px] lg:text-[64px] text-[#0a0a0a]
                                leading-[1.08] mb-6">
                   Every objection,<br />instantly understood.
                 </h2>
@@ -143,7 +143,7 @@ const RobotFeatures = () => {
                                  text-sm font-semibold mb-4 block">
                   BUYER PERSONA DETECTION
                 </span>
-                <h2 className="font-display text-[52px] lg:text-[72px] text-[#0a0a0a]
+                <h2 className="font-display text-[48px] lg:text-[64px] text-[#0a0a0a]
                                leading-[1.08] mb-6">
                   Knows who it's<br />talking to.
                 </h2>
@@ -164,7 +164,7 @@ const RobotFeatures = () => {
                                  text-sm font-semibold mb-4 block">
                   SMART HANDOFF
                 </span>
-                <h2 className="font-display text-[52px] lg:text-[72px] text-[#0a0a0a]
+                <h2 className="font-display text-[48px] lg:text-[64px] text-[#0a0a0a]
                                leading-[1.08] mb-6">
                   Knows when to<br />step aside.
                 </h2>
@@ -184,7 +184,7 @@ const RobotFeatures = () => {
                                  text-sm font-semibold mb-4 block">
                   READY TO SEE IT LIVE
                 </span>
-                <h2 className="font-display text-[52px] lg:text-[72px] text-[#0a0a0a]
+                <h2 className="font-display text-[48px] lg:text-[64px] text-[#0a0a0a]
                                leading-[1.08] mb-6">
                   Your pipeline deserves<br />better than guesswork.
                 </h2>
