@@ -75,7 +75,7 @@ const LandingPage = () => {
       {/* NAVBAR */}
       <header className="fixed top-0 inset-x-0 z-10 px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center bg-transparent">
         <div className="flex flex-row gap-3">
-          <span className="text-[21px] sm:text-[26px] tracking-tight text-[#0a0a0a] font-display font-normal select-none">auralis</span>
+          <span className="text-[22px] sm:text-[26px] tracking-tight text-[#0a0a0a] font-logo font-semibold select-none">Auralis</span>
         </div>
         
         <div className="hidden md:flex flex-row items-center gap-8 text-sm font-sans font-medium text-[#6b7280]">

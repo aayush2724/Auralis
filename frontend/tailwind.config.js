@@ -10,6 +10,7 @@ export default {
         display: ['"DM Serif Display"', 'Georgia', 'serif'],
         sans:    ['"DM Sans"', 'system-ui', 'sans-serif'],
         mono:    ['"JetBrains Mono"', 'Menlo', 'monospace'],
+        logo:    ['"Space Grotesk"', 'system-ui', 'sans-serif'],
       },
       colors: {
         auralis: {

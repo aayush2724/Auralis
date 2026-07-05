@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
       >
         <div>
           <div className="p-6 flex items-center space-x-2">
-            <span className="text-xl font-semibold text-[#0a0a0a] tracking-tight font-display font-normal">auralis</span>
+            <span className="text-xl font-logo font-semibold text-[#0a0a0a] tracking-tight">Auralis</span>
             <div className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-blink" aria-hidden="true"></div>
           </div>
           
