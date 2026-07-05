@@ -30,6 +30,7 @@ services:
     name: auralis-redis
     region: ohio
     plan: free
+    ipAllowList: []
 
 databases:
   - name: auralis-db
