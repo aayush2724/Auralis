@@ -7,7 +7,7 @@ import KnowledgeBasePanel from '../components/kb/KnowledgeBasePanel';
 
 const DashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
-  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
+  const [sessionId] = useState<string>(() => crypto.randomUUID());
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {

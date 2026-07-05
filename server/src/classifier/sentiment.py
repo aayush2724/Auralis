@@ -21,16 +21,13 @@ from __future__ import annotations
 
 import logging
 import sys
-import threading
 from typing import Literal, TypedDict
 
-from transformers import pipeline
+from src.classifier.shared_model import get_zeroshot_pipeline
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
 logger = logging.getLogger("auralis.classifier.sentiment")
-
-from src.classifier.shared_model import get_zeroshot_pipeline
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -78,12 +75,12 @@ def analyze(text: str) -> SentimentResult:
 
     clf = get_zeroshot_pipeline()
     candidate_labels = ["positive", "neutral", "negative"]
-    
+
     res = clf(text, candidate_labels)
-    
+
     best_label = res["labels"][0]
     best_score = res["scores"][0]
-    
+
     tone_instruction = _TONE_INSTRUCTIONS[best_label]
 
     logger.debug(
