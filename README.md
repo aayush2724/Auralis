@@ -12,7 +12,9 @@
     <a href="#-quickstart">Quickstart</a>
   </p>
 
-  [![CI](https://github.com/aayush2724/auralis/actions/workflows/ci.yml/badge.svg)](https://github.com/aayush2724/auralis/actions/workflows/ci.yml)
+  [![CI](https://github.com/aayush2724/Auralis/actions/workflows/ci.yml/badge.svg)](https://github.com/aayush2724/Auralis/actions/workflows/ci.yml)
+  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Faayush2724%2FAuralis)
+  [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aayush2724/Auralis)
   [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
   [![FastAPI](https://img.shields.io/badge/FastAPI-v0.100+-green.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
   [![LangGraph](https://img.shields.io/badge/LangGraph-Framework-orange.svg?style=flat-square)](https://github.com/langchain-ai/langgraph)
