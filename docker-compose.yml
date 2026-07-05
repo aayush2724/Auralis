@@ -50,8 +50,8 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./data:/app/data
-      - ./vectorstore:/app/vectorstore
+      - ./data:/app/server/data
+      - ./vectorstore:/app/server/vectorstore
     restart: on-failure
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -60,14 +60,14 @@ services:
       retries: 5
       start_period: 30s
 
-  # ─── React Frontend ───────────────────────────────────────────
-  frontend:
+  # ─── React Client ─────────────────────────────────────────────
+  client:
     build:
       context: .
       dockerfile: Dockerfile.frontend
       args:
         VITE_API_URL: http://localhost:8001
-    container_name: auralis_frontend
+    container_name: auralis_client
     ports:
       - "4000:3000"
     depends_on:

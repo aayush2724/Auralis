@@ -44,12 +44,12 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r requirements.txt
-      - run: pytest tests/ --cov=src --cov-report=xml -v
+        run: pip install -r server/requirements.txt
+      - run: cd server && pytest tests/ --cov=src --cov-report=xml -v
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage.xml
+          path: server/coverage.xml
 
   lint:
     runs-on: ubuntu-latest
@@ -59,8 +59,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install ruff black
-      - run: ruff check src/
-      - run: black --check src/
+      - run: cd server && ruff check src/
+      - run: cd server && black --check src/
 
   docker-build:
     runs-on: ubuntu-latest

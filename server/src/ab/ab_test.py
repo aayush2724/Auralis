@@ -16,6 +16,7 @@ The assignment is persisted in Redis for fast lookup.
 from __future__ import annotations
 
 
+import hashlib
 import logging
 from enum import Enum
 
@@ -77,8 +78,9 @@ async def assign_variant(session_id: str) -> ABVariant:
                 session_id,
             )
 
-    # Temporarily force ADAPTIVE for testing
-    variant = ABVariant.ADAPTIVE
+    # Deterministic split: hash the session_id
+    hash_val = int(hashlib.sha256(session_id.encode("utf-8")).hexdigest(), 16)
+    variant = ABVariant.STATIC if hash_val % 2 == 0 else ABVariant.ADAPTIVE
 
     # Persist in Redis (no TTL — assignment should be permanent for the session)
     await set_cached(cache_key, variant.value, ttl=0)
