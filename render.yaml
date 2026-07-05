@@ -26,14 +26,14 @@ services:
       - key: CORS_ORIGINS
         value: "*" # Update this to your Vercel URL once deployed
 
+  - type: redis
+    name: auralis-redis
+    region: ohio
+    plan: free
+
 databases:
   - name: auralis-db
     region: ohio
     plan: free
     databaseName: auralis
     user: auralis_user
-
-  - name: auralis-redis
-    type: redis
-    region: ohio
-    plan: free
