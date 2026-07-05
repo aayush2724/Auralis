@@ -3,7 +3,7 @@ services:
     name: auralis-api
     env: python
     region: ohio
-    buildCommand: "cd server && pip install -r requirements.txt"
+    buildCommand: "cd server && pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu"
     startCommand: "cd server && uvicorn src.api.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
