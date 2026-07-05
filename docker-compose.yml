@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: auralis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - auralis_pg:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     image: redis:7-alpine
     container_name: auralis_redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - auralis_redis:/data
     healthcheck:
@@ -38,8 +38,12 @@ services:
       dockerfile: Dockerfile
     container_name: auralis_api
     env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://auralis:${POSTGRES_PASSWORD}@postgres:5432/auralis
+      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_HOST=postgres
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,7 +54,7 @@ services:
       - ./vectorstore:/app/vectorstore
     restart: on-failure
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
       timeout: 5s
       retries: 5
