@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LoginModal from '../components/ui/LoginModal';
 import PageNavbar from '../components/layout/PageNavbar';
-import StatsBar from '../components/landing/StatsBar';
 import HowItWorks from '../components/landing/HowItWorks';
 import RobotFeatures from '../components/landing/RobotFeatures';
 import Footer from '../components/landing/Footer';
@@ -144,7 +143,6 @@ const LandingPage = () => {
 
       <HowItWorks />
       <RobotFeatures />
-      <StatsBar />
       <Footer />
     </div>
   );
