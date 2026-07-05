@@ -4,10 +4,10 @@ export default function Footer() {
   const navigate = useNavigate();
 
   const links = [
-    { name: 'Product', id: 'features' },
-    { name: 'Solutions', id: 'how-it-works' },
-    { name: 'Pricing', id: 'footer' },
-    { name: 'Resources', id: 'how-it-works' }
+    { name: 'Product', href: '/#features' },
+    { name: 'Solutions', href: '/#how-it-works' },
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'Resources', href: '/resources' }
   ];
 
   return (
@@ -40,7 +40,17 @@ export default function Footer() {
             {links.map((link) => (
               <button
                 key={link.name}
-                onClick={() => document.getElementById(link.id)?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  if (link.href.startsWith('/#')) {
+                    navigate('/');
+                    setTimeout(() => {
+                      const id = link.href.replace('/#', '');
+                      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  } else {
+                    navigate(link.href);
+                  }
+                }}
                 className="text-[#6b7280] text-sm font-sans hover:text-white transition-colors"
               >
                 {link.name}

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LoginModal from '../components/ui/LoginModal';
-import { Button } from '../components/ui/Button';
+import PageNavbar from '../components/layout/PageNavbar';
 import StatsBar from '../components/landing/StatsBar';
 import HowItWorks from '../components/landing/HowItWorks';
 import RobotFeatures from '../components/landing/RobotFeatures';
@@ -13,7 +13,6 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const showLogin = searchParams.get('login') === 'true';
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevX = useRef<number | null>(null);
@@ -72,85 +71,7 @@ const LandingPage = () => {
     <div className="relative bg-white text-neutral-900 font-sans selection:bg-[#f9fafb] selection:text-[#0a0a0a] antialiased flex flex-col">
       {showLogin && <LoginModal />}
       
-      {/* NAVBAR */}
-      <header className="fixed top-0 inset-x-0 z-10 px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center bg-transparent">
-        <div className="flex flex-row gap-3">
-          <span className="text-[22px] sm:text-[26px] tracking-tight text-[#0a0a0a] font-logo font-semibold select-none">Auralis</span>
-        </div>
-        
-        <div className="hidden md:flex flex-row items-center gap-8 text-sm font-sans font-medium text-[#6b7280]">
-          {[
-            { name: 'Product', id: 'features' },
-            { name: 'Solutions', id: 'how-it-works' },
-            { name: 'Pricing', id: 'footer' },
-            { name: 'Resources', id: 'how-it-works' }
-          ].map((item) => (
-            <button 
-              key={item.name} 
-              onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })}
-              className="hover:text-[#0a0a0a] transition-colors"
-            >
-              {item.name}
-            </button>
-          ))}
-        </div>
-        
-        <Button 
-          variant="ghost"
-          onClick={() => navigate('/?login=true')}
-          className="hidden md:block"
-        >
-          Login
-        </Button>
-
-        <button 
-          className="md:hidden relative w-6 h-[16px] flex flex-col justify-between z-20"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isMobileMenuOpen}
-        >
-          <span className={`w-6 h-[2px] bg-black transition-all duration-300 origin-center ${isMobileMenuOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
-          <span className={`w-6 h-[2px] bg-black transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
-          <span className={`w-6 h-[2px] bg-black transition-all duration-300 origin-center ${isMobileMenuOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
-        </button>
-      </header>
-
-      {/* MOBILE OVERLAY */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center space-y-8 pointer-events-auto"
-          >
-            {[
-              { name: 'Product', id: 'features' },
-              { name: 'Solutions', id: 'how-it-works' },
-              { name: 'Pricing', id: 'footer' },
-              { name: 'Resources', id: 'how-it-works' }
-            ].map(item => (
-              <button 
-                key={item.name} 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="text-3xl font-sans font-medium text-[#6b7280] hover:text-[#0a0a0a] transition-colors"
-              >
-                {item.name}
-              </button>
-            ))}
-            <Button 
-              variant="primary"
-              onClick={() => navigate('/?login=true')}
-              className="mt-8 text-lg px-8 py-4"
-            >
-              Login
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PageNavbar transparent={true} />
 
       {/* HERO SCROLL WRAPPER */}
   <div className="relative min-h-screen overflow-hidden bg-white">

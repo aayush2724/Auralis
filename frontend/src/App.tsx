@@ -7,6 +7,8 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
@@ -48,6 +50,22 @@ const AnimatedRoutes = () => {
               element={
                 <PublicRoute>
                   <LandingPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/pricing"
+              element={
+                <PublicRoute>
+                  <PricingPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/resources"
+              element={
+                <PublicRoute>
+                  <ResourcesPage />
                 </PublicRoute>
               }
             />
