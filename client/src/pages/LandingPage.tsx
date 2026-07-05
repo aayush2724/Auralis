@@ -6,7 +6,6 @@ import PageNavbar from '../components/layout/PageNavbar';
 import StatsBar from '../components/landing/StatsBar';
 import HowItWorks from '../components/landing/HowItWorks';
 import RobotFeatures from '../components/landing/RobotFeatures';
-import Features from '../components/landing/Features';
 import Footer from '../components/landing/Footer';
 
 const LandingPage = () => {
@@ -146,7 +145,6 @@ const LandingPage = () => {
       <HowItWorks />
       <RobotFeatures />
       <StatsBar />
-      <Features />
       <Footer />
     </div>
   );
