@@ -7,7 +7,8 @@
 [![FAISS](https://img.shields.io/badge/FAISS-VectorStore-yellow.svg?style=flat-square)](https://github.com/facebookresearch/faiss)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-Cache-red.svg?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-UI-FF4B4B.svg?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![React](https://img.shields.io/badge/React-18-blue.svg?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
+[![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-Container-blue.svg?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-black.svg?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
@@ -20,7 +21,7 @@
 ```text
                                +-----------------------------+
                                |         Web Browser         |
-                               |    (Streamlit Frontend)     |
+                               |  (React / Vite Frontend)    |
                                +--------------+--------------+
                                               |
                                               v (HTTP / REST)
@@ -88,7 +89,7 @@ git clone https://github.com/aayush2724/Auralis.git && cd Auralis
 # 2. Set up environment configuration (fill in DEEPSEEK_API_KEY, JWT_SECRET_KEY, and DB credentials)
 cp .env.example .env
 
-# 3. Start PostgreSQL, Redis, FastAPI, and Streamlit containers
+# 3. Start PostgreSQL, Redis, FastAPI, and React containers
 docker compose up --build
 ```
 
