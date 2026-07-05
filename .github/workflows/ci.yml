@@ -78,7 +78,7 @@ jobs:
           set -e
           MAX_RETRIES=20
           RETRY=0
-          until curl -fsS http://localhost:8000/health >/dev/null 2>&1; do
+          until curl -fsS http://localhost:8001/health >/dev/null 2>&1; do
             RETRY=$((RETRY+1))
             echo "Health check attempt $RETRY/$MAX_RETRIES failed; waiting 3s..."
             if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
