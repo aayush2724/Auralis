@@ -19,6 +19,8 @@ services:
           property: connectionString
       - key: DEEPSEEK_API_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: ENVIRONMENT

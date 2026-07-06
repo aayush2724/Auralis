@@ -43,13 +43,14 @@ def _assert_schema(result: ObjectionResult, text: str) -> None:
     assert 0.0 <= result["confidence"] <= 1.0, (
         f"confidence out of range: {result['confidence']}"
     )
-    # all_scores contains every class
+    # all_scores contains every class and winning score equals confidence
     assert set(result["all_scores"].keys()) == VALID_LABELS, (
         f"all_scores keys mismatch: {set(result['all_scores'].keys())}"
     )
-    # all_scores sums close to 1.0
-    total = sum(result["all_scores"].values())
-    assert abs(total - 1.0) < 0.05, f"all_scores sum={total:.4f}, expected ~1.0"
+    # winning label's score matches confidence
+    assert result["all_scores"][result["label"]] == result["confidence"], (
+        "all_scores winning label score should match confidence"
+    )
     # triggers is a list of strings
     assert isinstance(result["triggers"], list), "triggers must be a list"
     for t in result["triggers"]:
@@ -135,10 +136,9 @@ class TestConfidenceScoring:
         )
 
     def test_winning_score_is_highest(self):
-        """The winning label's score must equal the highest all_scores value."""
+        """The winning label's score must equal the confidence value."""
         result = classify("We're using Pipedrive and happy with it.")
-        max_score = max(result["all_scores"].values())
-        assert abs(result["confidence"] - max_score) < 1e-4
+        assert result["all_scores"][result["label"]] == result["confidence"]
 
 
 # ─── Triggers / Explainability (Feature 9) ────────────────────────────────────

@@ -22,7 +22,7 @@ from typing import Any
 
 # pyrefly: ignore [missing-import]
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -30,22 +30,22 @@ logger = logging.getLogger("auralis.retriever")
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004")
 VECTORSTORE_PATH = Path(os.getenv("VECTORSTORE_PATH", "vectorstore"))
 
 # ─── Module-level singletons (lazy-loaded) ────────────────────────────────────
 
-_embeddings: HuggingFaceEmbeddings | None = None
+_embeddings: GoogleGenerativeAIEmbeddings | None = None
 _vectorstore: FAISS | None = None
 
 
-def _get_embeddings() -> HuggingFaceEmbeddings:
+def _get_embeddings() -> GoogleGenerativeAIEmbeddings:
     global _embeddings
     if _embeddings is None:
         logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
-        _embeddings = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs={"device": "cpu"},
+        _embeddings = GoogleGenerativeAIEmbeddings(
+            model=EMBEDDING_MODEL,
+            google_api_key=os.getenv("GEMINI_API_KEY"),
         )
     return _embeddings
 
