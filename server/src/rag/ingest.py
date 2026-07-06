@@ -5,7 +5,7 @@ Knowledge-base ingestion pipeline.
 
 Supports: .pdf (PyMuPDF), .csv (pandas), .md (pathlib)
 Chunking : RecursiveCharacterTextSplitter — 512 tokens / 64-token overlap
-Embedding: sentence-transformers/all-MiniLM-L6-v2
+Embedding: models/text-embedding-004 (Google GenAI)
 Storage  : FAISS index persisted to vectorstore/
 
 CLI usage
@@ -37,7 +37,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 
 # pyrefly: ignore [missing-import]
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ logger = logging.getLogger("auralis.ingest")
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004")
 VECTORSTORE_PATH = Path(os.getenv("VECTORSTORE_PATH", "vectorstore"))
 CHUNK_SIZE = 512  # tokens (approx. characters / 4)
 CHUNK_OVERLAP = 64
@@ -140,7 +140,10 @@ def _embed_and_persist(chunks: list[dict[str, Any]], vectorstore_path: Path) -> 
     metadatas = [c["metadata"] for c in chunks]
 
     logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model=EMBEDDING_MODEL,
+        google_api_key=os.getenv("GEMINI_API_KEY"),
+    )
 
     index_file = vectorstore_path / "index.faiss"
 

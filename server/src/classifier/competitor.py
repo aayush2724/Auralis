@@ -7,7 +7,7 @@ Strategy
 --------
 1. Regex-first: scan the input for known competitor names using a curated
    dictionary of canonical names + common aliases.  O(n) and zero model load.
-2. Fallback to zero-shot NLI (BART-large-mnli) when regex finds nothing but
+2. Fallback to zero-shot LLM classifier (Gemini) when regex finds nothing but
    the text still looks like it could mention a competitor.
 
 Public API
@@ -81,26 +81,20 @@ def _get_nli_pipeline():
 
 def _nli_detect(text: str) -> str | None:
     """
-    Use zero-shot NLI to check if any known competitor is implied.
+    Use zero-shot LLM classification to check if any known competitor is implied.
     Only called when regex finds nothing but context words suggest a competitor.
     """
     candidate_labels = list(_COMPETITOR_ALIASES.keys())
-    hypothesis_template = "The speaker is mentioning, using, or comparing against {}."
 
     clf = _get_nli_pipeline()
-    result = clf(
-        text,
-        candidate_labels=candidate_labels,
-        hypothesis_template=hypothesis_template,
-        multi_label=False,
-    )
+    result = clf(text, candidate_labels=candidate_labels)
 
     top_label: str = result["labels"][0]
     top_score: float = result["scores"][0]
 
-    # Only accept NLI result if it's confident enough
+    # Only accept result if it's confident enough
     if top_score >= 0.55:
-        logger.debug("NLI detected competitor: %s (score=%.2f)", top_label, top_score)
+        logger.debug("LLM detected competitor: %s (score=%.2f)", top_label, top_score)
         return top_label
 
     return None
