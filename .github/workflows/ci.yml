@@ -13,7 +13,7 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: auralis_test
+          POSTGRES_DB: auralis
           POSTGRES_USER: auralis
           POSTGRES_PASSWORD: test_password
         ports:
@@ -33,7 +33,7 @@ jobs:
           --health-timeout 3s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql+asyncpg://auralis:test_password@localhost:5432/auralis_test
+      DATABASE_URL: postgresql+asyncpg://auralis:test_password@localhost:5432/auralis
       REDIS_URL: redis://localhost:6379/0
       JWT_SECRET_KEY: test_secret_key_for_ci_only_32chars
       OPENAI_API_KEY: sk-fake-key-for-testing
