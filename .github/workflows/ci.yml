@@ -37,6 +37,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       JWT_SECRET_KEY: test_secret_key_for_ci_only_32chars
       OPENAI_API_KEY: sk-fake-key-for-testing
+      GEMINI_API_KEY: ci-dummy-key
       ENVIRONMENT: test
     steps:
       - uses: actions/checkout@v4
