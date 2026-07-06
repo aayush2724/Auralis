@@ -76,16 +76,21 @@ if os.getenv("USE_MOCK_LLM", "").lower() in ("1", "true", "yes"):
     # Patch the LLM classification entrypoint
     patch.object(LLMZeroShotClassifier, "__call__", fake_classify).start()
 
-    # Patch Google Embeddings globally using unittest.mock to ensure it works on Pydantic models
-    from langchain_google_genai import GoogleGenerativeAIEmbeddings
-    patch.object(
-        GoogleGenerativeAIEmbeddings,
-        "embed_documents",
-        lambda self, texts, **kwargs: [[float((i + 1) % 10) for _ in range(768)] for i, _ in enumerate(texts)]
-    ).start()
+    # 2. Patch the underlying google-genai SDK for embeddings globally.
+    # This prevents LangChain from throwing `TypeError: 'FakeEmbeddings' object is not callable`
+    # because it will still use the real LangChain embeddings class, but the network call is intercepted.
+    from google.genai.models import Models
+    from google.genai.types import EmbedContentResponse, ContentEmbedding
     
-    patch.object(
-        GoogleGenerativeAIEmbeddings,
-        "embed_query",
-        lambda self, text, **kwargs: [0.1 for _ in range(768)]
-    ).start()
+    def fake_embed_content(self, model, contents, **kwargs):
+        # Determine number of items to embed based on `contents` which can be a single item or a list
+        if not isinstance(contents, list):
+            contents = [contents]
+        
+        embeddings = []
+        for i, _ in enumerate(contents):
+            # Deterministic, simple mock embedding
+            embeddings.append(ContentEmbedding(values=[float((i + 1) % 10) for _ in range(768)]))
+        return EmbedContentResponse(embeddings=embeddings)
+        
+    patch.object(Models, "embed_content", fake_embed_content).start()
