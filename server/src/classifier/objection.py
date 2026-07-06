@@ -1,7 +1,7 @@
 """
 auralis/src/classifier/objection.py
 ─────────────────────────────────────
-Zero-shot objection classifier powered by Gemini LLM via shared_model.
+Zero-shot objection classifier powered by facebook/bart-large-mnli.
 
 Implements:
   - Feature 8  — Confidence Scoring (softmax score on every class)
@@ -39,6 +39,8 @@ from src.classifier.shared_model import get_zeroshot_pipeline
 logger = logging.getLogger("auralis.classifier.objection")
 
 # ─── Constants ────────────────────────────────────────────────────────────────
+
+MODEL_NAME = "facebook/bart-large-mnli"
 
 CLASSES: list[str] = [
     "price",
@@ -199,16 +201,28 @@ def classify(text: str) -> ObjectionResult:
 
     clf = _get_pipeline()
 
-    # Pass short class labels with descriptive context via the prompt in shared_model
-    result = clf(text, candidate_labels=CLASSES)
+    # Build one hypothesis per class and run multi-label NLI
+    # We use the full sentences from _HYPOTHESIS_TEMPLATES.values() as candidate labels,
+    # and map them back to their short string keys after classification.
+    val_to_key = {v: k for k, v in _HYPOTHESIS_TEMPLATES.items()}
+    candidate_labels = list(_HYPOTHESIS_TEMPLATES.values())
+    hypothesis_template = "{}"
 
-    winning_label: str = result["labels"][0]
+    result = clf(
+        text,
+        candidate_labels=candidate_labels,
+        hypothesis_template=hypothesis_template,
+        multi_label=False,
+    )
+
+    # Align scores back to their labels
+    all_scores: dict[str, float] = {
+        val_to_key[lbl]: round(float(score), 4)
+        for lbl, score in zip(result["labels"], result["scores"])
+    }
+
+    winning_label: str = val_to_key[result["labels"][0]]
     confidence: float = round(float(result["scores"][0]), 4)
-
-    # Build all_scores dict: winning label gets the confidence, rest get 0.0
-    all_scores: dict[str, float] = {label: 0.0 for label in CLASSES}
-    all_scores[winning_label] = confidence
-
     triggers = _extract_triggers(text, winning_label)
 
     logger.debug(

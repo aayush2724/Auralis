@@ -3,11 +3,13 @@ langchain
 langchain-community
 langchain-google-genai~=4.2.6
 langchain-openai
+langchain-huggingface
 langgraph
 openai
 
 # Vector store + embeddings
 faiss-cpu
+sentence-transformers
 
 # Document loaders
 pymupdf
@@ -24,6 +26,12 @@ bcrypt==4.0.1             # passlib is incompatible with bcrypt >= 4.1.0
 sqlalchemy
 asyncpg
 redis
+
+# ML / NLP
+transformers
+torch
+accelerate
+scipy
 
 # Frontend / Visualization
 streamlit

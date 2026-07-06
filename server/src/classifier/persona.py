@@ -3,7 +3,7 @@ auralis/src/classifier/persona.py
 ──────────────────────────────────
 Zero-shot customer persona detector (Feature 3).
 
-Uses a Gemini LLM classifier (shared with other classifiers) to
+Uses facebook/bart-large-mnli (shared with the objection classifier) to
 identify the most likely buyer persona from a sales utterance, then maps
 that persona to a one-sentence pitch angle instruction for the strategy
 selection node.
@@ -24,7 +24,6 @@ CLI smoke-test
 from __future__ import annotations
 
 import logging
-import os
 import sys
 from typing import TypedDict
 from src.classifier.shared_model import get_zeroshot_pipeline
@@ -35,7 +34,7 @@ logger = logging.getLogger("auralis.classifier.persona")
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
-MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+MODEL_NAME = "facebook/bart-large-mnli"
 
 # Minimum confidence below which we fall back to "Unknown"
 _UNKNOWN_THRESHOLD = 0.25
@@ -142,10 +141,18 @@ def detect(text: str) -> PersonaResult:
     # Exclude "Unknown" from candidate labels — it will be applied as a
     # threshold fallback rather than letting the model "choose" unknown.
     candidate_personas = [p for p in PERSONAS if p != "Unknown"]
+    hypotheses_values = [_HYPOTHESES[p] for p in candidate_personas]
+    val_to_key = {v: k for k, v in _HYPOTHESES.items()}
 
-    result = clf(text, candidate_labels=candidate_personas)
+    result = clf(
+        text,
+        candidate_labels=hypotheses_values,
+        hypothesis_template="{}",  # hypotheses are already full sentences
+        multi_label=False,
+    )
 
-    winning_label: str = result["labels"][0]
+    # The result['labels'] will be the long hypothesis strings, map back to persona name
+    winning_label: str = val_to_key[result["labels"][0]]
     confidence: float = round(float(result["scores"][0]), 4)
 
     # Apply unknown threshold
