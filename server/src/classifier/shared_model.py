@@ -29,38 +29,54 @@ class LLMZeroShotClassifier:
         ).with_structured_output(ClassificationOutput)
         self.prompt = PromptTemplate.from_template(
             "You are an expert sales conversation analyst.\n"
-            "Classify the following text into exactly one of these categories, identified by their 0-based index:\n"
+            "Classify the following sales text into exactly one of these categories (by 0-based index).\n"
+            "Read the description carefully before choosing:\n\n"
             "{candidate_labels}\n\n"
             "Text to classify: {text}\n\n"
-            "Select the best matching label_index (an integer) and provide a confidence score (0.0-1.0)."
+            "Pick the single best-matching label_index and provide a confidence score (0.0-1.0)."
         )
 
-    def __call__(
-        self, text: str, candidate_labels: list[str], **kwargs
-    ) -> dict[str, Any]:
-        try:
-            # format candidate labels with their index
-            formatted_labels = "\n".join(
-                [f"{i}: {label}" for i, label in enumerate(candidate_labels)]
-            )
-            chain = self.prompt | self.llm
-            result: ClassificationOutput = chain.invoke(
-                {"candidate_labels": formatted_labels, "text": text}
-            )
-            idx = (
-                result.label_index
-                if 0 <= result.label_index < len(candidate_labels)
-                else 0
-            )
-            label = candidate_labels[idx]
-            score = result.confidence
-        except Exception as e:
-            logger.error(f"LLM Classification failed: {e}")
-            label = candidate_labels[0]
-            score = 0.5
+    def __call__(self, text: str, candidate_labels: list[str], descriptions: list[str] | None = None, **kwargs) -> dict[str, Any]:
+        import time
 
-        return {"labels": [label], "scores": [score]}
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Format labels with optional descriptions for better LLM accuracy
+                if descriptions and len(descriptions) == len(candidate_labels):
+                    formatted_labels = "\n".join(
+                        [f"{i}: {label} — {desc}" for i, (label, desc) in enumerate(zip(candidate_labels, descriptions))]
+                    )
+                else:
+                    formatted_labels = "\n".join([f"{i}: {label}" for i, label in enumerate(candidate_labels)])
+                chain = self.prompt | self.llm
+                result: ClassificationOutput = chain.invoke({
+                    "candidate_labels": formatted_labels,
+                    "text": text
+                })
+                idx = result.label_index if 0 <= result.label_index < len(candidate_labels) else 0
+                label = candidate_labels[idx]
+                score = result.confidence
+                return {
+                    "labels": [label],
+                    "scores": [score]
+                }
+            except Exception as e:
+                err_str = str(e)
+                if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+                    wait = 15 * (attempt + 1)  # 15s, 30s, 45s
+                    logger.warning(f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait)
+                else:
+                    logger.error(f"LLM Classification failed: {e}")
+                    break
 
+        # Final fallback after all retries exhausted
+        logger.error("All retries exhausted, returning fallback label")
+        return {
+            "labels": [candidate_labels[0]],
+            "scores": [0.5]
+        }
 
 def get_zeroshot_pipeline():
     """

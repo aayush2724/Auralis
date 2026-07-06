@@ -143,7 +143,8 @@ def detect(text: str) -> PersonaResult:
     # threshold fallback rather than letting the model "choose" unknown.
     candidate_personas = [p for p in PERSONAS if p != "Unknown"]
 
-    result = clf(text, candidate_labels=candidate_personas)
+    descriptions = [_HYPOTHESES[p] for p in candidate_personas]
+    result = clf(text, candidate_labels=candidate_personas, descriptions=descriptions)
 
     winning_label: str = result["labels"][0]
     confidence: float = round(float(result["scores"][0]), 4)

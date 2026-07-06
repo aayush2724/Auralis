@@ -199,8 +199,9 @@ def classify(text: str) -> ObjectionResult:
 
     clf = _get_pipeline()
 
-    # Pass short class labels with descriptive context via the prompt in shared_model
-    result = clf(text, candidate_labels=CLASSES)
+    # Pass short class labels WITH their descriptions for LLM context
+    descriptions = [_HYPOTHESIS_TEMPLATES[c] for c in CLASSES]
+    result = clf(text, candidate_labels=CLASSES, descriptions=descriptions)
 
     winning_label: str = result["labels"][0]
     confidence: float = round(float(result["scores"][0]), 4)
