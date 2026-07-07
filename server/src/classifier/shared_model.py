@@ -36,7 +36,13 @@ class LLMZeroShotClassifier:
             "Pick the single best-matching label_index and provide a confidence score (0.0-1.0)."
         )
 
-    def __call__(self, text: str, candidate_labels: list[str], descriptions: list[str] | None = None, **kwargs) -> dict[str, Any]:
+    def __call__(
+        self,
+        text: str,
+        candidate_labels: list[str],
+        descriptions: list[str] | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
         import time
 
         max_retries = 3
@@ -45,27 +51,36 @@ class LLMZeroShotClassifier:
                 # Format labels with optional descriptions for better LLM accuracy
                 if descriptions and len(descriptions) == len(candidate_labels):
                     formatted_labels = "\n".join(
-                        [f"{i}: {label} — {desc}" for i, (label, desc) in enumerate(zip(candidate_labels, descriptions))]
+                        [
+                            f"{i}: {label} — {desc}"
+                            for i, (label, desc) in enumerate(
+                                zip(candidate_labels, descriptions)
+                            )
+                        ]
                     )
                 else:
-                    formatted_labels = "\n".join([f"{i}: {label}" for i, label in enumerate(candidate_labels)])
+                    formatted_labels = "\n".join(
+                        [f"{i}: {label}" for i, label in enumerate(candidate_labels)]
+                    )
                 chain = self.prompt | self.llm
-                result: ClassificationOutput = chain.invoke({
-                    "candidate_labels": formatted_labels,
-                    "text": text
-                })
-                idx = result.label_index if 0 <= result.label_index < len(candidate_labels) else 0
+                result: ClassificationOutput = chain.invoke(
+                    {"candidate_labels": formatted_labels, "text": text}
+                )
+                idx = (
+                    result.label_index
+                    if 0 <= result.label_index < len(candidate_labels)
+                    else 0
+                )
                 label = candidate_labels[idx]
                 score = result.confidence
-                return {
-                    "labels": [label],
-                    "scores": [score]
-                }
+                return {"labels": [label], "scores": [score]}
             except Exception as e:
                 err_str = str(e)
                 if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
                     wait = 15 * (attempt + 1)  # 15s, 30s, 45s
-                    logger.warning(f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})")
+                    logger.warning(
+                        f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})"
+                    )
                     time.sleep(wait)
                 else:
                     logger.error(f"LLM Classification failed: {e}")
@@ -73,10 +88,8 @@ class LLMZeroShotClassifier:
 
         # Final fallback after all retries exhausted
         logger.error("All retries exhausted, returning fallback label")
-        return {
-            "labels": [candidate_labels[0]],
-            "scores": [0.5]
-        }
+        return {"labels": [candidate_labels[0]], "scores": [0.5]}
+
 
 def get_zeroshot_pipeline():
     """
