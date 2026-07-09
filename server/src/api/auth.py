@@ -140,7 +140,7 @@ async def seed_admin() -> None:
     """
     if not _ADMIN_EMAIL or not _ADMIN_PASSWORD:
         return
-        
+
     engine = _get_engine()
     async with engine.begin() as conn:
         result = await conn.execute(text("SELECT COUNT(*) FROM users"))
