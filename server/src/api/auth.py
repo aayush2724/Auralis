@@ -46,25 +46,21 @@ logger = logging.getLogger("auralis.auth")
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-JWT_SECRET_KEY: str = os.getenv(
-    "JWT_SECRET_KEY",
-    "CHANGE_ME_IN_PRODUCTION_USE_A_LONG_RANDOM_SECRET",  # overridden via .env
-)
+JWT_SECRET_KEY: str | None = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # Default admin seeded when the users table is empty
-_ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@auralis.ai")
-_ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "changeme")
+_ADMIN_EMAIL: str | None = os.getenv("ADMIN_EMAIL")
+_ADMIN_PASSWORD: str | None = os.getenv("ADMIN_PASSWORD")
 
-if JWT_SECRET_KEY == "CHANGE_ME_IN_PRODUCTION_USE_A_LONG_RANDOM_SECRET":
-    logger.warning(
-        "SECURITY WARNING: Using default insecure JWT_SECRET_KEY. Ensure this is overridden in production!"
-    )
+if not JWT_SECRET_KEY:
+    logger.critical("SECURITY ERROR: JWT_SECRET_KEY environment variable is missing.")
 
-if _ADMIN_PASSWORD == "changeme":
+if not _ADMIN_EMAIL or not _ADMIN_PASSWORD:
     logger.warning(
-        "SECURITY WARNING: Using default ADMIN_PASSWORD ('changeme'). Change it in your production .env file!"
+        "ADMIN_EMAIL or ADMIN_PASSWORD is not set in the environment. "
+        "The default admin user cannot be seeded."
     )
 
 # ─── Roles ────────────────────────────────────────────────────────────────────
@@ -142,6 +138,9 @@ async def seed_admin() -> None:
     Credentials are read from ADMIN_EMAIL / ADMIN_PASSWORD env vars.
     This runs once on startup and is a no-op if any user already exists.
     """
+    if not _ADMIN_EMAIL or not _ADMIN_PASSWORD:
+        return
+        
     engine = _get_engine()
     async with engine.begin() as conn:
         result = await conn.execute(text("SELECT COUNT(*) FROM users"))
