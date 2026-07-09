@@ -64,6 +64,9 @@ def _get_engine() -> AsyncEngine:
                 "postgresql://", "postgresql+asyncpg://", 1
             )
 
+        # asyncpg does not support 'sslmode', it uses 'ssl'
+        database_url = database_url.replace("sslmode=", "ssl=")
+
         _engine = create_async_engine(
             database_url,
             echo=False,

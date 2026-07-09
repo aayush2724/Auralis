@@ -83,7 +83,16 @@ async def lifespan(app: FastAPI):
 
     try:
         await init_users_db()
-        logger.info("users table ready.")
+
+        # TEMPORARY FIX: Clear the users table so it forces a re-seed with the new environment variables
+        from src.memory.db import _get_engine
+        from sqlalchemy import text
+
+        engine = _get_engine()
+        async with engine.begin() as conn:
+            await conn.execute(text("DELETE FROM users"))
+
+        logger.info("users table ready. Old users cleared for re-seeding.")
         await seed_admin()
     except Exception as exc:
         logger.error("users init / seed failed: %s", exc, exc_info=True)
