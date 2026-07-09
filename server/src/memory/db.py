@@ -32,6 +32,8 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -64,8 +66,13 @@ def _get_engine() -> AsyncEngine:
                 "postgresql://", "postgresql+asyncpg://", 1
             )
 
-        # asyncpg does not support 'sslmode', it uses 'ssl'
-        database_url = database_url.replace("sslmode=", "ssl=")
+        # Parse and filter out query parameters unsupported by asyncpg
+        parsed = urlparse(database_url)
+        query_params = parse_qsl(parsed.query)
+        filtered_params = [
+            (k, v) for k, v in query_params if k not in ("channel_binding", "sslmode")
+        ]
+        database_url = urlunparse(parsed._replace(query=urlencode(filtered_params)))
 
         _engine = create_async_engine(
             database_url,
