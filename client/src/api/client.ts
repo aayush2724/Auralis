@@ -3,8 +3,14 @@ import { QueryClient } from '@tanstack/react-query';
 
 export const queryClient = new QueryClient();
 
+// Always use the relative /api path so Vite's dev proxy routes requests to the
+// backend. VITE_API_URL is only used by vite.config.ts (Node process.env),
+// not the browser client — using it here caused cross-origin preflights on
+// every request.
+const API_BASE = '/api';
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: API_BASE,
   timeout: 30000,
 });
 
@@ -31,7 +37,7 @@ client.interceptors.response.use(
 );
 
 export const chatClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: API_BASE,
   timeout: 120000,
 });
 
