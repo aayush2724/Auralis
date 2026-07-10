@@ -63,6 +63,7 @@ from src.memory.db import load_session, save_session
 from src.memory.memory import ConversationMemory
 from src.utils.explainability import explain
 from src.utils.logger import log_request
+from src.classifier.shared_model import GeminiRateLimitError
 
 logger = logging.getLogger("auralis.api.chat")
 router = APIRouter()
@@ -287,8 +288,14 @@ async def chat(
 
         return response
 
+    except GeminiRateLimitError as e:
+        logger.warning(f"Rate limit exceeded: {e}")
+        raise HTTPException(
+            status_code=429,
+            detail=str(e),
+        )
     except HTTPException:
-        raise  # Re-raise 400/401/403 unchanged
+        raise  # Re-raise 400/401/403/429 unchanged
     except Exception as exc:
         logger.exception("Error in POST /chat for session %s", session_id)
         raise HTTPException(

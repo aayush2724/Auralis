@@ -15,6 +15,12 @@ _classifier = None
 _lock = threading.Lock()
 
 
+class GeminiRateLimitError(Exception):
+    """Raised when the Gemini API rate limit is exceeded after retries."""
+
+    pass
+
+
 class ClassificationOutput(BaseModel):
     label_index: int = Field(
         description="The 0-based index of the most appropriate label from the candidate list."
@@ -40,7 +46,7 @@ class CombinedClassificationOutput(BaseModel):
 class LLMZeroShotClassifier:
     def __init__(self):
         self.llm = ChatGoogleGenerativeAI(
-            model=os.environ.get("GEMINI_MODEL", "gemini-2.0-flash"),
+            model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite"),
             temperature=0,
             google_api_key=os.getenv("GEMINI_API_KEY"),
         )
@@ -123,8 +129,8 @@ class LLMZeroShotClassifier:
         if cached_val:
             return cached_val
 
-        max_retries = 3
-        for attempt in range(max_retries):
+        max_retries = 1
+        for attempt in range(max_retries + 1):
             try:
                 result: ClassificationOutput = self.single_chain.invoke(
                     {"candidate_labels": formatted_labels, "text": text}
@@ -142,16 +148,22 @@ class LLMZeroShotClassifier:
             except Exception as e:
                 err_str = str(e)
                 if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
-                    wait = 15 * (attempt + 1)
-                    logger.warning(
-                        f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})"
-                    )
-                    time.sleep(wait)
+                    if attempt < max_retries:
+                        wait = 3
+                        logger.warning(
+                            f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})"
+                        )
+                        time.sleep(wait)
+                    else:
+                        logger.error("All retries exhausted due to rate limit")
+                        raise GeminiRateLimitError(
+                            "The AI is currently busy, please try again in a moment."
+                        ) from e
                 else:
                     logger.error(f"LLM Classification failed: {e}")
                     break
 
-        logger.error("All retries exhausted, returning fallback label")
+        logger.error("Returning fallback label due to non-rate-limit error")
         return {"labels": [candidate_labels[0]], "scores": [0.5]}
 
     def classify_combined(
@@ -187,8 +199,8 @@ class LLMZeroShotClassifier:
         if cached_val:
             return cached_val
 
-        max_retries = 3
-        for attempt in range(max_retries):
+        max_retries = 1
+        for attempt in range(max_retries + 1):
             try:
                 result: CombinedClassificationOutput = self.combined_chain.invoke(
                     {
@@ -224,18 +236,22 @@ class LLMZeroShotClassifier:
             except Exception as e:
                 err_str = str(e)
                 if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
-                    wait = 15 * (attempt + 1)
-                    logger.warning(
-                        f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})"
-                    )
-                    time.sleep(wait)
+                    if attempt < max_retries:
+                        wait = 3
+                        logger.warning(
+                            f"Rate limited by Gemini API, retrying in {wait}s (attempt {attempt + 1}/{max_retries})"
+                        )
+                        time.sleep(wait)
+                    else:
+                        logger.error("All retries exhausted due to rate limit")
+                        raise GeminiRateLimitError(
+                            "The AI is currently busy, please try again in a moment."
+                        ) from e
                 else:
                     logger.error(f"Combined LLM Classification failed: {e}")
                     break
 
-        logger.error(
-            "All retries exhausted for combined classification, returning fallback labels"
-        )
+        logger.error("Returning fallback labels due to non-rate-limit error")
         return {
             "objection": {"label": objection_labels[0], "confidence": 0.5},
             "persona": {"label": persona_labels[0], "confidence": 0.5},

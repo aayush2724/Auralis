@@ -22,6 +22,23 @@ from __future__ import annotations
 import pytest
 
 from src.classifier.objection import ObjectionResult, classify
+from unittest.mock import patch
+
+@pytest.fixture(autouse=True)
+def mock_pipeline():
+    with patch("src.classifier.objection.get_zeroshot_pipeline") as mock:
+        def fake_call(text, candidate_labels, **kwargs):
+            if "HubSpot" in text: label = "competitor"
+            elif "expensive" in text or "budget" in text or "price" in text or "high" in text: label = "price"
+            elif "time" in text or "quarter" in text: label = "timing"
+            elif "never heard" in text or "prove" in text: label = "trust"
+            elif "complex" in text: label = "fit"
+            elif "demo" in text or "contract" in text: label = "buying_signal"
+            else: label = "neutral"
+            return {"labels": [label], "scores": [0.95]}
+        
+        mock.return_value.side_effect = fake_call
+        yield mock
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────

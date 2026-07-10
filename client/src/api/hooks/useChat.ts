@@ -43,9 +43,20 @@ export const useChat = (sessionId: string) => {
   }, []);
 
   const sendWithHttpFallback = useCallback(async (message: string) => {
-    const req: ChatRequest = { session_id: sessionId, message };
-    const data = await chatRequest<ChatResponse>(req);
-    appendAssistantMessage(data, message);
+    try {
+      const req: ChatRequest = { session_id: sessionId, message };
+      const data = await chatRequest<ChatResponse>(req);
+      appendAssistantMessage(data, message);
+    } catch (error: any) {
+      const errMsg = error.response?.data?.detail || "The AI is currently busy, please try again in a moment.";
+      const assistantMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: `**Error**: ${errMsg}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    }
   }, [appendAssistantMessage, sessionId]);
 
   const ensureSocket = useCallback(() => {
@@ -69,6 +80,13 @@ export const useChat = (sessionId: string) => {
           setIsLoading(false);
         } else if (payload.type === 'error') {
           setWsError(payload.detail);
+          const assistantMessage: Message = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: `**Error**: ${payload.detail}`,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
           pendingSourceRef.current = null;
           setIsLoading(false);
         }

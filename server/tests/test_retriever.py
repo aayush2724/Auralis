@@ -14,9 +14,18 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from unittest.mock import patch
+from langchain_community.embeddings import FakeEmbeddings
 
 from src.rag.ingest import ingest_directory
-from src.rag.retriever import format_citations, retrieve, _reset_cache
+from src.rag.retriever import _get_vectorstore, _reset_cache, format_citations, retrieve
+
+
+@pytest.fixture(autouse=True)
+def mock_embeddings():
+    with patch("src.rag.retriever._get_embeddings") as mock:
+        mock.return_value = FakeEmbeddings(size=768)
+        yield mock, _reset_cache
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
