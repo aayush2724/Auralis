@@ -21,15 +21,20 @@ class ClassificationOutput(BaseModel):
     )
     confidence: float = Field(description="Confidence score between 0.0 and 1.0.")
 
+
 class CombinedClassificationOutput(BaseModel):
     objection_index: int = Field(
         description="The 0-based index of the most appropriate objection label."
     )
-    objection_confidence: float = Field(description="Confidence score for the objection between 0.0 and 1.0.")
+    objection_confidence: float = Field(
+        description="Confidence score for the objection between 0.0 and 1.0."
+    )
     persona_index: int = Field(
         description="The 0-based index of the most appropriate persona label."
     )
-    persona_confidence: float = Field(description="Confidence score for the persona between 0.0 and 1.0.")
+    persona_confidence: float = Field(
+        description="Confidence score for the persona between 0.0 and 1.0."
+    )
 
 
 class LLMZeroShotClassifier:
@@ -39,9 +44,13 @@ class LLMZeroShotClassifier:
             temperature=0,
             google_api_key=os.getenv("GEMINI_API_KEY"),
         )
-        self.single_chain = self.prompt_single | self.llm.with_structured_output(ClassificationOutput)
-        self.combined_chain = self.prompt_combined | self.llm.with_structured_output(CombinedClassificationOutput)
-        
+        self.single_chain = self.prompt_single | self.llm.with_structured_output(
+            ClassificationOutput
+        )
+        self.combined_chain = self.prompt_combined | self.llm.with_structured_output(
+            CombinedClassificationOutput
+        )
+
         self._cache = OrderedDict()
         self._cache_max_size = 200
         self._cache_lock = threading.Lock()
@@ -92,17 +101,24 @@ class LLMZeroShotClassifier:
         descriptions: list[str] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
-        
+
         if descriptions and len(descriptions) == len(candidate_labels):
             formatted_labels = "\n".join(
-                [f"{i}: {label} — {desc}" for i, (label, desc) in enumerate(zip(candidate_labels, descriptions))]
+                [
+                    f"{i}: {label} — {desc}"
+                    for i, (label, desc) in enumerate(
+                        zip(candidate_labels, descriptions)
+                    )
+                ]
             )
         else:
             formatted_labels = "\n".join(
                 [f"{i}: {label}" for i, label in enumerate(candidate_labels)]
             )
-            
-        cache_key = hashlib.md5(f"single|{text}|{formatted_labels}".encode()).hexdigest()
+
+        cache_key = hashlib.md5(
+            f"single|{text}|{formatted_labels}".encode()
+        ).hexdigest()
         cached_val = self._get_cache(cache_key)
         if cached_val:
             return cached_val
@@ -113,7 +129,11 @@ class LLMZeroShotClassifier:
                 result: ClassificationOutput = self.single_chain.invoke(
                     {"candidate_labels": formatted_labels, "text": text}
                 )
-                idx = result.label_index if 0 <= result.label_index < len(candidate_labels) else 0
+                idx = (
+                    result.label_index
+                    if 0 <= result.label_index < len(candidate_labels)
+                    else 0
+                )
                 label = candidate_labels[idx]
                 score = result.confidence
                 out = {"labels": [label], "scores": [score]}
@@ -140,13 +160,29 @@ class LLMZeroShotClassifier:
         objection_labels: list[str],
         objection_descriptions: list[str],
         persona_labels: list[str],
-        persona_descriptions: list[str]
+        persona_descriptions: list[str],
     ) -> dict[str, Any]:
-        
-        fmt_obj = "\n".join([f"{i}: {label} — {desc}" for i, (label, desc) in enumerate(zip(objection_labels, objection_descriptions))])
-        fmt_per = "\n".join([f"{i}: {label} — {desc}" for i, (label, desc) in enumerate(zip(persona_labels, persona_descriptions))])
-        
-        cache_key = hashlib.md5(f"combined|{text}|{fmt_obj}|{fmt_per}".encode()).hexdigest()
+
+        fmt_obj = "\n".join(
+            [
+                f"{i}: {label} — {desc}"
+                for i, (label, desc) in enumerate(
+                    zip(objection_labels, objection_descriptions)
+                )
+            ]
+        )
+        fmt_per = "\n".join(
+            [
+                f"{i}: {label} — {desc}"
+                for i, (label, desc) in enumerate(
+                    zip(persona_labels, persona_descriptions)
+                )
+            ]
+        )
+
+        cache_key = hashlib.md5(
+            f"combined|{text}|{fmt_obj}|{fmt_per}".encode()
+        ).hexdigest()
         cached_val = self._get_cache(cache_key)
         if cached_val:
             return cached_val
@@ -155,21 +191,33 @@ class LLMZeroShotClassifier:
         for attempt in range(max_retries):
             try:
                 result: CombinedClassificationOutput = self.combined_chain.invoke(
-                    {"objection_labels": fmt_obj, "persona_labels": fmt_per, "text": text}
+                    {
+                        "objection_labels": fmt_obj,
+                        "persona_labels": fmt_per,
+                        "text": text,
+                    }
                 )
-                
-                obj_idx = result.objection_index if 0 <= result.objection_index < len(objection_labels) else 0
-                per_idx = result.persona_index if 0 <= result.persona_index < len(persona_labels) else 0
-                
+
+                obj_idx = (
+                    result.objection_index
+                    if 0 <= result.objection_index < len(objection_labels)
+                    else 0
+                )
+                per_idx = (
+                    result.persona_index
+                    if 0 <= result.persona_index < len(persona_labels)
+                    else 0
+                )
+
                 out = {
                     "objection": {
                         "label": objection_labels[obj_idx],
-                        "confidence": result.objection_confidence
+                        "confidence": result.objection_confidence,
                     },
                     "persona": {
                         "label": persona_labels[per_idx],
-                        "confidence": result.persona_confidence
-                    }
+                        "confidence": result.persona_confidence,
+                    },
                 }
                 self._set_cache(cache_key, out)
                 return out
@@ -185,10 +233,12 @@ class LLMZeroShotClassifier:
                     logger.error(f"Combined LLM Classification failed: {e}")
                     break
 
-        logger.error("All retries exhausted for combined classification, returning fallback labels")
+        logger.error(
+            "All retries exhausted for combined classification, returning fallback labels"
+        )
         return {
             "objection": {"label": objection_labels[0], "confidence": 0.5},
-            "persona": {"label": persona_labels[0], "confidence": 0.5}
+            "persona": {"label": persona_labels[0], "confidence": 0.5},
         }
 
 

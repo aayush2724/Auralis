@@ -30,8 +30,19 @@ from typing import Any, TypedDict
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
-from src.classifier.objection import ObjectionResult, classify, CLASSES, _HYPOTHESIS_TEMPLATES, _extract_triggers
-from src.classifier.persona import PersonaResult, detect, PERSONAS, _HYPOTHESES, _PITCH_ANGLES, _UNKNOWN_THRESHOLD
+from src.classifier.objection import (
+    ObjectionResult,
+    CLASSES,
+    _HYPOTHESIS_TEMPLATES,
+    _extract_triggers,
+)
+from src.classifier.persona import (
+    PersonaResult,
+    PERSONAS,
+    _HYPOTHESES,
+    _PITCH_ANGLES,
+    _UNKNOWN_THRESHOLD,
+)
 from src.classifier.sentiment import SentimentResult, analyze
 from src.classifier.shared_model import get_zeroshot_pipeline
 
@@ -137,19 +148,19 @@ def classify_node(state: GraphState) -> dict[str, Any]:
 
     # Combined LLM call for Objection + Persona
     clf = get_zeroshot_pipeline()
-    
+
     obj_descs = [_HYPOTHESIS_TEMPLATES[c] for c in CLASSES]
     candidate_personas = [p for p in PERSONAS if p != "Unknown"]
     per_descs = [_HYPOTHESES[p] for p in candidate_personas]
-    
+
     combined_result = clf.classify_combined(
         text=text,
         objection_labels=CLASSES,
         objection_descriptions=obj_descs,
         persona_labels=candidate_personas,
-        persona_descriptions=per_descs
+        persona_descriptions=per_descs,
     )
-    
+
     # Process Objection
     obj_label = combined_result["objection"]["label"]
     obj_conf = combined_result["objection"]["confidence"]
@@ -159,19 +170,19 @@ def classify_node(state: GraphState) -> dict[str, Any]:
         "label": obj_label,
         "confidence": obj_conf,
         "all_scores": obj_all_scores,
-        "triggers": _extract_triggers(text, obj_label)
+        "triggers": _extract_triggers(text, obj_label),
     }
-    
+
     # Process Persona
     per_label = combined_result["persona"]["label"]
     per_conf = combined_result["persona"]["confidence"]
     if per_conf < _UNKNOWN_THRESHOLD:
         per_label = "Unknown"
-        
+
     persona: PersonaResult = {
         "label": per_label,
         "confidence": per_conf,
-        "pitch_angle": _PITCH_ANGLES[per_label]
+        "pitch_angle": _PITCH_ANGLES[per_label],
     }
 
     logger.info(
