@@ -27,9 +27,9 @@ from unittest.mock import patch
 def mock_pipeline():
     with patch("src.classifier.persona.get_zeroshot_pipeline") as mock:
         def fake_call(text, candidate_labels, **kwargs):
-            if "CTO" in text or "architecture" in text or "API" in text: label = "CTO"
+            if "developer" in text or "REST APIs" in text: label = "Developer"
+            elif "CTO" in text or "architecture" in text or "API" in text: label = "CTO"
             elif "CEO" in text or "revenue" in text: label = "CEO"
-            elif "developer" in text or "REST APIs" in text: label = "Developer"
             elif "startup" in text or "moat" in text: label = "Founder"
             elif "roadmap" in text: label = "Product_Manager"
             else: label = "Unknown"
