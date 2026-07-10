@@ -43,7 +43,7 @@ Auralis uses a decoupled microservices architecture with a directed acyclic grap
 
 ```mermaid
 graph TD
-    User([User / Browser]) <-->|REST API| API[FastAPI Server]
+    User([User / Browser]) <-->|REST API + WebSocket| API[FastAPI Server]
     
     subgraph Backend Pipeline
         API --> LangGraph[LangGraph Coordinator]
@@ -103,7 +103,8 @@ Auralis isn't just a prototype; it's built with 14 production-grade features des
 | **A/B Testing** | Deterministic 50/50 variant assignment (Static vs Adaptive) mapped to Redis. |
 | **Analytics Event Tracker** | Logs sentiment trends and variant conversion ratios to Postgres. |
 | **Redis Session Cache** | Persists conversation history and state for rapid sub-millisecond retrieval. |
-| **JWT Authentication** | Secures API endpoints with robust JSON Web Token authorization. |
+| **JWT Authentication** | Secures REST and WebSocket chat channels with JSON Web Tokens. |
+| **Real-time Chat Transport** | Supports authenticated WebSocket chat at `/ws/chat` with HTTP fallback for resilience. |
 | **Prometheus Monitoring** | Exposes structured latency and request metrics for observability. |
 
 </details>
@@ -142,4 +143,4 @@ This repository includes everything needed for one-click cloud deployment:
 
 ## 📄 Resume / Portfolio Summary
 
-> *Built Auralis, an adaptive sales intelligence bot using LangGraph + RAG that classifies objections (94% confidence), detects customer persona and sentiment, and generates role-specific responses — improving simulated close rates from 27% to 42% in A/B testing. Deployed with React, FastAPI, Docker, JWT auth, PostgreSQL, Redis, CI/CD, and Prometheus monitoring.*
+> *Built Auralis, an adaptive sales intelligence platform using LangGraph + RAG with end-to-end production architecture: React frontend, FastAPI backend, JWT-secured REST + WebSocket APIs, PostgreSQL persistence, Redis-backed experiments, CI/CD, and Prometheus observability.*

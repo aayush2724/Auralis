@@ -254,6 +254,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         async def endpoint(user: User = Depends(get_current_user)):
             ...
     """
+    return await get_current_user_from_token(token)
+
+
+async def get_current_user_from_token(token: str) -> User:
+    """
+    Decode and validate a bearer token outside dependency injection contexts.
+
+    This helper is used by WebSocket handlers where FastAPI's OAuth2 dependency
+    mechanism is not available.
+    """
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         user_id: str | None = payload.get("sub")

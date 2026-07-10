@@ -7,6 +7,7 @@ Routes
 ------
   POST /auth/token            → issue JWT (public, no auth required)
   POST /chat                  → chat handler          (requires: sales_rep | admin)
+  WS   /ws/chat               → realtime chat stream  (requires: sales_rep | admin)
   GET  /session/{id}          → session facts handler (requires: admin)
   GET  /analytics/dashboard   → aggregated analytics  (requires: admin)
   GET  /health                → {status: ok, version: ...}
@@ -83,16 +84,7 @@ async def lifespan(app: FastAPI):
 
     try:
         await init_users_db()
-
-        # TEMPORARY FIX: Clear the users table so it forces a re-seed with the new environment variables
-        from src.memory.db import _get_engine
-        from sqlalchemy import text
-
-        engine = _get_engine()
-        async with engine.begin() as conn:
-            await conn.execute(text("DELETE FROM users"))
-
-        logger.info("users table ready. Old users cleared for re-seeding.")
+        logger.info("users table ready.")
         await seed_admin()
     except Exception as exc:
         logger.error("users init / seed failed: %s", exc, exc_info=True)

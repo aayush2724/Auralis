@@ -8,7 +8,7 @@ import { Button } from './Button';
 const LoginModal = () => {
   const navigate = useNavigate();
   const loginMutation = useLogin();
-  const [email, setEmail] = useState('admin@auralis.ai');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
   const handleBackdropClick = (e: React.MouseEvent) => {

@@ -183,7 +183,7 @@ function AssistantMessageMeta({ message }: { message: Message }) {
 
 export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: string }) {
   const [currentSessionId, setCurrentSessionId] = useState(initialSessionId);
-  const { messages, sendMessage, isLoading, lastResponse, clearMessages } = useChat(currentSessionId);
+  const { messages, sendMessage, isLoading, lastResponse, clearMessages, wsError } = useChat(currentSessionId);
   const [input, setInput] = useState('');
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -317,6 +317,11 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
 
         <div className="absolute bottom-0 inset-x-0 bg-white border-t border-[#f9fafb] p-3 sm:p-4">
           <div className="max-w-3xl mx-auto flex items-end space-x-3 bg-white">
+            {wsError && (
+              <div className="absolute -top-9 left-1/2 w-[min(92vw,42rem)] -translate-x-1/2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+                {wsError}
+              </div>
+            )}
             <label htmlFor="chat-input" className="sr-only">Type your message</label>
             <textarea
               id="chat-input"
