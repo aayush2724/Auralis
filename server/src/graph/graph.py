@@ -30,9 +30,10 @@ from typing import Any, TypedDict
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
-from src.classifier.objection import ObjectionResult, classify
-from src.classifier.persona import PersonaResult, detect
+from src.classifier.objection import ObjectionResult, classify, CLASSES, _HYPOTHESIS_TEMPLATES, _extract_triggers
+from src.classifier.persona import PersonaResult, detect, PERSONAS, _HYPOTHESES, _PITCH_ANGLES, _UNKNOWN_THRESHOLD
 from src.classifier.sentiment import SentimentResult, analyze
+from src.classifier.shared_model import get_zeroshot_pipeline
 
 from src.memory.memory import ConversationMemory
 from src.rag.retriever import format_citations, retrieve
@@ -124,15 +125,54 @@ class GraphState(TypedDict, total=False):
 
 def classify_node(state: GraphState) -> dict[str, Any]:
     """
-    Run objection, sentiment, and persona classifiers in parallel.
+    Run objection, sentiment, and persona classifiers.
+    Objection and Persona are run in a single LLM call.
     Returns partial state update.
     """
     text = state["user_input"]
     logger.info("[classify_node] text='%s'", text[:80])
 
-    objection = classify(text)
+    # Sentiment is independent (local model)
     sentiment = analyze(text)
-    persona = detect(text)
+
+    # Combined LLM call for Objection + Persona
+    clf = get_zeroshot_pipeline()
+    
+    obj_descs = [_HYPOTHESIS_TEMPLATES[c] for c in CLASSES]
+    candidate_personas = [p for p in PERSONAS if p != "Unknown"]
+    per_descs = [_HYPOTHESES[p] for p in candidate_personas]
+    
+    combined_result = clf.classify_combined(
+        text=text,
+        objection_labels=CLASSES,
+        objection_descriptions=obj_descs,
+        persona_labels=candidate_personas,
+        persona_descriptions=per_descs
+    )
+    
+    # Process Objection
+    obj_label = combined_result["objection"]["label"]
+    obj_conf = combined_result["objection"]["confidence"]
+    obj_all_scores = {label: 0.0 for label in CLASSES}
+    obj_all_scores[obj_label] = obj_conf
+    objection: ObjectionResult = {
+        "label": obj_label,
+        "confidence": obj_conf,
+        "all_scores": obj_all_scores,
+        "triggers": _extract_triggers(text, obj_label)
+    }
+    
+    # Process Persona
+    per_label = combined_result["persona"]["label"]
+    per_conf = combined_result["persona"]["confidence"]
+    if per_conf < _UNKNOWN_THRESHOLD:
+        per_label = "Unknown"
+        
+    persona: PersonaResult = {
+        "label": per_label,
+        "confidence": per_conf,
+        "pitch_angle": _PITCH_ANGLES[per_label]
+    }
 
     logger.info(
         "[classify_node] objection=%s(%.2f) sentiment=%s persona=%s",

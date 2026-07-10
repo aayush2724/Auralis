@@ -32,6 +32,12 @@ from src.memory.memory import ConversationMemory
 
 # ─── Shared mock factories ────────────────────────────────────────────────────
 
+def _mock_combined(obj_label="price", obj_conf=0.88, per_label="CTO", per_conf=0.82) -> dict:
+    return {
+        "objection": {"label": obj_label, "confidence": obj_conf},
+        "persona": {"label": per_label, "confidence": per_conf}
+    }
+
 def _mock_objection(label="price", confidence=0.88) -> dict:
     return {
         "label":      label,
@@ -90,10 +96,10 @@ def _base_state(**overrides) -> GraphState:
 # ─── classify_node ────────────────────────────────────────────────────────────
 
 class TestClassifyNode:
-    @patch("src.graph.graph.classify", return_value=_mock_objection())
+    @patch("src.graph.graph.get_zeroshot_pipeline")
     @patch("src.graph.graph.analyze",  return_value=_mock_sentiment())
-    @patch("src.graph.graph.detect",   return_value=_mock_persona())
-    def test_returns_all_classifier_results(self, mock_detect, mock_analyze, mock_classify):
+    def test_returns_all_classifier_results(self, mock_analyze, mock_pipeline):
+        mock_pipeline.return_value.classify_combined.return_value = _mock_combined()
         state = {"user_input": "This is too expensive."}
         result = classify_node(state)
 
@@ -103,24 +109,24 @@ class TestClassifyNode:
         assert "confidence" in result
         assert "metadata"   in result
 
-    @patch("src.graph.graph.classify", return_value=_mock_objection("competitor", 0.91))
+    @patch("src.graph.graph.get_zeroshot_pipeline")
     @patch("src.graph.graph.analyze",  return_value=_mock_sentiment())
-    @patch("src.graph.graph.detect",   return_value=_mock_persona())
-    def test_confidence_mirrors_objection(self, *_):
+    def test_confidence_mirrors_objection(self, mock_analyze, mock_pipeline):
+        mock_pipeline.return_value.classify_combined.return_value = _mock_combined("competitor", 0.91)
         result = classify_node({"user_input": "We use HubSpot."})
         assert result["confidence"] == pytest.approx(0.91)
 
-    @patch("src.graph.graph.classify", return_value=_mock_objection())
+    @patch("src.graph.graph.get_zeroshot_pipeline")
     @patch("src.graph.graph.analyze",  return_value=_mock_sentiment())
-    @patch("src.graph.graph.detect",   return_value=_mock_persona())
-    def test_metadata_contains_pitch_angle(self, mock_detect, *_):
+    def test_metadata_contains_pitch_angle(self, mock_analyze, mock_pipeline):
+        mock_pipeline.return_value.classify_combined.return_value = _mock_combined()
         result = classify_node({"user_input": "Explain your APIs."})
         assert "pitch_angle" in result["metadata"]
 
-    @patch("src.graph.graph.classify", side_effect=RuntimeError("Model down"))
+    @patch("src.graph.graph.get_zeroshot_pipeline")
     @patch("src.graph.graph.analyze",  return_value=_mock_sentiment())
-    @patch("src.graph.graph.detect",   return_value=_mock_persona())
-    def test_classifier_failure_propagates(self, *_):
+    def test_classifier_failure_propagates(self, mock_analyze, mock_pipeline):
+        mock_pipeline.return_value.classify_combined.side_effect = RuntimeError("Model down")
         with pytest.raises(RuntimeError, match="Model down"):
             classify_node({"user_input": "Hello"})
 
@@ -301,9 +307,8 @@ class TestRunGraph:
         """Context manager that patches all external I/O."""
         import unittest.mock as um
         patches = [
-            um.patch("src.graph.graph.classify", return_value=_mock_objection()),
+            um.patch("src.graph.graph.get_zeroshot_pipeline"),
             um.patch("src.graph.graph.analyze",  return_value=_mock_sentiment()),
-            um.patch("src.graph.graph.detect",   return_value=_mock_persona()),
             um.patch("src.graph.graph.retrieve", return_value=_mock_docs()),
             um.patch("src.graph.graph.format_citations", return_value="[1] Source"),
             um.patch("src.graph.graph._get_llm"),
@@ -313,6 +318,7 @@ class TestRunGraph:
     def test_run_graph_returns_graphstate(self):
         patches = self._patch_all()
         mocks = [p.start() for p in patches]
+        mocks[0].return_value.classify_combined.return_value = _mock_combined()
         llm_mock = mocks[-1]
         llm_mock.return_value.invoke.return_value = MagicMock(content="Test response.")
 
@@ -330,6 +336,7 @@ class TestRunGraph:
     def test_run_graph_adds_to_memory(self):
         patches = self._patch_all()
         mocks = [p.start() for p in patches]
+        mocks[0].return_value.classify_combined.return_value = _mock_combined()
         mocks[-1].return_value.invoke.return_value = MagicMock(content="Response text.")
 
         try:
