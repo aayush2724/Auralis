@@ -246,20 +246,21 @@ class TestGenerateNode:
 
 class TestHandoffNode:
     def test_sets_should_handoff_true(self):
-        state = _base_state(confidence=0.25)
+        state = _base_state(confidence=0.25, objection=_mock_objection(confidence=0.25))
         result = handoff_node(state)
         assert result["should_handoff"] is True
 
     def test_returns_handoff_message(self):
-        state = _base_state(confidence=0.25)
+        state = _base_state(confidence=0.25, objection=_mock_objection(confidence=0.25))
         result = handoff_node(state)
         assert "handoff_message" in result
         assert len(result["handoff_message"]) > 0
 
     def test_empty_response_handled(self):
-        state = _base_state(response="", confidence=0.25)
+        state = _base_state(response="", confidence=0.25, objection=_mock_objection(confidence=0.25))
         result = handoff_node(state)
         assert result["should_handoff"] is True
+        assert len(result["handoff_message"]) > 0
         assert len(result["handoff_message"]) > 0
 
 
@@ -267,20 +268,21 @@ class TestHandoffNode:
 
 class TestShouldHandoffRouter:
     def test_low_confidence_triggers_handoff(self):
-        state = _base_state(confidence=0.25)
+        state = _base_state(confidence=0.25, objection=_mock_objection(confidence=0.25))
         assert _should_handoff(state) == "handoff"
 
     def test_confidence_at_threshold_does_not_trigger(self):
-        state = _base_state(confidence=0.40)
+        state = _base_state(confidence=0.40, objection=_mock_objection(confidence=0.40))
         assert _should_handoff(state) == "end"
 
     def test_above_threshold_no_handoff(self):
-        state = _base_state(confidence=0.80)
+        state = _base_state(confidence=0.80, objection=_mock_objection(confidence=0.80))
         assert _should_handoff(state) == "end"
 
     def test_high_negative_sentiment_triggers_handoff(self):
         state = _base_state(
             confidence=0.75,
+            objection=_mock_objection(label="unknown", confidence=0.75),
             sentiment=_mock_sentiment("negative", 0.92),
         )
         assert _should_handoff(state) == "handoff"
@@ -288,6 +290,7 @@ class TestShouldHandoffRouter:
     def test_negative_sentiment_below_threshold_no_handoff(self):
         state = _base_state(
             confidence=0.75,
+            objection=_mock_objection(label="unknown", confidence=0.75),
             sentiment=_mock_sentiment("negative", 0.80),
         )
         assert _should_handoff(state) == "end"
@@ -295,6 +298,7 @@ class TestShouldHandoffRouter:
     def test_positive_high_confidence_no_handoff(self):
         state = _base_state(
             confidence=0.92,
+            objection=_mock_objection(confidence=0.92),
             sentiment=_mock_sentiment("positive", 0.95),
         )
         assert _should_handoff(state) == "end"

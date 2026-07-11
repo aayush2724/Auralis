@@ -45,6 +45,7 @@ from src.classifier.persona import (
 )
 from src.classifier.sentiment import SentimentResult, analyze
 from src.classifier.shared_model import get_zeroshot_pipeline
+from src.handoff.handoff import evaluate_handoff
 
 from src.memory.memory import ConversationMemory
 from src.rag.retriever import format_citations, retrieve
@@ -445,12 +446,11 @@ def generate_node(state: GraphState) -> dict[str, Any]:
 
 
 def handoff_node(state: GraphState) -> dict:
+    decision = evaluate_handoff(state, state.get("user_input", ""))
     return {
-        "should_handoff": True,
-        "handoff_message": (
-            "I need to connect you with a specialist who can better assist "
-            "with your request."
-        ),
+        "should_handoff": decision["should_handoff"],
+        "handoff_trigger": decision["trigger"].value if decision["trigger"] else None,
+        "handoff_message": decision["handoff_message"],
     }
 
 
@@ -458,20 +458,8 @@ def handoff_node(state: GraphState) -> dict:
 
 
 def _should_handoff(state: GraphState) -> str:
-    confidence_threshold = 0.40
-    negative_sentiment_threshold = 0.90
-
-    if state.get("confidence", 1.0) < confidence_threshold:
-        return "handoff"
-
-    sentiment = state.get("sentiment", {})
-    if (
-        sentiment.get("label") == "negative"
-        and sentiment.get("score", 0) >= negative_sentiment_threshold
-    ):
-        return "handoff"
-
-    return "end"
+    decision = evaluate_handoff(state, state.get("user_input", ""))
+    return "handoff" if decision["should_handoff"] else "end"
 
 
 # ─── Graph compilation ────────────────────────────────────────────────────────
