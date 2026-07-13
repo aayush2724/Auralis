@@ -66,6 +66,17 @@ The application is fully deployed and ready to test. No sign-up friction — jus
 | 🗄️ **Database** | PostgreSQL on Neon |
 | ⚡ **Cache** | Redis on Upstash |
 
+### 🔐 Demo Admin Login
+
+Use these seeded credentials to explore the admin dashboard on the live demo (or locally after `docker compose up`):
+
+| Field | Value |
+|---|---|
+| **Email** | `aayush@auralis.ai` |
+| **Password** | `AuralisAdmin!2026` |
+
+> The default admin is seeded on first startup from the `ADMIN_EMAIL` / `ADMIN_PASSWORD` environment variables (see `.env`). Change these before deploying to production.
+
 ---
 
 ## 🏗️ Architecture
