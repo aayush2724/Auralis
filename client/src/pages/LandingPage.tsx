@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import LoginModal from '../components/ui/LoginModal';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import PageNavbar from '../components/layout/PageNavbar';
 import HowItWorks from '../components/landing/HowItWorks';
 import RobotFeatures from '../components/landing/RobotFeatures';
@@ -68,7 +67,7 @@ const LandingPage = () => {
 
   return (
     <div className="relative bg-white text-neutral-900 font-sans selection:bg-[#f9fafb] selection:text-[#0a0a0a] antialiased flex flex-col">
-      {showLogin && <LoginModal />}
+      {showLogin && <Navigate to="/login" replace />}
       
       <PageNavbar transparent={true} />
 

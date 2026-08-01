@@ -55,7 +55,7 @@ export default function PageNavbar({ transparent = false }: { transparent?: bool
       </nav>
 
       <button
-        onClick={() => navigate('/?login=true')}
+        onClick={() => navigate('/login')}
         className="hidden md:block text-sm font-sans font-medium text-[#6b7280] hover:text-[#0a0a0a] transition-colors"
       >
         Login
@@ -90,7 +90,7 @@ export default function PageNavbar({ transparent = false }: { transparent?: bool
               </button>
             ))}
             <button
-              onClick={() => { setOpen(false); navigate('/?login=true'); }}
+              onClick={() => { setOpen(false); navigate('/login'); }}
               className="mt-4 bg-[#0d9488] text-white font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0f766e] transition-colors"
             >
               Login

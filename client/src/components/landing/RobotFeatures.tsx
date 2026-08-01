@@ -179,7 +179,7 @@ const RobotFeatures = () => {
                   read the room, and never miss a close.
                 </p>
                 <motion.button
-                  onClick={() => navigate('/?login=true')}
+                  onClick={() => navigate('/login')}
                   whileHover={{ y: -2, scale: 1.01 }}
                   whileTap={{ scale: 0.985 }}
                   transition={{ type: 'spring', stiffness: 520, damping: 34 }}

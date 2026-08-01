@@ -194,7 +194,7 @@ export default function PricingPage() {
                 )}
               </div>
               <button
-                onClick={() => navigate('/?login=true')}
+                onClick={() => navigate('/login')}
                 className={`w-full py-3.5 rounded-full font-sans font-medium text-sm mb-8 transition-colors duration-200 ${
                   plan.highlighted
                     ? 'bg-[#0d9488] text-white hover:bg-[#0f766e]'
@@ -240,7 +240,7 @@ export default function PricingPage() {
           Join sales teams already using Auralis to handle objections, read the room, and never miss a close.
         </p>
         <button
-          onClick={() => navigate('/?login=true')}
+          onClick={() => navigate('/login')}
           className="bg-white text-[#0d9488] font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0a0a0a] hover:text-white transition-colors duration-300"
         >
           Try it now

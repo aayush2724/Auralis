@@ -116,7 +116,7 @@ export default function ResourcesPage() {
           Put these insights into practice.
         </h2>
         <button
-          onClick={() => navigate('/?login=true')}
+          onClick={() => navigate('/login')}
           className="bg-[#0d9488] text-white font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0f766e] transition-colors duration-300 mt-4"
         >
           Start your free trial
