@@ -85,6 +85,21 @@ export const pageTransition = (reduced: boolean = false): Variants => ({
   }
 });
 
+export const tabTransition = (reduced: boolean = false): Variants => ({
+  inactive: {
+    opacity: 0,
+    x: reduced ? 0 : -12,
+    transition: { duration: 0.2, ease: 'easeIn' },
+  },
+  active: {
+    opacity: 1,
+    x: 0,
+    transition: reduced
+      ? { duration: 0.2, ease: 'easeOut' }
+      : { type: 'spring', stiffness: 360, damping: 34, mass: 0.8 },
+  },
+});
+
 export const scaleHover = (reduced: boolean = false) => ({
   hover: reduced ? {} : { scale: 1.02, transition: easeTransition }
 });

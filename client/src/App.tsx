@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { queryClient } from './api/client';
 import { useAuthStore } from './store/authStore';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import AmbientBackground from './components/ui/AmbientBackground';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -34,7 +35,7 @@ const AnimatedRoutes = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <PageTransition key={location.pathname}>
+      <PageTransition key={location.pathname} className="relative z-10">
         <Suspense fallback={
           <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-[#0d9488] border-t-transparent rounded-full animate-spin" />
@@ -84,6 +85,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <MotionConfig reducedMotion="user">
+        <AmbientBackground />
         <BrowserRouter>
           <ErrorBoundary>
             <AnimatedRoutes />
