@@ -33,9 +33,21 @@ export default function AnalyticsDashboard() {
   const [refreshMs, setRefreshMs] = useState(0);
   const { data, isPending, isError, isSuccess, isFetching, refetch } = useAnalyticsDashboard(refreshMs || false);
 
+  const loadingRefresh = isPending || isFetching;
+
   const Header = () => (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-2xl font-display font-normal text-[#0a0a0a] tracking-tight">Analytics</h2>
+      <div className="flex items-center gap-2">
+        <motion.span
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0d9488]/10 text-[#0d9488]"
+          animate={{ rotate: [0, -8, 8, -5, 0] }}
+          transition={{ duration: 0.9, repeat: Infinity, repeatDelay: 4.5, ease: 'easeInOut' }}
+          style={{ transformOrigin: '50% 50%' }}
+        >
+          <Brain className="h-4 w-4" />
+        </motion.span>
+        <h2 className="text-2xl font-display font-normal text-[#0a0a0a] tracking-tight">Analytics</h2>
+      </div>
       <div className="flex items-center gap-2">
         <select
           value={refreshMs}
@@ -50,10 +62,10 @@ export default function AnalyticsDashboard() {
         <Button
           variant="outline"
           onClick={() => refetch()}
-          disabled={isFetching}
+          disabled={loadingRefresh}
           className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${loadingRefresh ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -108,7 +120,14 @@ export default function AnalyticsDashboard() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-[#f9fafb] rounded-lg p-3 shadow-md z-50 relative">
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 4, scale: 0.98 }}
+          transition={{ duration: 0.16, ease: 'easeOut' }}
+          className="bg-white border border-[#f9fafb] rounded-lg p-3 shadow-md z-50 relative"
+          style={{ transform: 'translateZ(0)' }}
+        >
           {label && <p className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-1">{label}</p>}
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center space-x-2 text-sm font-sans font-light text-[#0a0a0a]">
@@ -116,7 +135,7 @@ export default function AnalyticsDashboard() {
               <span>{entry.name}: {entry.value}</span>
             </div>
           ))}
-        </div>
+        </motion.div>
       );
     }
     return null;
@@ -137,6 +156,7 @@ export default function AnalyticsDashboard() {
           value={data.total_sessions} 
           icon={Users} 
           color="[#0d9488]" 
+          delay={0.02}
         />
         <MetricCard 
           label="Conversion Rate" 
@@ -144,6 +164,7 @@ export default function AnalyticsDashboard() {
           suffix="%" 
           icon={TrendingUp} 
           color="green" 
+          delay={0.1}
         />
         <MetricCard 
           label="Avg Confidence" 
@@ -151,6 +172,7 @@ export default function AnalyticsDashboard() {
           suffix="%"
           icon={Brain} 
           color="indigo" 
+          delay={0.18}
         />
       </motion.div>
 
@@ -163,19 +185,26 @@ export default function AnalyticsDashboard() {
       )}
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        initial={{ opacity: 0, y: 16, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 28, delay: 0.22 }}
         className="bg-white border border-[#f9fafb] rounded-2xl p-6 mb-6 shadow-sm"
       >
         <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-4">Objection Distribution</h3>
         <div className="w-full h-[280px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" debounce={50}>
             <BarChart data={objectionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#5A635A', fontFamily: 'DM Sans' }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#5A635A', fontFamily: 'DM Sans' }} tickLine={false} axisLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#F1F3F1' }} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} animationDuration={600} isAnimationActive={true}>
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#F1F3F1' }} animationDuration={120} />
+              <Bar
+                dataKey="value"
+                radius={[4, 4, 0, 0]}
+                isAnimationActive
+                animationBegin={0}
+                animationDuration={900}
+                animationEasing="ease-out"
+              >
                 {objectionData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={OBJECTION_COLORS[entry.rawName] || OBJECTION_COLORS['neutral']} />
                 ))}
@@ -187,14 +216,14 @@ export default function AnalyticsDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          initial={{ opacity: 0, y: 16, scale: 0.99 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 240, damping: 28, delay: 0.3 }}
           className="bg-white border border-[#f9fafb] rounded-2xl p-6 shadow-sm"
         >
           <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-4">Persona Distribution</h3>
           <div className="w-full h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
               <PieChart>
                 <Pie
                   data={personaData}
@@ -204,14 +233,16 @@ export default function AnalyticsDashboard() {
                   outerRadius={90}
                   paddingAngle={2}
                   dataKey="value"
-                  animationBegin={200}
+                  isAnimationActive
+                  animationBegin={0}
                   animationDuration={1000}
+                  animationEasing="ease-out"
                 >
                   {personaData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} animationDuration={120} />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#5A635A', fontFamily: 'DM Sans' }} />
               </PieChart>
             </ResponsiveContainer>
@@ -219,14 +250,14 @@ export default function AnalyticsDashboard() {
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          initial={{ opacity: 0, y: 16, scale: 0.99 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 240, damping: 28, delay: 0.38 }}
           className="bg-white border border-[#f9fafb] rounded-2xl p-6 shadow-sm"
         >
           <h3 className="text-lg font-display font-normal text-[#0a0a0a] mb-4">Sentiment Trend</h3>
           <div className="w-full h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
               <LineChart data={data.sentiment_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F3F1" />
                 <XAxis 
@@ -240,10 +271,46 @@ export default function AnalyticsDashboard() {
                   }}
                 />
                 <YAxis tick={{ fontSize: 10, fill: '#5A635A', fontFamily: 'DM Sans' }} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="positive" name="Positive" stroke="#22c55e" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={1000} />
-                <Line type="monotone" dataKey="neutral" name="Neutral" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={1000} />
-                <Line type="monotone" dataKey="negative" name="Negative" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} animationDuration={1000} />
+                <Tooltip content={<CustomTooltip />} animationDuration={120} />
+                <Line
+                  type="monotone"
+                  dataKey="positive"
+                  name="Positive"
+                  stroke="#22c55e"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  isAnimationActive
+                  animationBegin={0}
+                  animationDuration={1000}
+                  animationEasing="ease-out"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="neutral"
+                  name="Neutral"
+                  stroke="#f59e0b"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  isAnimationActive
+                  animationBegin={0}
+                  animationDuration={1000}
+                  animationEasing="ease-out"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="negative"
+                  name="Negative"
+                  stroke="#ef4444"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  isAnimationActive
+                  animationBegin={0}
+                  animationDuration={1000}
+                  animationEasing="ease-out"
+                />
                 <Legend verticalAlign="bottom" height={20} iconType="rect" wrapperStyle={{ fontSize: '11px', paddingTop: '10px', fontFamily: 'DM Sans' }} />
               </LineChart>
             </ResponsiveContainer>
