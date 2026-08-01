@@ -116,8 +116,19 @@ export const scaleHover = (reduced: boolean = false) => ({
   hover: reduced ? {} : { scale: 1.02, transition: easeTransition }
 });
 
+export const buttonHover = (reduced: boolean = false) => ({
+  hover: reduced
+    ? {}
+    : {
+        y: -2,
+        scale: 1.01,
+        boxShadow: '0 12px 28px rgba(13, 148, 136, 0.12), 0 0 0 1px rgba(13, 148, 136, 0.08)',
+        transition: { type: 'spring' as const, stiffness: 500, damping: 34, mass: 0.45 },
+      },
+});
+
 export const buttonTap = (reduced: boolean = false) => ({
-  tap: reduced ? {} : { scale: 0.97, transition: springTransition }
+  tap: reduced ? {} : { scale: 0.985, y: 0, transition: { type: 'spring' as const, stiffness: 700, damping: 36, mass: 0.35 } }
 });
 
 interface AnimationWrapperProps extends HTMLMotionProps<"div"> {

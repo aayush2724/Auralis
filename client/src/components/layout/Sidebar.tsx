@@ -60,10 +60,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
         )}
       </AnimatePresence>
 
-      <aside
-        className={`fixed left-0 top-0 h-screen w-[240px] border-r border-[#F1F3F1] bg-white flex flex-col justify-between z-40 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+      <motion.aside
+        initial={false}
+        animate={{
+          width: isOpen ? 240 : 0,
+          x: isOpen ? 0 : -12,
+          opacity: isOpen ? 1 : 0,
+        }}
+        transition={{ type: 'spring', stiffness: 360, damping: 36, mass: 0.8 }}
+        className={`fixed left-0 top-0 h-screen overflow-hidden border-r border-[#F1F3F1] bg-white flex flex-col justify-between z-40 transition-[width,transform,opacity] duration-300 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'} lg:pointer-events-auto lg:w-[240px] lg:translate-x-0 lg:opacity-100`}
         role="navigation"
         aria-label="Dashboard navigation"
+        style={{ willChange: 'width, transform, opacity' }}
       >
         <div>
           <div className="p-6 flex items-center space-x-2">
@@ -76,11 +84,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
-                <button
+                <motion.button
                   key={item.id}
                   onClick={() => handleNavClick(item.id as Tab)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative w-full flex items-center px-3 py-2 rounded-lg transition-colors font-sans text-sm ${
+                  whileHover={isActive ? { y: -1, scale: 1.01 } : { y: -1, scale: 1.01 }}
+                  whileTap={{ scale: 0.985 }}
+                  className={`group relative w-full flex items-center px-3 py-2 rounded-lg transition-colors font-sans text-sm ${
                     isActive
                       ? 'text-[#0a0a0a] font-medium'
                       : 'text-auralis-text font-light hover:bg-[#f9fafb]'
@@ -88,16 +98,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
                 >
                   {isActive && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="absolute inset-0 bg-[#f9fafb] rounded-lg z-0"
+                      layoutId="sidebar-active-indicator"
+                      transition={{ type: 'spring', stiffness: 520, damping: 34, mass: 0.6 }}
+                      className="absolute inset-0 rounded-lg bg-[#f4fbf9] shadow-[0_8px_20px_rgba(13,148,136,0.08)] z-0"
                     />
                   )}
                   <div className="relative z-10 flex items-center space-x-3">
-                    <Icon className="w-4 h-4" aria-hidden="true" />
+                    <motion.span
+                      className="flex"
+                      whileHover={{ scale: 1.06 }}
+                      transition={{ type: 'spring', stiffness: 600, damping: 35 }}
+                    >
+                      <Icon className="w-4 h-4" aria-hidden="true" />
+                    </motion.span>
                     <span>{item.label}</span>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </nav>
@@ -119,7 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
             <span>Logout</span>
           </Button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 };

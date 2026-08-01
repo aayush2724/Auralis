@@ -23,8 +23,8 @@ export default {
           cream:  '#EAECE9',
           text:   '#5C6D5C',
           faded:  '#9DB89A',
-          accent: '#0d9488', // Teal-600
-          secondary: '#6366f1', // Indigo-500
+          accent: '#dd6668',
+          secondary: '#b85c6b',
           dark:   '#0a0a0a',
           border: '#e5e7eb',
         }

@@ -84,7 +84,7 @@ const RobotFeatures = () => {
                 style={{ opacity: stage1Opacity }}
                 className="absolute inset-0 flex flex-col justify-center pointer-events-none"
               >
-                <span className="text-[#0d9488] font-sans tracking-wide uppercase
+                <span className="text-[#dd6668] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   BUILT FOR EVERY MOMENT
                 </span>
@@ -104,7 +104,7 @@ const RobotFeatures = () => {
                 className="absolute inset-0 flex flex-col justify-center
                            pointer-events-none"
               >
-                <span className="text-[#0d9488] font-sans tracking-wide uppercase
+                <span className="text-[#dd6668] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   OBJECTION CLASSIFICATION
                 </span>
@@ -125,7 +125,7 @@ const RobotFeatures = () => {
                 className="absolute inset-0 flex flex-col justify-center
                            pointer-events-none"
               >
-                <span className="text-[#0d9488] font-sans tracking-wide uppercase
+                <span className="text-[#dd6668] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   BUYER PERSONA DETECTION
                 </span>
@@ -146,7 +146,7 @@ const RobotFeatures = () => {
                 className="absolute inset-0 flex flex-col justify-center
                            pointer-events-none"
               >
-                <span className="text-[#0d9488] font-sans tracking-wide uppercase
+                <span className="text-[#dd6668] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   SMART HANDOFF
                 </span>
@@ -166,7 +166,7 @@ const RobotFeatures = () => {
                 style={{ opacity: stage5Opacity }}
                 className="absolute inset-0 flex flex-col justify-center"
               >
-                <span className="text-[#0d9488] font-sans tracking-wide uppercase
+                <span className="text-[#dd6668] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   READY TO SEE IT LIVE
                 </span>
@@ -180,8 +180,8 @@ const RobotFeatures = () => {
                 </p>
                 <button
                   onClick={() => navigate('/?login=true')}
-                  className="w-fit bg-[#0d9488] text-white px-7 py-3.5 rounded-full
-                             font-sans font-medium text-sm hover:bg-[#0f766e]
+                  className="w-fit bg-[#dd6668] text-white px-7 py-3.5 rounded-full
+                             font-sans font-medium text-sm hover:bg-[#c45557]
                              transition-colors pointer-events-auto"
                 >
                   Try it now
@@ -202,7 +202,7 @@ const RobotFeatures = () => {
                             relative overflow-hidden">
               <motion.div
                 style={{ scaleY: scrollYProgress, transformOrigin: 'top' }}
-                className="absolute inset-0 bg-[#0d9488] rounded-full"
+                className="absolute inset-0 bg-[#dd6668] rounded-full"
               />
             </div>
           </motion.div>
