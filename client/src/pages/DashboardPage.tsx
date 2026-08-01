@@ -21,6 +21,16 @@ const DashboardPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion() ?? false;
 
+  const handleTabChange = (tab: Tab) => {
+    setVisitedTabs((current) => {
+      if (current.has(tab)) return current;
+      const next = new Set(current);
+      next.add(tab);
+      return next;
+    });
+    setActiveTab(tab);
+  };
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -31,20 +41,11 @@ const DashboardPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    setVisitedTabs((current) => {
-      if (current.has(activeTab)) return current;
-      const next = new Set(current);
-      next.add(activeTab);
-      return next;
-    });
-  }, [activeTab]);
-
   return (
-    <div className="relative z-10 min-h-screen bg-white/95">
+    <div className="relative z-10 min-h-screen bg-white/92 backdrop-blur-[1px]">
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         sessionId={sessionId}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -58,7 +59,7 @@ const DashboardPage: React.FC = () => {
           return (
             <motion.section
               key={tab.id}
-              initial={false}
+              initial="inactive"
               animate={isActive ? 'active' : 'inactive'}
               variants={tabTransition(shouldReduceMotion)}
               className={`absolute inset-x-0 bottom-0 top-16 flex flex-col lg:top-0 ${isActive ? 'pointer-events-auto' : 'pointer-events-none'}`}

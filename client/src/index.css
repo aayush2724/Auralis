@@ -6,6 +6,21 @@
 .animate-blink { animation: blink 1s step-end infinite; }
 .animate-shimmer { animation: shimmer 1.5s infinite linear; }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: #f7faf8;
+  overflow-x: hidden;
+}
+
+#root {
+  isolation: isolate;
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

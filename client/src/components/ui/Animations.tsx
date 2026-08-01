@@ -71,32 +71,44 @@ export const staggerContainer = (staggerChildren = 0.1, delayChildren = 0): Vari
 export const pageTransition = (reduced: boolean = false): Variants => ({
   initial: { 
     opacity: 0, 
-    y: reduced ? 0 : 8 
+    x: reduced ? 0 : 10,
+    y: reduced ? 0 : 6 
   },
   animate: { 
     opacity: 1, 
+    x: 0,
     y: 0, 
-    transition: { duration: 0.25, ease: 'easeOut' },
+    transition: reduced
+      ? { duration: 0.2, ease: 'easeOut' }
+      : { type: 'spring', stiffness: 320, damping: 34, mass: 0.9 },
   },
   exit: { 
     opacity: 0, 
-    y: reduced ? 0 : -8, 
-    transition: { duration: 0.2, ease: 'easeIn' } 
+    x: reduced ? 0 : -10,
+    y: reduced ? 0 : -6, 
+    transition: reduced
+      ? { duration: 0.18, ease: 'easeIn' }
+      : { duration: 0.26, ease: 'easeInOut' } 
   }
 });
 
 export const tabTransition = (reduced: boolean = false): Variants => ({
   inactive: {
     opacity: 0,
-    x: reduced ? 0 : -12,
-    transition: { duration: 0.2, ease: 'easeIn' },
+    x: reduced ? 0 : -18,
+    y: reduced ? 0 : 4,
+    scale: reduced ? 1 : 0.985,
+    transition: reduced
+      ? { duration: 0.18, ease: 'easeIn' }
+      : { duration: 0.24, ease: 'easeInOut' },
   },
   active: {
     opacity: 1,
+    y: 0,
     x: 0,
     transition: reduced
       ? { duration: 0.2, ease: 'easeOut' }
-      : { type: 'spring', stiffness: 360, damping: 34, mass: 0.8 },
+      : { type: 'spring', stiffness: 330, damping: 34, mass: 0.9 },
   },
 });
 
