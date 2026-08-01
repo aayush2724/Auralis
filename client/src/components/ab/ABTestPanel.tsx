@@ -1,13 +1,13 @@
 
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Crown, AlertCircle, ArrowUpRight, RefreshCw, FlaskConical } from 'lucide-react';
+import { Crown, AlertCircle, ArrowUpRight, RefreshCw, FlaskConical, Sparkles } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { useABTestResults } from '../../api/hooks/useABTest';
 import { useCountUp } from '../../hooks/useCountUp';
 import Skeleton from '../ui/Skeleton';
 import { Button } from '../ui/Button';
-import { fadeUp, scaleHover, staggerContainer } from '../ui/Animations';
+import { fadeUp, staggerContainer } from '../ui/Animations';
 
 const REFRESH_OPTIONS = [
   { label: 'Off', value: 0 },
@@ -118,16 +118,33 @@ export default function ABTestPanel() {
       )}
 
       {/* Hero Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-stretch gap-6 mb-6">
         {/* STATIC Card */}
         <motion.div 
             variants={itemVariants}
-            whileHover={scaleHover(shouldReduceMotion).hover}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            whileHover={shouldReduceMotion ? undefined : { y: -6, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 360, damping: 24 }}
             style={{ transform: 'translateZ(0)', willChange: 'transform, opacity' }}
-            className={`bg-white border-2 rounded-2xl p-6 relative ${!adaptiveWins && totalSessions > 0 ? 'border-[#0d9488]' : 'border-[#F1F3F1]'}`}
+            className={`bg-white border-2 rounded-2xl p-6 relative overflow-hidden flex-1 ${!adaptiveWins && totalSessions > 0 ? 'border-[#0d9488]' : 'border-[#F1F3F1]'}`}
           >
-            {!adaptiveWins && totalSessions > 0 && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#0d9488]" />}
+            {!adaptiveWins && totalSessions > 0 && (
+              <>
+                <motion.div
+                  aria-hidden="true"
+                  initial={{ opacity: 0.45, scale: 0.98 }}
+                  animate={{ opacity: [0.45, 0.9, 0.45], scale: [0.98, 1, 0.98] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                  className="pointer-events-none absolute inset-0 rounded-2xl border border-[#0d9488]/35 shadow-[0_0_0_1px_rgba(13,148,136,0.12),0_0_32px_rgba(13,148,136,0.14)]"
+                />
+                <div className="absolute right-5 top-5 rounded-full border border-emerald-200/80 bg-white/90 px-3 py-1 shadow-[0_12px_30px_rgba(13,148,136,0.12)] backdrop-blur-sm">
+                  <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0d9488]">
+                    <Sparkles className="h-3 w-3 animate-sparkle text-[#0d9488]" />
+                    <Crown className="h-3.5 w-3.5" />
+                    Winner
+                  </span>
+                </div>
+              </>
+            )}
             <div className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-2">STATIC</div>
             <div className="flex items-start text-[#0a0a0a] mb-6">
               <span className="text-6xl font-display font-normal tracking-tight">{staticRate.toFixed(1)}</span>
@@ -146,15 +163,44 @@ export default function ABTestPanel() {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, scale: 0.75 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 22, delay: 0.08 }}
+            className="flex items-center justify-center self-center md:self-stretch"
+            aria-hidden="true"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white/90 text-xs font-semibold tracking-[0.4em] text-[#0d9488] shadow-[0_14px_40px_rgba(13,148,136,0.14)] backdrop-blur-sm">
+              VS
+            </div>
+          </motion.div>
+
           {/* ADAPTIVE Card */}
           <motion.div 
             variants={itemVariants}
-            whileHover={scaleHover(shouldReduceMotion).hover}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            whileHover={shouldReduceMotion ? undefined : { y: -6, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 360, damping: 24 }}
             style={{ transform: 'translateZ(0)', willChange: 'transform, opacity' }}
-            className={`bg-white border-2 rounded-2xl p-6 relative ${adaptiveWins ? 'border-[#0d9488] bg-[#f9fafb]/30 shadow-[0_12px_40px_rgba(77,109,71,0.14)]' : 'border-[#F1F3F1]'}`}
+            className={`bg-white border-2 rounded-2xl p-6 relative overflow-hidden flex-1 ${adaptiveWins ? 'border-[#0d9488] bg-[#f9fafb]/30 shadow-[0_12px_40px_rgba(77,109,71,0.14)]' : 'border-[#F1F3F1]'}`}
           >
-            {adaptiveWins && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#0d9488]" />}
+            {adaptiveWins && (
+              <>
+                <motion.div
+                  aria-hidden="true"
+                  initial={{ opacity: 0.35, scale: 0.98 }}
+                  animate={{ opacity: [0.35, 1, 0.35], scale: [0.98, 1.01, 0.98] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="pointer-events-none absolute inset-0 rounded-2xl border border-[#0d9488]/40 shadow-[0_0_0_1px_rgba(13,148,136,0.18),0_0_42px_rgba(13,148,136,0.2)]"
+                />
+                <div className="absolute right-5 top-5 rounded-full border border-emerald-200/80 bg-white/90 px-3 py-1 shadow-[0_12px_30px_rgba(13,148,136,0.12)] backdrop-blur-sm">
+                  <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0d9488]">
+                    <Sparkles className="h-3 w-3 animate-sparkle text-[#0d9488]" />
+                    <Crown className="h-3.5 w-3.5" />
+                    Winner
+                  </span>
+                </div>
+              </>
+            )}
             <div className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-2">ADAPTIVE</div>
             <div className="flex items-start text-[#0a0a0a] mb-6">
               <span className="text-6xl font-display font-normal tracking-tight">{adaptiveRate.toFixed(1)}</span>
