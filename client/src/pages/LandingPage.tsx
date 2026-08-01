@@ -103,7 +103,7 @@ const LandingPage = () => {
         transition={{ duration: 0.7 }}
         className="max-w-lg"
       >
-        <span className="text-[#dd6668] font-sans tracking-wide uppercase
+        <span className="text-[#0d9488] font-sans tracking-wide uppercase
                          text-sm font-semibold mb-4 block">
           AI SALES INTELLIGENCE
         </span>
@@ -119,8 +119,8 @@ const LandingPage = () => {
         <div className="flex flex-row items-center gap-4">
           <button
             onClick={() => navigate('/?login=true')}
-            className="bg-[#dd6668] text-white px-7 py-3.5 rounded-full
-                       font-sans font-medium text-sm hover:bg-[#c45557]
+            className="bg-[#0d9488] text-white px-7 py-3.5 rounded-full
+                       font-sans font-medium text-sm hover:bg-[#0f766e]
                        transition-colors"
           >
             Try it now
@@ -130,7 +130,7 @@ const LandingPage = () => {
               document.getElementById('how-it-works')
                 ?.scrollIntoView({ behavior: 'smooth' })
             }
-            className="text-[#dd6668] font-sans font-medium text-sm
+            className="text-[#0d9488] font-sans font-medium text-sm
                        underline underline-offset-4 hover:opacity-70
                        transition-opacity"
           >

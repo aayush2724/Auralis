@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Crown, AlertCircle, ArrowUpRight, RefreshCw, FlaskConical } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { useABTestResults } from '../../api/hooks/useABTest';
 import { useCountUp } from '../../hooks/useCountUp';
 import Skeleton from '../ui/Skeleton';
 import { Button } from '../ui/Button';
+import { fadeUp, scaleHover, staggerContainer } from '../ui/Animations';
 
 const REFRESH_OPTIONS = [
   { label: 'Off', value: 0 },
@@ -17,6 +18,7 @@ const REFRESH_OPTIONS = [
 
 export default function ABTestPanel() {
   const [refreshMs, setRefreshMs] = useState(0);
+  const shouldReduceMotion = useReducedMotion() ?? false;
   const { data, isPending, isError, isSuccess, isFetching, refetch } = useABTestResults(refreshMs || false);
 
   const staticConversionRate = data?.static_conversion_rate ?? 0;
@@ -44,7 +46,7 @@ export default function ABTestPanel() {
         <select
           value={refreshMs}
           onChange={(event) => setRefreshMs(Number(event.target.value))}
-          className="h-10 rounded-xl border border-[#f9fafb] bg-white px-3 text-xs font-medium text-[#0a0a0a] outline-none focus:border-[#dd6668]"
+          className="h-10 rounded-xl border border-[#f9fafb] bg-white px-3 text-xs font-medium text-[#0a0a0a] outline-none focus:border-[#0d9488]"
           aria-label="A/B test auto refresh interval"
         >
           {REFRESH_OPTIONS.map((option) => (
@@ -100,15 +102,8 @@ export default function ABTestPanel() {
     }
   ];
 
-  const gridVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
+  const gridVariants = staggerContainer(0.1);
+  const itemVariants = fadeUp(shouldReduceMotion);
 
   return (
     <div className="px-6 py-8 overflow-y-auto h-full bg-[#FAFBF9]">
@@ -127,11 +122,12 @@ export default function ABTestPanel() {
         {/* STATIC Card */}
         <motion.div 
             variants={itemVariants}
-            whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(28,46,30,0.08)" }}
+            whileHover={scaleHover(shouldReduceMotion).hover}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className={`bg-white border-2 rounded-2xl p-6 relative ${!adaptiveWins && totalSessions > 0 ? 'border-[#dd6668]' : 'border-[#F1F3F1]'}`}
+            style={{ transform: 'translateZ(0)', willChange: 'transform, opacity' }}
+            className={`bg-white border-2 rounded-2xl p-6 relative ${!adaptiveWins && totalSessions > 0 ? 'border-[#0d9488]' : 'border-[#F1F3F1]'}`}
           >
-            {!adaptiveWins && totalSessions > 0 && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#dd6668]" />}
+            {!adaptiveWins && totalSessions > 0 && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#0d9488]" />}
             <div className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-2">STATIC</div>
             <div className="flex items-start text-[#0a0a0a] mb-6">
               <span className="text-6xl font-display font-normal tracking-tight">{staticRate.toFixed(1)}</span>
@@ -153,11 +149,12 @@ export default function ABTestPanel() {
           {/* ADAPTIVE Card */}
           <motion.div 
             variants={itemVariants}
-            whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(28,46,30,0.08)" }}
+            whileHover={scaleHover(shouldReduceMotion).hover}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className={`bg-white border-2 rounded-2xl p-6 relative ${adaptiveWins ? 'border-[#dd6668] bg-[#f9fafb]/30 shadow-[0_12px_40px_rgba(77,109,71,0.14)]' : 'border-[#F1F3F1]'}`}
+            style={{ transform: 'translateZ(0)', willChange: 'transform, opacity' }}
+            className={`bg-white border-2 rounded-2xl p-6 relative ${adaptiveWins ? 'border-[#0d9488] bg-[#f9fafb]/30 shadow-[0_12px_40px_rgba(77,109,71,0.14)]' : 'border-[#F1F3F1]'}`}
           >
-            {adaptiveWins && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#dd6668]" />}
+            {adaptiveWins && <Crown className="absolute top-6 right-6 w-6 h-6 text-[#0d9488]" />}
             <div className="text-xs font-sans font-medium tracking-widest uppercase text-[#6b7280] mb-2">ADAPTIVE</div>
             <div className="flex items-start text-[#0a0a0a] mb-6">
               <span className="text-6xl font-display font-normal tracking-tight">{adaptiveRate.toFixed(1)}</span>
@@ -184,7 +181,7 @@ export default function ABTestPanel() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-            <div className="mb-6 bg-[#f9fafb] rounded-2xl px-6 py-4 flex items-center justify-center space-x-3 text-[#dd6668] font-medium">
+            <div className="mb-6 bg-[#f9fafb] rounded-2xl px-6 py-4 flex items-center justify-center space-x-3 text-[#0d9488] font-medium">
               <ArrowUpRight className="w-5 h-5" />
               <span>Adaptive is outperforming static by {improvement.toFixed(1)}%</span>
             </div>
@@ -210,8 +207,8 @@ export default function ABTestPanel() {
                 <Bar dataKey="STATIC" fill="#D1D5DB" radius={[6, 6, 0, 0]} animationDuration={1500}>
                   <LabelList dataKey="STATIC" position="top" fill="#5A635A" fontSize={12} formatter={(val: any) => `${val}%`} />
                 </Bar>
-                <Bar dataKey="ADAPTIVE" fill="#dd6668" radius={[6, 6, 0, 0]} animationDuration={1500}>
-                  <LabelList dataKey="ADAPTIVE" position="top" fill="#dd6668" fontSize={12} fontWeight={500} formatter={(val: any) => `${val}%`} />
+                <Bar dataKey="ADAPTIVE" fill="#0d9488" radius={[6, 6, 0, 0]} animationDuration={1500}>
+                  <LabelList dataKey="ADAPTIVE" position="top" fill="#0d9488" fontSize={12} fontWeight={500} formatter={(val: any) => `${val}%`} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -222,7 +219,7 @@ export default function ABTestPanel() {
         <motion.div 
           variants={gridVariants}
           initial="hidden"
-          animate="show"
+          animate="visible"
           className="grid grid-cols-2 gap-4"
         >
           {/* STATIC Column */}
@@ -232,8 +229,8 @@ export default function ABTestPanel() {
           </motion.div>
           
           {/* ADAPTIVE Column */}
-          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#dd6668]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#dd6668] mb-1">Adaptive Sessions</p>
+          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#0d9488]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#0d9488] mb-1">Adaptive Sessions</p>
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{data.sessions_per_variant.ADAPTIVE}</p>
           </motion.div>
 
@@ -242,8 +239,8 @@ export default function ABTestPanel() {
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{staticRate}%</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#dd6668]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#dd6668] mb-1">Adaptive Conv.</p>
+          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#0d9488]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#0d9488] mb-1">Adaptive Conv.</p>
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{adaptiveRate}%</p>
           </motion.div>
 
@@ -252,8 +249,8 @@ export default function ABTestPanel() {
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{(data.static_avg_confidence * 100).toFixed(0)}%</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#dd6668]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#dd6668] mb-1">Adaptive Conf.</p>
+          <motion.div variants={itemVariants} className="bg-[#f9fafb]/50 border border-[#0d9488]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#0d9488] mb-1">Adaptive Conf.</p>
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{(data.adaptive_avg_confidence * 100).toFixed(0)}%</p>
           </motion.div>
         </motion.div>

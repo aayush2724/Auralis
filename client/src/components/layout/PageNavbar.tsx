@@ -67,9 +67,9 @@ export default function PageNavbar({ transparent = false }: { transparent?: bool
         onClick={() => setOpen(!open)}
         aria-label="Toggle menu"
       >
-        <span className={`w-6 h-[2px] bg-black transition-all duration-300 origin-center ${open ? 'rotate-45 translate-y-[7px]' : ''}`} />
-        <span className={`w-6 h-[2px] bg-black transition-all duration-300 ${open ? 'opacity-0' : ''}`} />
-        <span className={`w-6 h-[2px] bg-black transition-all duration-300 origin-center ${open ? '-rotate-45 -translate-y-[7px]' : ''}`} />
+        <span className={`w-6 h-[2px] bg-black transition-transform duration-300 origin-center ${open ? 'rotate-45 translate-y-[7px]' : ''}`} />
+        <span className={`w-6 h-[2px] bg-black transition-opacity duration-300 ${open ? 'opacity-0' : ''}`} />
+        <span className={`w-6 h-[2px] bg-black transition-transform duration-300 origin-center ${open ? '-rotate-45 -translate-y-[7px]' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -91,7 +91,7 @@ export default function PageNavbar({ transparent = false }: { transparent?: bool
             ))}
             <button
               onClick={() => { setOpen(false); navigate('/?login=true'); }}
-              className="mt-4 bg-[#dd6668] text-white font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#c45557] transition-colors"
+              className="mt-4 bg-[#0d9488] text-white font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0f766e] transition-colors"
             >
               Login
             </button>

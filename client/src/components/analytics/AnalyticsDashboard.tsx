@@ -21,7 +21,7 @@ const OBJECTION_COLORS: Record<string, string> = {
   neutral: '#6b7280',
 };
 
-const PIE_COLORS = ['#0a0a0a', '#dd6668', '#5A635A', '#a3b1a3', '#d0d8d0'];
+const PIE_COLORS = ['#0a0a0a', '#0d9488', '#5A635A', '#a3b1a3', '#d0d8d0'];
 const REFRESH_OPTIONS = [
   { label: 'Off', value: 0 },
   { label: '15s', value: 15000 },
@@ -40,7 +40,7 @@ export default function AnalyticsDashboard() {
         <select
           value={refreshMs}
           onChange={(event) => setRefreshMs(Number(event.target.value))}
-          className="h-10 rounded-xl border border-[#f9fafb] bg-white px-3 text-xs font-medium text-[#0a0a0a] outline-none focus:border-[#dd6668]"
+          className="h-10 rounded-xl border border-[#f9fafb] bg-white px-3 text-xs font-medium text-[#0a0a0a] outline-none focus:border-[#0d9488]"
           aria-label="Analytics auto refresh interval"
         >
           {REFRESH_OPTIONS.map((option) => (
@@ -136,7 +136,7 @@ export default function AnalyticsDashboard() {
           label="Total Sessions" 
           value={data.total_sessions} 
           icon={Users} 
-          color="[#dd6668]" 
+          color="[#0d9488]" 
         />
         <MetricCard 
           label="Conversion Rate" 
@@ -150,7 +150,7 @@ export default function AnalyticsDashboard() {
           value={(data.avg_confidence * 100).toFixed(1)} 
           suffix="%"
           icon={Brain} 
-          color="purple" 
+          color="indigo" 
         />
       </motion.div>
 

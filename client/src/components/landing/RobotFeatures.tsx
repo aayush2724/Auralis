@@ -17,20 +17,10 @@ const RobotFeatures = () => {
     [1,  1,   2.5,  2.5,  2,    1]
   );
   
-  const videoOrigin = useTransform(
-    scrollYProgress,
-    [0,       0.20,     0.45,     0.70,     0.88,     1],
-    ["75% 40%","75% 40%","75% 25%","60% 65%","80% 40%","75% 40%"]
-  );
-
   const stage1Opacity = useTransform(
     scrollYProgress,
     [0, 0.16, 0.20, 1],
     [1, 1,    0,    0]
-  );
-  const stage1PointerEvents = useTransform(
-    scrollYProgress,
-    (v) => (v < 0.20) ? 'auto' : 'none'
   );
   
   const stage2Opacity = useTransform(
@@ -56,10 +46,6 @@ const RobotFeatures = () => {
     [0, 0.88, 0.92, 1],
     [0, 0,    1,   1]
   );
-  const stage5PointerEvents = useTransform(
-    scrollYProgress,
-    (v) => (v > 0.88) ? 'auto' : 'none'
-  );
 
   return (
     <section id="robot-features" className="relative bg-white">
@@ -79,7 +65,7 @@ const RobotFeatures = () => {
               preload="none"
               className="w-full h-full object-cover object-right
                          lg:object-right-bottom will-change-transform"
-              style={{ scale: videoScale, transformOrigin: videoOrigin as any }}
+              style={{ scale: videoScale, transformOrigin: '75% 40%' }}
             >
               <source
                 src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260601_110537_3a579fa0-7bbc-4d94-9d25-0e816c7840f5.mp4"
@@ -95,10 +81,10 @@ const RobotFeatures = () => {
   
               {/* Stage 1 — intro */}
               <motion.div
-                style={{ opacity: stage1Opacity, pointerEvents: stage1PointerEvents as any }}
-                className="absolute inset-0 flex flex-col justify-center"
+                style={{ opacity: stage1Opacity }}
+                className="absolute inset-0 flex flex-col justify-center pointer-events-none"
               >
-                <span className="text-[#dd6668] font-sans tracking-wide uppercase
+                <span className="text-[#0d9488] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   BUILT FOR EVERY MOMENT
                 </span>
@@ -118,7 +104,7 @@ const RobotFeatures = () => {
                 className="absolute inset-0 flex flex-col justify-center
                            pointer-events-none"
               >
-                <span className="text-[#dd6668] font-sans tracking-wide uppercase
+                <span className="text-[#0d9488] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   OBJECTION CLASSIFICATION
                 </span>
@@ -139,7 +125,7 @@ const RobotFeatures = () => {
                 className="absolute inset-0 flex flex-col justify-center
                            pointer-events-none"
               >
-                <span className="text-[#dd6668] font-sans tracking-wide uppercase
+                <span className="text-[#0d9488] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   BUYER PERSONA DETECTION
                 </span>
@@ -160,7 +146,7 @@ const RobotFeatures = () => {
                 className="absolute inset-0 flex flex-col justify-center
                            pointer-events-none"
               >
-                <span className="text-[#dd6668] font-sans tracking-wide uppercase
+                <span className="text-[#0d9488] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   SMART HANDOFF
                 </span>
@@ -177,10 +163,10 @@ const RobotFeatures = () => {
   
               {/* Stage 5 — CTA */}
               <motion.div
-                style={{ opacity: stage5Opacity, pointerEvents: stage5PointerEvents as any }}
+                style={{ opacity: stage5Opacity }}
                 className="absolute inset-0 flex flex-col justify-center"
               >
-                <span className="text-[#dd6668] font-sans tracking-wide uppercase
+                <span className="text-[#0d9488] font-sans tracking-wide uppercase
                                  text-sm font-semibold mb-4 block">
                   READY TO SEE IT LIVE
                 </span>
@@ -194,8 +180,8 @@ const RobotFeatures = () => {
                 </p>
                 <button
                   onClick={() => navigate('/?login=true')}
-                  className="w-fit bg-[#dd6668] text-white px-7 py-3.5 rounded-full
-                             font-sans font-medium text-sm hover:bg-[#c45557]
+                  className="w-fit bg-[#0d9488] text-white px-7 py-3.5 rounded-full
+                             font-sans font-medium text-sm hover:bg-[#0f766e]
                              transition-colors pointer-events-auto"
                 >
                   Try it now
@@ -216,7 +202,7 @@ const RobotFeatures = () => {
                             relative overflow-hidden">
               <motion.div
                 style={{ scaleY: scrollYProgress, transformOrigin: 'top' }}
-                className="absolute inset-0 bg-[#dd6668] rounded-full"
+                className="absolute inset-0 bg-[#0d9488] rounded-full"
               />
             </div>
           </motion.div>

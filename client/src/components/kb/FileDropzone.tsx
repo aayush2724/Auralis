@@ -1,5 +1,5 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { UploadCloud, FileText, FileSpreadsheet, FileCode, X, Loader2, Check } from 'lucide-react';
 import type { KBIngestResponse } from '../../types/api';
 import { Button } from '../ui/Button';
@@ -74,6 +74,8 @@ export default function FileDropzone({ onIngest, isIngesting, isSuccess, error, 
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className="w-full">
       <input 
@@ -86,19 +88,20 @@ export default function FileDropzone({ onIngest, isIngesting, isSuccess, error, 
       />
       
       <motion.div
-        animate={{ scale: isDragging ? 1.01 : 1 }}
+        animate={{ scale: isDragging && !shouldReduceMotion ? 1.01 : 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`border-2 rounded-2xl p-6 sm:p-12 cursor-pointer flex flex-col items-center justify-center transition-colors ${
-          isDragging ? 'border-[#dd6668] bg-[#f9fafb] border-solid' : 'border-[#f9fafb] bg-white hover:bg-[#f9fafb] border-dashed'
+          isDragging ? 'border-[#0d9488] bg-[#f9fafb] border-solid' : 'border-[#f9fafb] bg-white hover:bg-[#f9fafb] border-dashed'
         }`}
+        style={{ transform: 'translateZ(0)', willChange: 'transform' }}
       >
-        <UploadCloud className="w-12 h-12 text-[#dd6668] mb-4" />
+        <UploadCloud className="w-12 h-12 text-[#0d9488] mb-4" />
         <p className="text-sm font-sans font-light text-[#6b7280]">Drop PDF, CSV, or Markdown files here</p>
-        <p className="text-xs font-sans font-medium text-[#dd6668] underline mt-1">or click to browse</p>
+        <p className="text-xs font-sans font-medium text-[#0d9488] underline mt-1">or click to browse</p>
       </motion.div>
 
       <div className="mt-6">
@@ -106,10 +109,12 @@ export default function FileDropzone({ onIngest, isIngesting, isSuccess, error, 
           {files.map((file, idx) => (
             <motion.div
               key={`${file.name}-${idx}`}
-              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className="flex items-center justify-between bg-white border border-[#f9fafb] rounded-xl p-3 overflow-hidden"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="mb-2 flex items-center justify-between bg-white border border-[#f9fafb] rounded-xl p-3 overflow-hidden"
+              style={{ transform: 'translateZ(0)', willChange: 'transform, opacity' }}
             >
               <div className="flex items-center space-x-3 truncate pr-4">
                 {getFileIcon(file.name)}

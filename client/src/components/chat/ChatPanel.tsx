@@ -44,14 +44,14 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
             cy="16"
             r="14"
             fill="none"
-            stroke="#dd6668"
+            stroke="#0d9488"
             strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={stroke}
             strokeDashoffset={offset}
           />
         </svg>
-        <Gauge className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-[#dd6668]" />
+        <Gauge className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 text-[#0d9488]" />
       </span>
       <span>{percent}% confidence</span>
     </div>
@@ -74,7 +74,7 @@ function MessageAccordion({ title, icon: Icon, children, defaultOpen = false }: 
         className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-medium text-[#0a0a0a]"
       >
         <span className="flex items-center gap-2">
-          <Icon className="h-3.5 w-3.5 text-[#dd6668]" />
+          <Icon className="h-3.5 w-3.5 text-[#0d9488]" />
           {title}
         </span>
         {isOpen ? <ChevronUp className="h-4 w-4 text-[#6b7280]" /> : <ChevronDown className="h-4 w-4 text-[#6b7280]" />}
@@ -117,7 +117,7 @@ function WhyThisResponse({ data, sourceMessage }: { data: ChatResponse; sourceMe
 
         {data.explanation.confidence_note && (
           <div className="rounded-lg bg-[#f9fafb]/70 p-3 leading-relaxed text-[#0a0a0a]">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#dd6668]">Confidence note</span>
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-[#0d9488]">Confidence note</span>
             {data.explanation.confidence_note}
           </div>
         )}
@@ -267,7 +267,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                   >
                     {!isUser && (
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#dd6668] to-[#0a0a0a] flex items-center justify-center" aria-hidden="true">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0d9488] to-[#0a0a0a] flex items-center justify-center" aria-hidden="true">
                           <Mic className="w-4 h-4 text-white" />
                         </div>
                       </div>
@@ -286,8 +286,8 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                           remarkPlugins={[remarkGfm]}
                           components={{
                             p: (props) => <p className="mb-3 last:mb-0" {...props} />,
-                            ul: (props) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-[#dd6668]" {...props} />,
-                            ol: (props) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-[#dd6668]" {...props} />,
+                            ul: (props) => <ul className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-[#0d9488]" {...props} />,
+                            ol: (props) => <ol className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5 marker:text-[#0d9488]" {...props} />,
                             li: (props) => <li className="pl-1" {...props} />,
                             strong: (props) => <strong className="font-semibold text-current" {...props} />,
                             a: (props) => <a className="underline hover:opacity-80 underline-offset-2" {...props} />
@@ -331,7 +331,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
               onChange={handleInput}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="flex-1 rounded-2xl border border-[#f9fafb] px-4 py-3 resize-none outline-none focus:border-[#dd6668] bg-[#f9fafb] focus:bg-white transition-colors text-sm max-h-[120px] font-sans font-light"
+              className="flex-1 rounded-2xl border border-[#f9fafb] px-4 py-3 resize-none outline-none focus:border-[#0d9488] bg-[#f9fafb] focus:bg-white transition-colors text-sm max-h-[120px] font-sans font-light"
             />
             <Button
               variant="primary"

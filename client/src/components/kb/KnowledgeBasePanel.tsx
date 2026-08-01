@@ -83,7 +83,7 @@ export default function KnowledgeBasePanel() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="bg-[#f9fafb] border border-[#f9fafb] rounded-xl p-4 flex flex-col items-center justify-center text-center"
           >
-            <Database className="w-6 h-6 text-[#dd6668] mb-2" />
+            <Database className="w-6 h-6 text-[#0d9488] mb-2" />
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{Math.round(docCount)}</p>
             <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mt-1">Total Documents</p>
           </motion.div>
@@ -91,7 +91,7 @@ export default function KnowledgeBasePanel() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             className="bg-[#f9fafb] border border-[#f9fafb] rounded-xl p-4 flex flex-col items-center justify-center text-center"
           >
-            <Layers className="w-6 h-6 text-[#dd6668] mb-2" />
+            <Layers className="w-6 h-6 text-[#0d9488] mb-2" />
             <p className="text-xl font-display font-normal text-[#0a0a0a]">{Math.round(chunkCount)}</p>
             <p className="text-xs font-sans font-medium uppercase tracking-widest text-[#6b7280] mt-1">Total Chunks</p>
           </motion.div>
@@ -99,7 +99,7 @@ export default function KnowledgeBasePanel() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="bg-[#f9fafb] border border-[#f9fafb] rounded-xl p-4 flex flex-col items-center justify-center text-center"
           >
-            <Clock className="w-6 h-6 text-[#dd6668] mb-2" />
+            <Clock className="w-6 h-6 text-[#0d9488] mb-2" />
             <p className="text-sm font-sans font-medium text-[#0a0a0a] truncate w-full px-2">
               {stats.last_updated ? new Date(stats.last_updated).toLocaleDateString() : 'Never'}
             </p>

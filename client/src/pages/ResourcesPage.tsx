@@ -9,42 +9,42 @@ const resources = [
     type: 'Guide',
     icon: <BookOpen size={20} />,
     description: 'Learn how top teams are using Auralis to classify objections and close deals faster.',
-    color: '#dd6668'
+    color: '#0d9488'
   },
   {
     title: 'Handling Price Objections in 2026',
     type: 'Article',
     icon: <FileText size={20} />,
     description: 'A deep dive into the psychology of price objections and how AI can help navigate them.',
-    color: '#10b981'
+    color: '#6366f1'
   },
   {
     title: 'Auralis Product Tour',
     type: 'Video',
     icon: <PlayCircle size={20} />,
     description: 'A 5-minute walkthrough of the Auralis platform, from setup to first AI conversation.',
-    color: '#8b5cf6'
+    color: '#6366f1'
   },
   {
     title: 'Buyer Persona Cheatsheet',
     type: 'Download',
     icon: <FileText size={20} />,
     description: 'Quick reference guide for identifying and adapting to the 4 main buyer personas.',
-    color: '#f59e0b'
+    color: '#0d9488'
   },
   {
     title: 'Setting up Smart Handoffs',
     type: 'Tutorial',
     icon: <PlayCircle size={20} />,
     description: 'Configure routing rules to bring human reps into the loop at exactly the right moment.',
-    color: '#8b5cf6'
+    color: '#6366f1'
   },
   {
     title: 'State of Sales AI Report',
     type: 'Report',
     icon: <BookOpen size={20} />,
     description: 'Data from over 1M sales conversations on what separates top performers from the rest.',
-    color: '#dd6668'
+    color: '#0d9488'
   }
 ];
 
@@ -62,7 +62,7 @@ export default function ResourcesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-xs font-sans font-semibold tracking-widest text-[#dd6668] uppercase mb-4 block">
+          <span className="text-xs font-sans font-semibold tracking-widest text-[#0d9488] uppercase mb-4 block">
             Resources
           </span>
           <h1 className="font-display text-5xl md:text-6xl text-[#0a0a0a] leading-tight mb-6">
@@ -83,7 +83,7 @@ export default function ResourcesPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group cursor-pointer rounded-2xl p-8 border border-[#e5e7eb] hover:border-[#dd6668]/30 hover:shadow-lg transition-all duration-300 flex flex-col h-full bg-white"
+              className="group cursor-pointer rounded-2xl p-8 border border-[#e5e7eb] hover:border-[#0d9488]/30 transition-colors duration-300 flex flex-col h-full bg-white"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div 
@@ -96,14 +96,14 @@ export default function ResourcesPage() {
                   {resource.type}
                 </span>
               </div>
-              <h3 className="font-logo font-semibold text-xl mb-3 text-[#0a0a0a] group-hover:text-[#dd6668] transition-colors">
+              <h3 className="font-logo font-semibold text-xl mb-3 text-[#0a0a0a] group-hover:text-[#0d9488] transition-colors">
                 {resource.title}
               </h3>
               <p className="text-sm font-sans text-[#6b7280] leading-relaxed mb-8 flex-grow">
                 {resource.description}
               </p>
-              <div className="flex items-center gap-2 text-[#dd6668] font-sans font-medium text-sm group-hover:gap-3 transition-all">
-                Read more <ArrowRight size={16} />
+              <div className="flex items-center gap-2 text-[#0d9488] font-sans font-medium text-sm">
+                Read more <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
               </div>
             </motion.div>
           ))}
@@ -117,7 +117,7 @@ export default function ResourcesPage() {
         </h2>
         <button
           onClick={() => navigate('/?login=true')}
-          className="bg-[#dd6668] text-white font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#c45557] transition-colors duration-300 mt-4"
+          className="bg-[#0d9488] text-white font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0f766e] transition-colors duration-300 mt-4"
         >
           Start your free trial
         </button>

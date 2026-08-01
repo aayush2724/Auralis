@@ -13,7 +13,7 @@ export default function Footer() {
   return (
     <footer id="footer" className="w-full flex flex-col">
       {/* CTA BAND */}
-      <div className="w-full bg-[#dd6668] py-24 px-6 flex flex-col items-center justify-center">
+      <div className="w-full bg-[#0d9488] py-24 px-6 flex flex-col items-center justify-center">
         <h2 className="font-display text-4xl md:text-5xl text-white text-center leading-tight mb-6">
           Ready to close more deals?
         </h2>
@@ -23,7 +23,7 @@ export default function Footer() {
         </p>
         <button
           onClick={() => navigate('/?login=true')}
-          className="bg-white text-[#dd6668] font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0a0a0a] hover:text-white transition-colors duration-300"
+          className="bg-white text-[#0d9488] font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0a0a0a] hover:text-white transition-colors duration-300"
         >
           Try it now
         </button>

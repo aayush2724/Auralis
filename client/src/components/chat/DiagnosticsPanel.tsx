@@ -18,7 +18,7 @@ const badgeColors: Record<string, string> = {
   timing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   competitor: 'bg-green-100 text-green-700 border-green-200',
   fit: 'bg-blue-100 text-blue-700 border-blue-200',
-  buying_signal: 'bg-purple-100 text-purple-700 border-purple-200',
+  buying_signal: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   neutral: 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
@@ -73,10 +73,11 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
           </div>
           <div className="mt-2 w-full bg-[#f9fafb] rounded-full h-1.5 overflow-hidden relative">
             <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.round(data.confidence * 100)}%` }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: data.confidence }}
               transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.3 }}
-              className="absolute left-0 top-0 bottom-0 bg-current opacity-70"
+              className="absolute left-0 top-0 bottom-0 w-full origin-left bg-current opacity-70"
+              style={{ transform: 'translateZ(0)', willChange: 'transform' }}
             />
           </div>
           <p className="text-right text-[10px] text-[#6b7280] mt-1 font-mono">
@@ -176,7 +177,7 @@ export default function DiagnosticsPanel({ data }: { data: ChatResponse | null }
                     <span className="text-[10px] text-[#6b7280]">{Math.round(doc.score * 100)}%</span>
                   </div>
                   <div className="w-full bg-[#f9fafb] h-1 rounded-full overflow-hidden relative">
-                    <div className="absolute left-0 top-0 bottom-0 bg-[#dd6668]" style={{ width: `${doc.score * 100}%` }} />
+                    <div className="absolute left-0 top-0 bottom-0 bg-[#0d9488]" style={{ width: `${doc.score * 100}%` }} />
                   </div>
                   <p className="text-[10px] leading-snug line-clamp-3 italic opacity-80 mt-1">
                     {doc.text.substring(0, 300)}

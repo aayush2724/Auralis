@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
                   key={item.id}
                   onClick={() => handleNavClick(item.id as Tab)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative w-full flex items-center px-3 py-2 rounded-lg transition-all font-sans text-sm ${
+                  className={`relative w-full flex items-center px-3 py-2 rounded-lg transition-colors font-sans text-sm ${
                     isActive
                       ? 'text-[#0a0a0a] font-medium'
                       : 'text-auralis-text font-light hover:bg-[#f9fafb]'
@@ -88,9 +88,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
                 >
                   {isActive && (
                     <motion.div
-                      layoutId="sidebar-pill"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                       className="absolute inset-0 bg-[#f9fafb] rounded-lg z-0"
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
                   )}
                   <div className="relative z-10 flex items-center space-x-3">
@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sessionId, i
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-[#6b7280] hover:text-[#dd6668] no-underline"
+            className="w-full flex items-center justify-center space-x-2 py-2 px-3 text-[#6b7280] hover:text-[#0d9488] no-underline"
           >
             <LogOut className="w-4 h-4" aria-hidden="true" />
             <span>Logout</span>

@@ -47,7 +47,7 @@ const LoginModal = () => {
           className="max-w-sm w-full bg-white rounded-2xl p-8 shadow-2xl"
         >
           <div className="flex flex-col items-center mb-6">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#dd6668] to-[#0a0a0a] flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0d9488] to-[#0a0a0a] flex items-center justify-center mb-4">
               <Mic className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-display font-normal tracking-tight text-[#0a0a0a]">Welcome back</h2>
@@ -63,7 +63,7 @@ const LoginModal = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-[#f9fafb] rounded-xl px-4 py-3 focus:border-[#dd6668] focus:ring-1 focus:ring-[#dd6668] outline-none transition-all text-[#0a0a0a] font-sans"
+                className="w-full border border-[#f9fafb] rounded-xl px-4 py-3 focus:border-[#0d9488] focus:ring-1 focus:ring-[#0d9488] outline-none transition-colors text-[#0a0a0a] font-sans"
               />
             </div>
             
@@ -75,7 +75,7 @@ const LoginModal = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-[#f9fafb] rounded-xl px-4 py-3 focus:border-[#dd6668] focus:ring-1 focus:ring-[#dd6668] outline-none transition-all text-[#0a0a0a] font-sans"
+                className="w-full border border-[#f9fafb] rounded-xl px-4 py-3 focus:border-[#0d9488] focus:ring-1 focus:ring-[#0d9488] outline-none transition-colors text-[#0a0a0a] font-sans"
               />
             </div>
 

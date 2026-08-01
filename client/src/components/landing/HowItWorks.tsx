@@ -1,10 +1,11 @@
 import { useRef } from 'react';
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValueEvent, useReducedMotion } from 'framer-motion';
 
 const HowItWorks = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const glowGroupRef = useRef<SVGGElement>(null);
+  const shouldReduceMotion = useReducedMotion() ?? false;
 
   const { scrollYProgress } = useScroll({
     target: wrapperRef,
@@ -13,17 +14,16 @@ const HowItWorks = () => {
 
   // Step 1 Transforms
   const step1Opacity = useTransform(scrollYProgress, [0.15, 0.23], [0, 1]);
-  const step1Color = useTransform(scrollYProgress, [0.15, 0.23], ['#e5e7eb', '#dd6668']);
 
   // Step 2 Transforms
   const step2Opacity = useTransform(scrollYProgress, [0.45, 0.53], [0, 1]);
-  const step2Color = useTransform(scrollYProgress, [0.45, 0.53], ['#e5e7eb', '#dd6668']);
 
   // Step 3 Transforms
   const step3Opacity = useTransform(scrollYProgress, [0.73, 0.81], [0, 1]);
-  const step3Color = useTransform(scrollYProgress, [0.73, 0.81], ['#e5e7eb', '#dd6668']);
+  const pathOpacity = useTransform(scrollYProgress, [0.05, 0.95], [0.2, 1]);
 
   useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    if (shouldReduceMotion) return;
     const path = pathRef.current;
     const group = glowGroupRef.current;
     if (!path || !group) return;
@@ -42,7 +42,7 @@ const HowItWorks = () => {
           
           {/* Section header */}
           <div className="text-center mb-4 mt-[-40px]">
-            <p className="text-xs font-sans font-medium tracking-widest text-[#dd6668] uppercase mb-3">
+            <p className="text-xs font-sans font-medium tracking-widest text-[#0d9488] uppercase mb-3">
               HOW IT WORKS
             </p>
             <h2 className="font-display text-4xl md:text-5xl text-[#0a0a0a] leading-tight max-w-2xl mx-auto">
@@ -69,16 +69,16 @@ const HowItWorks = () => {
               <motion.path
                 d={pathD}
                 fill="none"
-                stroke="#dd6668"
+                stroke="#0d9488"
                 strokeWidth={3}
-                style={{ pathLength: scrollYProgress }}
+                style={{ opacity: pathOpacity }}
                 strokeDasharray="1"
               />
 
               {/* Glowing circle group */}
               <g ref={glowGroupRef} transform="translate(0, 140)">
-                <circle r="10" fill="#dd6668" filter="url(#glow)" opacity="0.6" />
-                <circle r="5" fill="#dd6668" />
+                <circle r="10" fill="#0d9488" filter="url(#glow)" opacity="0.6" />
+                <circle r="5" fill="#0d9488" />
                 <circle r="2.5" fill="white" />
               </g>
             </svg>
@@ -88,13 +88,10 @@ const HowItWorks = () => {
               
               {/* Step 1 */}
               <motion.div style={{ opacity: step1Opacity }} className="flex flex-col items-center text-center">
-                <motion.div 
-                  className="w-[10px] h-[10px] rounded-full mb-6"
-                  style={{ backgroundColor: step1Color as any }}
-                />
-                <motion.div style={{ color: step1Color as any }} className="font-display text-7xl leading-none mb-6">
+                <div className="w-[10px] h-[10px] rounded-full mb-6 bg-[#0d9488]" />
+                <div className="font-display text-7xl leading-none mb-6 text-[#0d9488]">
                   01
-                </motion.div>
+                </div>
                 <h3 className="font-sans font-medium text-lg text-[#0a0a0a] mb-3">
                   Message comes in
                 </h3>
@@ -105,13 +102,10 @@ const HowItWorks = () => {
 
               {/* Step 2 */}
               <motion.div style={{ opacity: step2Opacity }} className="flex flex-col items-center text-center -translate-y-8">
-                <motion.div 
-                  className="w-[10px] h-[10px] rounded-full mb-6"
-                  style={{ backgroundColor: step2Color as any }}
-                />
-                <motion.div style={{ color: step2Color as any }} className="font-display text-7xl leading-none mb-14">
+                <div className="w-[10px] h-[10px] rounded-full mb-6 bg-[#0d9488]" />
+                <div className="font-display text-7xl leading-none mb-14 text-[#0d9488]">
                   02
-                </motion.div>
+                </div>
                 <h3 className="font-sans font-medium text-lg text-[#0a0a0a] mb-3">
                   Auralis reads the room
                 </h3>
@@ -122,13 +116,10 @@ const HowItWorks = () => {
 
               {/* Step 3 */}
               <motion.div style={{ opacity: step3Opacity }} className="flex flex-col items-center text-center">
-                <motion.div 
-                  className="w-[10px] h-[10px] rounded-full mb-6"
-                  style={{ backgroundColor: step3Color as any }}
-                />
-                <motion.div style={{ color: step3Color as any }} className="font-display text-7xl leading-none mb-6">
+                <div className="w-[10px] h-[10px] rounded-full mb-6 bg-[#0d9488]" />
+                <div className="font-display text-7xl leading-none mb-6 text-[#0d9488]">
                   03
-                </motion.div>
+                </div>
                 <h3 className="font-sans font-medium text-lg text-[#0a0a0a] mb-3">
                   The right response, instantly
                 </h3>
@@ -145,7 +136,7 @@ const HowItWorks = () => {
       {/* MOBILE FALLBACK */}
       <div className="md:hidden px-6 py-24 bg-white">
         <div className="text-center mb-16">
-          <p className="text-xs font-sans font-medium tracking-widest text-[#dd6668] uppercase mb-3">
+          <p className="text-xs font-sans font-medium tracking-widest text-[#0d9488] uppercase mb-3">
             HOW IT WORKS
           </p>
           <h2 className="font-display text-4xl text-[#0a0a0a] leading-tight">
@@ -161,7 +152,7 @@ const HowItWorks = () => {
             viewport={{ once: true }}
             className="flex flex-row gap-6 w-full"
           >
-            <div className="font-display text-4xl text-[#dd6668] leading-none shrink-0">01</div>
+            <div className="font-display text-4xl text-[#0d9488] leading-none shrink-0">01</div>
             <div className="flex flex-col">
               <h3 className="font-sans font-medium text-lg text-[#0a0a0a] mb-2">Message comes in</h3>
               <p className="font-sans text-sm text-[#6b7280] leading-relaxed">
@@ -179,7 +170,7 @@ const HowItWorks = () => {
             viewport={{ once: true }}
             className="flex flex-row gap-6 w-full"
           >
-            <div className="font-display text-4xl text-[#dd6668] leading-none shrink-0">02</div>
+            <div className="font-display text-4xl text-[#0d9488] leading-none shrink-0">02</div>
             <div className="flex flex-col">
               <h3 className="font-sans font-medium text-lg text-[#0a0a0a] mb-2">Auralis reads the room</h3>
               <p className="font-sans text-sm text-[#6b7280] leading-relaxed">
@@ -197,7 +188,7 @@ const HowItWorks = () => {
             viewport={{ once: true }}
             className="flex flex-row gap-6 w-full"
           >
-            <div className="font-display text-4xl text-[#dd6668] leading-none shrink-0">03</div>
+            <div className="font-display text-4xl text-[#0d9488] leading-none shrink-0">03</div>
             <div className="flex flex-col">
               <h3 className="font-sans font-medium text-lg text-[#0a0a0a] mb-2">The right response, instantly</h3>
               <p className="font-sans text-sm text-[#6b7280] leading-relaxed">

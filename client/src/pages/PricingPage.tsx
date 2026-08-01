@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Zap, Building2, ChevronDown } from 'lucide-react';
 import PageNavbar from '../components/layout/PageNavbar';
 
@@ -29,7 +29,7 @@ const plans = [
     period: '/ seat / mo',
     description: 'For growing sales teams that need real-time intelligence at scale.',
     icon: <Zap size={20} />,
-    accent: '#dd6668',
+    accent: '#0d9488',
     features: [
       'Unlimited AI conversations',
       'Objection classification',
@@ -109,14 +109,19 @@ function FAQItem({ q, a }: { q: string; a: string }) {
           className={`text-[#6b7280] shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
         />
       </button>
-      <motion.div
-        initial={false}
-        animate={{ height: open ? 'auto' : 0, opacity: open ? 1 : 0 }}
-        transition={{ duration: 0.25 }}
-        className="overflow-hidden"
-      >
-        <p className="pb-5 font-sans text-[#6b7280] text-sm leading-relaxed">{a}</p>
-      </motion.div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            style={{ transform: 'translateZ(0)', willChange: 'transform, opacity' }}
+          >
+            <p className="pb-5 font-sans text-[#6b7280] text-sm leading-relaxed">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -135,7 +140,7 @@ export default function PricingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-xs font-sans font-semibold tracking-widest text-[#dd6668] uppercase mb-4 block">
+          <span className="text-xs font-sans font-semibold tracking-widest text-[#0d9488] uppercase mb-4 block">
             Pricing
           </span>
           <h1 className="font-display text-5xl md:text-6xl text-[#0a0a0a] leading-tight mb-6">
@@ -164,12 +169,12 @@ export default function PricingPage() {
             >
               {plan.highlighted && (
                 <div className="mb-4">
-                  <span className="text-xs font-sans font-semibold tracking-widest uppercase text-[#dd6668]">
+                  <span className="text-xs font-sans font-semibold tracking-widest uppercase text-[#0d9488]">
                     Most Popular
                   </span>
                 </div>
               )}
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-5 ${plan.highlighted ? 'bg-[#dd6668]/20 text-[#dd6668]' : 'bg-[#f3f4f6] text-[#6b7280]'}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-5 ${plan.highlighted ? 'bg-[#0d9488]/20 text-[#0d9488]' : 'bg-[#f3f4f6] text-[#6b7280]'}`}>
                 {plan.icon}
               </div>
               <h2 className={`font-logo font-semibold text-2xl mb-1 ${plan.highlighted ? 'text-white' : 'text-[#0a0a0a]'}`}>
@@ -192,7 +197,7 @@ export default function PricingPage() {
                 onClick={() => navigate('/?login=true')}
                 className={`w-full py-3.5 rounded-full font-sans font-medium text-sm mb-8 transition-colors duration-200 ${
                   plan.highlighted
-                    ? 'bg-[#dd6668] text-white hover:bg-[#c45557]'
+                    ? 'bg-[#0d9488] text-white hover:bg-[#0f766e]'
                     : 'bg-[#f3f4f6] text-[#0a0a0a] hover:bg-[#e5e7eb]'
                 }`}
               >
@@ -201,7 +206,7 @@ export default function PricingPage() {
               <ul className="space-y-3 flex-1">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm font-sans">
-                    <Check size={15} className={`mt-0.5 shrink-0 ${plan.highlighted ? 'text-[#dd6668]' : 'text-[#10b981]'}`} />
+                    <Check size={15} className={`mt-0.5 shrink-0 ${plan.highlighted ? 'text-[#0d9488]' : 'text-[#10b981]'}`} />
                     <span className={plan.highlighted ? 'text-white/70' : 'text-[#4b5563]'}>{f}</span>
                   </li>
                 ))}
@@ -214,7 +219,7 @@ export default function PricingPage() {
       {/* FAQ */}
       <section className="bg-[#fafafa] px-6 py-24 border-t border-[#f3f4f6]">
         <div className="max-w-3xl mx-auto">
-          <span className="text-xs font-sans font-semibold tracking-widest uppercase text-[#dd6668] mb-4 block">
+          <span className="text-xs font-sans font-semibold tracking-widest uppercase text-[#0d9488] mb-4 block">
             FAQ
           </span>
           <h2 className="font-display text-4xl text-[#0a0a0a] mb-12">
@@ -227,7 +232,7 @@ export default function PricingPage() {
       </section>
 
       {/* CTA BAND */}
-      <section className="w-full bg-[#dd6668] py-24 px-6 flex flex-col items-center justify-center text-center">
+      <section className="w-full bg-[#0d9488] py-24 px-6 flex flex-col items-center justify-center text-center">
         <h2 className="font-display text-4xl md:text-5xl text-white leading-tight mb-6">
           Ready to close more deals?
         </h2>
@@ -236,7 +241,7 @@ export default function PricingPage() {
         </p>
         <button
           onClick={() => navigate('/?login=true')}
-          className="bg-white text-[#dd6668] font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0a0a0a] hover:text-white transition-colors duration-300"
+          className="bg-white text-[#0d9488] font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0a0a0a] hover:text-white transition-colors duration-300"
         >
           Try it now
         </button>

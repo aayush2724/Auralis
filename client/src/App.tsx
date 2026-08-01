@@ -26,22 +26,18 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, MotionConfig } from 'framer-motion';
+import { PageTransition } from './components/ui/Animations';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div key={location.pathname}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.25 }}
-      >
+      <PageTransition key={location.pathname}>
         <Suspense fallback={
           <div className="min-h-screen bg-white flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-[#dd6668] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#0d9488] border-t-transparent rounded-full animate-spin" />
           </div>
         }>
           <Routes location={location} key={location.pathname}>
@@ -79,7 +75,7 @@ const AnimatedRoutes = () => {
             />
           </Routes>
         </Suspense>
-      </motion.div>
+      </PageTransition>
     </AnimatePresence>
   );
 };
@@ -87,11 +83,13 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <AnimatedRoutes />
-        </ErrorBoundary>
-      </BrowserRouter>
+      <MotionConfig reducedMotion="user">
+        <BrowserRouter>
+          <ErrorBoundary>
+            <AnimatedRoutes />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </MotionConfig>
     </QueryClientProvider>
   );
 }
