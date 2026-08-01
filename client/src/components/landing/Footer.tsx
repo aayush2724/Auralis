@@ -1,4 +1,6 @@
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { FadeUp } from '../ui/Animations';
 
 export default function Footer() {
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ export default function Footer() {
   return (
     <footer id="footer" className="w-full flex flex-col">
       {/* CTA BAND */}
-      <div className="w-full bg-[#0d9488] py-24 px-6 flex flex-col items-center justify-center">
+      <FadeUp className="w-full bg-[#0d9488] py-24 px-6 flex flex-col items-center justify-center">
         <h2 className="font-display text-4xl md:text-5xl text-white text-center leading-tight mb-6">
           Ready to close more deals?
         </h2>
@@ -21,13 +23,16 @@ export default function Footer() {
           Join sales teams already using Auralis to handle objections,
           read the room, and never miss a close.
         </p>
-        <button
+        <motion.button
           onClick={() => navigate('/?login=true')}
+          whileHover={{ y: -2, scale: 1.01 }}
+          whileTap={{ scale: 0.985 }}
+          transition={{ type: 'spring', stiffness: 520, damping: 34 }}
           className="bg-white text-[#0d9488] font-sans font-medium text-sm px-8 py-4 rounded-full hover:bg-[#0a0a0a] hover:text-white transition-colors duration-300"
         >
           Try it now
-        </button>
-      </div>
+        </motion.button>
+      </FadeUp>
 
       {/* FOOTER BAR */}
       <div className="w-full bg-[#0a0a0a]">

@@ -178,14 +178,17 @@ const RobotFeatures = () => {
                   Join sales teams already using Auralis to handle objections,
                   read the room, and never miss a close.
                 </p>
-                <button
+                <motion.button
                   onClick={() => navigate('/?login=true')}
+                  whileHover={{ y: -2, scale: 1.01 }}
+                  whileTap={{ scale: 0.985 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 34 }}
                   className="w-fit bg-[#dd6668] text-white px-7 py-3.5 rounded-full
                              font-sans font-medium text-sm hover:bg-[#c45557]
                              transition-colors pointer-events-auto"
                 >
                   Try it now
-                </button>
+                </motion.button>
               </motion.div>
   
             </div>

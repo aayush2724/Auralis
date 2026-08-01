@@ -260,9 +260,9 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
                 return (
                   <motion.div
                     key={msg.id}
-                    initial={{ opacity: 0, scale: 0.9, x: isUser ? 20 : -20, y: 10 }}
+                    initial={isUser ? { opacity: 0, scale: 0.9, x: 20, y: 10 } : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.8 }}
+                    transition={{ type: "spring", stiffness: 460, damping: 34, mass: 0.8 }}
                     className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} space-x-3`}
                   >
                     {!isUser && (
@@ -331,7 +331,7 @@ export default function ChatPanel({ sessionId: initialSessionId }: { sessionId: 
               onChange={handleInput}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="flex-1 rounded-2xl border border-[#f9fafb] px-4 py-3 resize-none outline-none focus:border-[#0d9488] bg-[#f9fafb] focus:bg-white transition-colors text-sm max-h-[120px] font-sans font-light"
+              className="flex-1 rounded-2xl border border-[#f9fafb] px-4 py-3 resize-none outline-none focus:border-[#0d9488] focus:ring-4 focus:ring-[#0d9488]/10 focus:shadow-[0_0_0_1px_rgba(13,148,136,0.12),0_0_0_4px_rgba(13,148,136,0.08)] bg-[#f9fafb] focus:bg-white transition-[background-color,border-color,box-shadow] duration-200 text-sm max-h-[120px] font-sans font-light"
             />
             <Button
               variant="primary"
