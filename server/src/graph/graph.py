@@ -14,7 +14,7 @@ Nodes
   classify_node  — runs objection / sentiment / persona classifiers in parallel
   retrieve_node  — semantic retrieval + citation formatting
   strategy_node  — maps (objection × persona) → named strategy
-  generate_node  — builds prompt and calls OpenAI
+  generate_node  — builds prompt and calls Gemini
   handoff_node   — flags human escalation (Feature 7)
 
 Exposed API
@@ -144,7 +144,7 @@ def classify_node(state: GraphState) -> dict[str, Any]:
     text = state["user_input"]
     logger.info("[classify_node] text='%s'", text[:80])
 
-    # Sentiment is independent (local model)
+    # Sentiment is a separate Gemini call (independent of objection/persona)
     sentiment = analyze(text)
 
     # Combined LLM call for Objection + Persona
@@ -386,7 +386,7 @@ def _get_system_prompt(persona_label: str) -> str:
 def generate_node(state: GraphState) -> dict[str, Any]:
     """
     Build a persona-specific system prompt (Feature 13), dispatch to the
-    strategy router for the user-turn prompt (Feature 2/11), then call OpenAI.
+    strategy router for the user-turn prompt (Feature 2/11), then call Gemini.
 
     Flow
     ----

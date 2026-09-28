@@ -1,12 +1,13 @@
 """
 auralis/src/classifier/sentiment.py
 ──────────────────────────────────────
-Sentiment classifier using DistilBERT fine-tuned on SST-2.
+Sentiment classifier backed by the shared Gemini zero-shot classifier.
 
-Model : distilbert-base-uncased-finetuned-sst-2-english
-Labels: POSITIVE / NEGATIVE → mapped to positive / negative / neutral
-         (neutral is inferred when the model's positive-score sits in the
-          ambiguous band [0.40, 0.60], meaning it is uncertain either way)
+Model : Google Gemini via src.classifier.shared_model.get_zeroshot_pipeline()
+        (GEMINI_MODEL env var, default gemini-3.1-flash-lite)
+Labels: positive / neutral / negative — chosen directly by the LLM, with the
+        LLM-reported confidence returned as ``score``. Each label maps to a
+        tone instruction that the generation prompt consumes downstream.
 
 Public API
 ----------
