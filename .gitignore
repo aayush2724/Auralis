@@ -48,5 +48,5 @@ logs/
 # ─── Data (large files tracked separately) ────────
 data/*.pdf
 data/*.csv
-config.bat
 node_modules
+.env.*
